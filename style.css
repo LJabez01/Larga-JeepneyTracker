@@ -1,0 +1,552 @@
+body
+{
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Poppins', 'Montserrat';
+}
+
+/* Navigation Bar Section */
+nav 
+{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: transparent;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo Section */
+.logo
+{
+  margin-left: 40px;
+}
+
+.logo img
+{
+  height: 23px;
+  width: 25px;
+  margin: 0;
+}
+
+.logo a
+{
+  font-family: 'Montserrat';
+  text-decoration: none;
+  font-size: 30px;
+  font-weight: 700;
+  color: #2E6F40;
+  text-shadow: 2px 4px 0px rgba(132, 132, 132, 0.612);
+}
+
+/* Navigation Bar controls Section */
+.controls
+{
+  margin-right: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.search-container 
+{
+  display: flex;
+  margin-right: -20px;
+  position: relative;
+}
+
+.search-bar 
+{
+  padding: 11px 30px;
+  border: none;
+  background-color: white;
+  border-radius: 25px;
+  outline: none;
+  width: 130px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #000;
+  box-shadow: 4px 4px 10px #2E6F40;
+}
+
+.search-icon 
+{
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #2E6F40;
+  pointer-events: none;
+}
+
+.controls ul
+{
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+
+.controls a
+{
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 500;
+  color: #000000;
+  padding: 10px;
+  background-color: white;
+  border-radius: 25px;
+  box-shadow: 4px 4px 10px #2E6F40;
+  display: inline-block; 
+  transition: 
+    transform 0.4s ease, 
+    background-color 0.4s ease;
+    color: 0.4 ease;
+    box-shadow: 0.4 ease;
+}
+
+.controls a i 
+{
+  margin-right: 6px;     
+  font-size: 14px;      
+  vertical-align: middle; 
+  color: #2E6F40;       
+  transition: color 0.3s, transform 0.3s;
+}
+
+.controls a:hover 
+{
+  color: #ffffff;
+  background-color: #26a138b4 ;
+  transform: scale(1.1);
+  box-shadow: 6px 6px 14px #1f512b;
+}
+
+.controls a:hover i 
+{
+  color: #ffffff;          
+  transform: scale(1.1); 
+}
+
+.controls a.active 
+{
+  background-color: #26a138b4; 
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 6px 6px 14px #1f512b;
+}
+
+.controls a.active i 
+{
+  color: white;
+  transform: scale(1.1);
+}
+
+.controls ul .signup 
+{
+  margin-left: 5px;
+}
+
+.controls ul .signup a 
+{
+  background-color: #09da2299;
+  color: white;
+  box-shadow: 5px 5px 10px hsl(135, 48%, 16%);
+  font-size: 14px;
+  display: inline-block; 
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.controls ul .signup a:hover 
+{
+  color: #ffffff;
+  background-color: #26a138b2 ;
+  transform: scale(1.1);
+}
+
+/*Log-out Button*/
+.controls ul .logout-button 
+{
+  margin-left: 5px;
+}
+
+.controls ul .logout-button a 
+{
+  background-color: #29552e99;
+  color: white;
+  box-shadow: 5px 5px 10px hsl(135, 48%, 16%);
+  font-size: 12px
+  display: inline-block; 
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.controls ul .logout-button i
+{
+  color: white;
+}
+
+.controls ul .logout-button a:hover 
+{
+  color: #ffffff;
+  background-color: #a72e2ecc ;
+  transform: scale(1.1);
+}
+
+
+/* Leaflet Map as background image Section */
+#map
+{
+  height: 100vh;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+/* Add waiting area button - Commuter Section */
+.addwaitingarea-button 
+{
+  position: absolute;
+  top: 90px;         
+  right: 40px;       
+  background-color: #6fd16f97;
+  border: none;
+  color: rgb(40, 88, 46);
+  padding: 10px 75px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1001;
+  box-shadow: 4px 4px 10px #2E6F40;
+  transition: 
+    transform 0.3s ease, 
+    background-color 0.3s ease, 
+    box-shadow 0.3s ease, 
+    color 0.3s ease;
+  transform-origin: center;
+}
+
+.addwaitingarea-button:hover 
+{
+  background-color: #4ca84c; 
+  color: white;              
+  transform: scale(1.05);    
+  box-shadow: 2px 2px 14px #1f512b; 
+  filter: brightness(1.05);  
+}
+
+.addwaitingarea-button i 
+{
+  margin-right: 5px;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.addwaitingarea-button:hover i 
+{
+  transform: scale(1.2); 
+  color: white;           
+}
+
+
+/* Commuters Information Panel */
+.commuters-info
+{
+  position: absolute;
+  top: 140px;       
+  right: 40px;      
+  width: 330px;
+  max-width: 90vw; 
+  height: 60vh;
+  background-color: #6fd16f8b;
+  box-shadow: 4px 4px 10px #2E6F40;
+  border-radius: 20px;
+  padding: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Waiting area location - Section */
+.waiting-area-section
+{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+}
+
+.waiting-area-section p
+{
+  font-size: 10px;
+  background-color: rgb(255, 255, 255);
+  padding: 10px 20px;
+  width: 250px;
+  border-radius: 20px;
+  text-align: center;
+  margin: 5px;
+}
+
+/* Vehicle Information Section */
+.vehicle-info
+{
+  background-color: rgb(255, 255, 255);
+  border-radius: 15px;
+  padding: 20px;
+  height: 150px;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vehicle-info h3 
+{
+  margin: 10px;
+  font-weight: 600;
+  color:rgb(40, 88, 46);
+}
+
+.information-line
+{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;           
+  margin: 5px 0;         
+  font-size: 12px;
+}
+
+.vehicle-status
+{
+  display: inline-block;            
+  padding: 4px 12px;
+  border-radius: 15px;
+  background-color: hsl(136, 45%, 25%);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Arrival Information Section */
+.arrival-info
+{
+  background-color: rgb(255, 255, 255);
+  border-radius: 15px;
+  margin: 50px 0px 20px ;
+  padding: 20px;
+  height: 80px;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.arrival-info h4
+{
+  font-size: 11px;
+  margin: 0;
+  color: rgb(40, 88, 46);
+}
+
+.arrival-time
+{
+  font-weight: 700;
+  background-color:  hsl(136, 45%, 25%);
+  border-radius: 20px;
+  padding: 5px 20px;
+  margin: 5px;
+}
+
+.time 
+{
+  color: white;
+}
+
+.distance
+{
+  font-size: 13px;
+  margin: 0;
+}
+
+/* Set Nofication Button - Commuters */
+.set-notifications-button
+{
+  font-weight: bold;
+  border-radius: 20px;
+  padding: 5px 90px;
+  margin: 0;
+  background-color: #407736;
+  box-shadow: 4px 4px 10px #2E6F40;
+  color: rgb(225, 249, 226);
+  border: none;
+  cursor: pointer;
+  transition: 
+    transform 0.4s ease, 
+    background-color 0.4s ease, 
+    box-shadow 0.4s ease, 
+    filter 0.4s ease;
+  transform-origin: center;
+}
+
+.set-notifications-button:hover
+{
+  background-color: #4ca84c; 
+  transform: scale(1.05);    
+  box-shadow: 6px 6px 14px #1f512b; 
+}
+
+/* Drivers Page */
+
+/* Select Route Button */
+.selectroute-button
+{
+  position: absolute;
+  top: 90px;         
+  right: 40px;       
+  background-color: #6fd16f97;
+  border: none;
+  color: rgb(40, 88, 46);
+  padding: 10px 100px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1001;
+  box-shadow: 4px 4px 10px #2E6F40;
+  transition: 
+    transform 0.3s ease, 
+    background-color 0.3s ease, 
+    box-shadow 0.3s ease, 
+    color 0.3s ease;
+  transform-origin: center;
+}
+
+.selectroute-button:hover 
+{
+  background-color: #4ca84c; 
+  color: white;              
+  transform: scale(1.05);    
+  box-shadow: 2px 2px 14px #1f512b; 
+  filter: brightness(1.05);  
+}
+
+.selectroute-button i 
+{
+  margin-right: 5px;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.selectroute-button:hover i 
+{
+  transform: scale(1.1); 
+  color: white;           
+}
+
+/* Drivers Information Section Panel */
+.drivers-info
+{
+  position: absolute;
+  top: 140px;       
+  right: 40px;      
+  width: 330px;
+  max-width: 90vw; 
+  height: 60vh;
+  background-color: #6fd16f8b;
+  box-shadow: 4px 4px 10px #2E6F40;
+  border-radius: 20px;
+  padding: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.driver-header
+{
+  background-color: rgb(255, 255, 255);
+  padding: 10px 20px;
+  width: 250px;
+  border-radius: 10px;
+  text-align: center;
+  height: 40px;
+  margin: 5px;
+}
+
+.driver-header h5
+{
+  font-family: 'Poppins';
+  font-size: 13px;
+  margin: 0;
+  color:rgb(40, 88, 46);
+}
+
+.driver-header p
+{
+  font-family: 'Poppins';
+  font-size: 13px;
+  margin: 3px;
+}
+
+.driverstatus-info
+{
+  background-color: rgb(255, 255, 255);
+  border-radius: 15px;
+  padding: 20px;
+  height: 220px;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+}
+
+.driverstatus-info h3
+{
+  font-weight: 600;
+  color:rgb(40, 88, 46);
+}
+
+
+/* Start Location */
+.livelocation-button
+{
+  font-weight: bold;
+  border-radius: 20px;
+  padding: 5px 70px;
+  margin: 10px;
+  background-color: #407736;
+  box-shadow: 4px 4px 10px #2E6F40;
+  color: rgb(225, 249, 226);
+  border: none;
+  cursor: pointer;
+  transition: 
+    transform 0.4s ease, 
+    background-color 0.4s ease, 
+    box-shadow 0.4s ease, 
+    filter 0.4s ease;
+  transform-origin: center;
+}
+
+.livelocation-button:hover
+{
+  background-color: #4ca84c; 
+  transform: scale(1.05);    
+  box-shadow: 6px 6px 14px #1f512b; 
+}
+
+.stoplivelocation-button
+{
+  font-weight: bold;
+  border-radius: 20px;
+  padding: 5px 70px;
+  margin: 0;
+  background-color: #717170;
+  box-shadow: 4px 4px 10px #444444;
+  color: rgb(201, 204, 201);
+  border: none;
+}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+    <link href="login-style.css" rel="stylesheet">
+</head>
+<body class="split-screen-body">
+    <div class="split-container">
+        <!-- Left Side - Registration Form -->
+        <div class="split-left-form">
+            <div class="form-card">
+                <form id="registrationForm" class="auth-form">
+                    <div class="form-group">
+                        <input type="text" id="username" name="username" placeholder="Username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="email" id="email" name="email" placeholder="Email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="password" id="password" name="password" placeholder="Password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <select id="role" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="commuter">Commuter</option>
+                            <option value="driver">Driver</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="auth-btn">Sign up</button>
+
+                    <div class="form-footer">
+                        <span class="footer-text">Already have an account? <a href="Log-in.html" class="link-text-bold">Sign in here</a></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side - Green Curved Background -->
+        <div class="split-right-green">
+            <h1 class="welcome-text">Join with us</h1>
+        </div>
+    </div>
+</body>
+</html>
