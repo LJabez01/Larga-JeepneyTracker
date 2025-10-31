@@ -169,31 +169,44 @@ nav
 }
 
 /*Log-out Button*/
-.controls ul .logout-button 
+.controls ul .main-menu 
 {
-  margin-left: 5px;
+  margin-left: 0;
 }
 
-.controls ul .logout-button a 
+.controls ul .main-menu a 
 {
-  background-color: #29552e99;
-  color: white;
-  box-shadow: 5px 5px 10px hsl(135, 48%, 16%);
-  font-size: 12px
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: #000000;
+  padding: 10px;
+  background-color: white;
+  border-radius: 25px;
+  box-shadow: 4px 4px 10px #2E6F40;
   display: inline-block; 
-  transition: transform 0.3s ease, background-color 0.3s ease;
+  transition: 
+    transform 0.4s ease, 
+    background-color 0.4s ease;
+    color: 0.4 ease;
+    box-shadow: 0.4 ease;
 }
 
-.controls ul .logout-button i
+.controls ul .main-menu i
 {
-  color: white;
+  color: rgb(0, 0, 0);
 }
 
-.controls ul .logout-button a:hover 
+.controls ul .main-menu a:hover 
 {
   color: #ffffff;
-  background-color: #a72e2ecc ;
+  background-color: #26a138b4 ;
   transform: scale(1.1);
+  box-shadow: 6px 6px 14px #1f512b;
+}
+
+.controls ul .main-menu a:hover i {
+  color: #ffffff;
 }
 
 
@@ -217,7 +230,8 @@ nav
   background-color: #6fd16f97;
   border: none;
   color: rgb(40, 88, 46);
-  padding: 10px 75px;
+  width: 23%;
+  padding: 10px;
   border-radius: 20px;
   font-weight: bold;
   cursor: pointer;
@@ -259,7 +273,7 @@ nav
   position: absolute;
   top: 140px;       
   right: 40px;      
-  width: 330px;
+  width: 20%;
   max-width: 90vw; 
   height: 60vh;
   background-color: #6fd16f8b;
@@ -285,8 +299,8 @@ nav
 {
   font-size: 10px;
   background-color: rgb(255, 255, 255);
-  padding: 10px 20px;
-  width: 250px;
+  padding: 10px 28px;
+  width: 100%;
   border-radius: 20px;
   text-align: center;
   margin: 5px;
@@ -298,8 +312,8 @@ nav
   background-color: rgb(255, 255, 255);
   border-radius: 15px;
   padding: 20px;
-  height: 150px;
-  width: 250px;
+  height: 33%;
+  width: 80%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -340,8 +354,8 @@ nav
   border-radius: 15px;
   margin: 50px 0px 20px ;
   padding: 20px;
-  height: 80px;
-  width: 250px;
+  height: 50%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -379,7 +393,8 @@ nav
 {
   font-weight: bold;
   border-radius: 20px;
-  padding: 5px 90px;
+  width: 70%;
+  padding: 5px;
   margin: 0;
   background-color: #407736;
   box-shadow: 4px 4px 10px #2E6F40;
@@ -549,4 +564,112 @@ nav
   box-shadow: 4px 4px 10px #444444;
   color: rgb(201, 204, 201);
   border: none;
+}
+
+@media (max-width: 600px) 
+{
+  .logo-text,
+  .menu-text 
+  {
+    display: none;
+  }
+
+  .logo
+  {
+    margin-left: 20px;
+
+  }
+
+  .logo img 
+  {
+    width: 35px;
+    height: 30px;
+    border-radius: 5px;
+  }
+
+  .controls
+  {
+    margin-right: 10px;
+  }
+
+  .search-bar 
+  {
+    padding: 10px 25px;
+    border: none;
+    width: 80px;
+    margin-right: -6px;
+    font-size: 8px;
+    box-shadow: 1px 4px 7px #1f512b;
+  }
+
+  .search-icon 
+  {
+    font-size: 10px;
+  }
+
+  .controls a
+  {
+    font-size: 8px;
+    padding: 10px 8px;
+    width: 80%;
+    box-shadow: 1px 4px 7px #1f512b;
+  }
+
+  .controls a i 
+  {
+    margin-right: 3px;     
+    font-size: 7px;      
+  }
+
+  .controls ul 
+  {
+    gap: 11px;
+  }
+
+  .controls ul .main-menu a 
+  {
+    padding: 7px 10px;          
+    width: auto;
+    border-radius: 40px;
+    
+  }
+
+  .controls ul .main-menu i 
+  {
+    font-size: 13px;
+    margin-right: 0;
+    padding: 0;      
+  }
+  
+  .controls a.active 
+  {
+    box-shadow: 1px 4px 7px #1f512b;
+  }
+
+  .addwaitingarea-button 
+  {        
+    width: 85%;
+    height: 5vh;
+    bottom: 520px;
+    left: 35px;
+    right: auto;    
+    top: auto;
+    box-shadow: 1px 2px 7px #1f512b;
+  }
+
+  .commuters-info
+  {
+    width: 75%;
+    height: 50vh;
+    bottom: 20px;
+    left: 36px;
+    right: auto;    
+    top: auto;
+    box-shadow: 1px 2px 7px #1f512b;
+  }
+
+  .leaflet-control-zoom 
+  {
+    display: none !important;   
+  }
 }
