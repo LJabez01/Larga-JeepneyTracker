@@ -1,4 +1,3 @@
-
 /* Split Screen Login/Registration Styles */
 
 .split-screen-body 
@@ -32,18 +31,19 @@
 .split-right 
 {
     flex: 1;
-    background: #f5f5f5;
+    background-color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40px;
+
 }
 
 /* Registration Page - Green on Right */
 .split-left-form 
 {
     flex: 1;
-    background: #f5f5f5;
+    background-color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -80,29 +80,17 @@
     max-width: 400px;
 }
 
-.login-button
+.auth-form 
 {
     display: flex;
-    justify-content: center;
-    background-color: #4a9d4a;
-    margin: 10px;
-    padding: 10px 10px;
-    border-radius: 10px;
-}
-
-.login-button a
-{
-    font-weight: bold;
-    text-decoration: none;
-    color: white;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .form-group 
 {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-bottom: 14px;
 }
 
 .form-group input,
@@ -191,4 +179,56 @@
 {
     color: #4a9d4a;
     text-decoration: underline;
+}
+
+/* Terms and Agreement Styling */
+.terms-group 
+{
+    margin: 10px 0;
+}
+
+.terms-label 
+{
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.terms-label input[type="checkbox"] 
+{
+    margin-top: 3px;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.terms-label span 
+{
+    flex: 1;
+}
+
+.terms-link 
+{
+    color: #5cb85c;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.terms-link:hover 
+{
+    color: #4a9d4a;
+    text-decoration: underline;
+}
+
+body
+{
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Poppins', 'Montserrat';
 }

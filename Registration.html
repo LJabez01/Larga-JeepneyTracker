@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- KUPAL KA BA BOI!!!-->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registration Form</title>
     <link href="login-style.css" rel="stylesheet">
+
+
 </head>
 <body class="split-screen-body">
     <div class="split-container">
@@ -36,6 +37,42 @@
                             <option value="driver">Driver</option>
                         </select>
                     </div>
+
+                    <!-- Commuter-Specific Fields -->
+                    <div id="commuterFields" style="display: none;">
+                        <div class="form-group">
+                            <input type="text" id="identityDocument" name="identityDocument" placeholder="Identity Document (ID Number)">
+                        </div><br>
+
+                        <div class="form-group">
+                            <label for="commuterIdUpload" class="upload-label">Upload ID Document</label>
+                            <input type="file" id="commuterIdUpload" name="commuterIdUpload" accept="image/*,.pdf">
+                        </div>
+                    </div>
+
+                    <!-- Driver-Specific Fields -->
+                    <div id="driverFields" style="display: none;">
+                        <div class="form-group">
+                            <input type="text" id="plateNumber" name="plateNumber" placeholder="Plate Number (Required)">
+                        </div><br>
+
+                        <div class="form-group">
+                            <input type="text" id="licenseNumber" name="licenseNumber" placeholder="License Number (Optional)">
+                        </div><br>
+
+                        <div class="form-group">
+                            <label for="driverLicenseUpload" class="upload-label">Upload Driver's License</label>
+                            <input type="file" id="driverLicenseUpload" name="driverLicenseUpload" accept="image/*,.pdf">
+                        </div>
+                    </div>
+                    
+                    <!-- Terms and Agreement -->
+                    <div class="terms-group">
+                        <label class="terms-label">
+                            <input type="checkbox" id="termsCheckbox" name="terms" required>
+                            <span>I agree to the <a href="#" class="terms-link">Terms and Conditions</a> and <a href="#" class="terms-link">Privacy Policy</a>. I understand that my data will be collected and used in accordance with these policies.</span>
+                        </label>
+                    </div>
                     
                     <button type="submit" class="auth-btn">Sign up</button>
 
@@ -50,6 +87,44 @@
         <div class="split-right-green">
             <h1 class="welcome-text">Join with us</h1>
         </div>
-    </div>
+    </div> <!-- .split-container -->
+
+    <script>
+        // Show/hide fields based on role selection (safe checks to avoid runtime errors)
+        (function() {
+            const roleSelect = document.getElementById('role');
+
+            function updateRoleFields() {
+                const role = roleSelect ? roleSelect.value : '';
+                const commuterFields = document.getElementById('commuterFields');
+                const driverFields = document.getElementById('driverFields');
+                const identityDocument = document.getElementById('identityDocument');
+                const plateNumber = document.getElementById('plateNumber');
+
+                // Hide both by default
+                if (commuterFields) commuterFields.style.display = 'none';
+                if (driverFields) driverFields.style.display = 'none';
+
+                // Clear required attribute
+                if (identityDocument) identityDocument.removeAttribute('required');
+                if (plateNumber) plateNumber.removeAttribute('required');
+
+                // Show relevant fields and set required
+                if (role === 'commuter') {
+                    if (commuterFields) commuterFields.style.display = 'block';
+                    if (identityDocument) identityDocument.setAttribute('required', 'required');
+                } else if (role === 'driver') {
+                    if (driverFields) driverFields.style.display = 'block';
+                    if (plateNumber) plateNumber.setAttribute('required', 'required');
+                }
+            }
+
+            if (roleSelect) {
+                roleSelect.addEventListener('change', updateRoleFields);
+                document.addEventListener('DOMContentLoaded', updateRoleFields);
+                updateRoleFields();
+            }
+        })();
+    </script>
 </body>
 </html>
