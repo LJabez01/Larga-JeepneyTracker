@@ -289,18 +289,21 @@ nav
 /* Waiting area location - Section */
 .waiting-area-section
 {
-  align-self: stretch;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
 }
 
 .waiting-area-section p
 {
-  text-align: center;
   font-size: 10px;
   background-color: rgb(255, 255, 255);
-  padding: 10px;
+  padding: 10px 20px;
+  width: 250px;
   border-radius: 20px;
-  margin: 10px;
+  text-align: center;
+  margin: 5px;
 }
 
 /* Vehicle Information Section */
@@ -309,8 +312,8 @@ nav
   background-color: rgb(255, 255, 255);
   border-radius: 15px;
   padding: 20px;
-  height: 33%;
-  width: 80%;
+  height: 150px;
+  width: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -344,15 +347,16 @@ nav
   font-size: 12px;
 }
 
+
 /* Arrival Information Section */
 .arrival-info
 {
   background-color: rgb(255, 255, 255);
   border-radius: 15px;
-  margin: 25px 0px 10px ;
+  margin: 50px 0px 20px ;
   padding: 20px;
-  height: 55%;
-  width: 100%;
+  height: 80px;
+  width: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -384,6 +388,7 @@ nav
   font-size: 13px;
   margin: 0;
 }
+
 
 /* Set Nofication Button - Commuters */
 .commuter-button
@@ -916,4 +921,109 @@ nav
   {
     margin: 25px 0 10px 0;
   }
+
 }
+
+/* Hide Leaflet Routing Machine UI (routing instructions panel) - global */
+.leaflet-routing-container,
+.leaflet-routing-machine,
+.leaflet-routing-alt
+{
+  display: none !important;
+}
+
+/* Popup styling for small-panel look (used with className: 'small-popup') */
+.leaflet-popup.small-popup .leaflet-popup-content-wrapper {
+  max-width: 320px;               /* slightly wider to avoid cramped wrapping */
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(111, 209, 111, 0.65);
+  box-shadow: 6px 8px 18px rgba(46,111,64,0.35);
+}
+.leaflet-popup.small-popup .leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  color: #0b2d12;
+  line-height: 1.4;
+}
+
+.leaflet-popup.small-popup .commuters-info {
+  position: static;
+  width: 280px;
+  max-width: 100%;
+  height: auto;
+  background: transparent; /* wrapper already provides background */
+  box-shadow: none;
+  padding: 0;
+}
+
+.leaflet-popup.small-popup .waiting-area-section {
+  display: block;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.leaflet-popup.small-popup .waiting-area-section p {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.leaflet-popup.small-popup .vehicle-info {
+  background-color: white;
+  border-radius: 10px;
+  padding: 12px;
+  height: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+.leaflet-popup.small-popup .vehicle-info h3 { font-size: 15px; margin: 6px 0 10px 0; }
+
+/* Make information lines align: label fixed width, value flexible */
+.leaflet-popup.small-popup .information-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 6px 0;
+}
+.leaflet-popup.small-popup .information-line span:first-child {
+  flex: 0 0 80px;
+  font-weight: 600;
+}
+.leaflet-popup.small-popup .information-line span:last-child {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.leaflet-popup.small-popup .vehicle-status { margin-left: auto; }
+
+.leaflet-popup.small-popup .arrival-info {
+  margin: 12px 0;
+  padding: 10px;
+  background: #ffffff;
+  border-radius: 10px;
+  text-align: center;
+}
+.leaflet-popup.small-popup .arrival-time { display: inline-block; padding: 6px 14px; border-radius: 18px; background: #1e6b35; color: #fff; font-weight:700; }
+
+.leaflet-popup.small-popup .distance { margin-top: 8px; }
+
+.leaflet-popup.small-popup .set-notifications-button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 8px;
+  font-size: 14px;
+  border-radius: 10px;
+  background-color: #2e6f40;
+  color: #e1f9e2;
+  box-shadow: 3px 3px 8px rgba(46,111,64,0.25);
+  border: none;
+  cursor: pointer;
+}
+.leaflet-popup.small-popup .set-notifications-button:hover { background-color: #3b8a49; }
+
+/* Ensure popups render above markers and reduce odd vertical spacing */
+.leaflet-popup { z-index: 10000 !important; }
+.leaflet-popup .leaflet-popup-content-wrapper { margin-top: 0; }
+.leaflet-popup-tip { margin-top: 0; }
+

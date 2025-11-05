@@ -6,10 +6,16 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
+    <!-- Added: styles for passenger map icon (divIcon). Keeps icon crisp and tappable -->
+    <style>
+        .passenger-divicon svg { display: block; pointer-events: none; }
+        .passenger-divicon { line-height: 0; }
+    </style>
     <title>Document</title>
 </head>
 <body>
@@ -97,12 +103,65 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin="">
     </script>
+    <!-- Leaflet Routing Machine JS (required for L.Routing.control) -->
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
     <script>
+        // Initialize Leaflet map
         const map = L.map('map').setView([14.831426, 120.976661], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
         map.zoomControl.setPosition('bottomleft');
+
+        // Passenger icon
+        var PassengerIcon = L.icon({
+            iconUrl: 'https://image2url.com/images/1762271241467-09178dbf-94d7-4a82-88f4-4ee7626f1570.png',
+            iconSize: [55, 55],
+            iconAnchor: [25, 55],
+            popupAnchor: [0, -46]
+        });
+
+        // Add commuter marker with custom icon
+    var commuterMarker = L.marker([14.831341439952697, 120.97348565571966],
+     { icon: PassengerIcon, title: 'Passenger' }).addTo(map);
+
+
+        // Simple custom icon for the jeepney marker (falls back to default if file missing)
+                var jeepneyIcon = L.icon({
+                    iconUrl: 'https://image2url.com/images/1761748252176-39f2cd27-02a7-4b73-b140-6171e24e62be.png',
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 36],
+                    // lift the popup a bit higher so it doesn't overlap the icon
+                    popupAnchor: [0, -46]
+                });
+
+                // Route Sta Maria - Guyong - Caypombo - Pulong Buhangin
+            var waypoints = [
+                L.latLng(14.821865560449373, 120.96157688030809), // Sta Maria - Starting point
+                L.latLng(14.831341439952697, 120.97348565571966), // Dulong
+                L.latLng(14.87136358444958, 121.00656357695095)  // Pulong Buhangin - Endpoint
+            ];
+        // Create the routing control (this replaces your polyline)
+        var routingControl = L.Routing.control({
+            waypoints: waypoints,
+            routeWhileDragging: false,  // Disable dragging to keep it static
+            addWaypoints: false,        // Prevent users from adding/removing waypoints
+                createMarker: function(i, waypoint, n) {
+                // Custom marker only at the start (index 0)
+                if (i === 0) {
+                    var marker = L.marker(waypoint.latLng, { icon: jeepneyIcon });
+                    // Icon-only marker per user request: do not bind popups or popup handlers here.
+                    return marker;
+                }
+                return null;  // No markers for intermediate waypoints
+            },
+            lineOptions: {
+                styles: [{ color: 'green', weight: 4 }]  /* Lines of route */
+            },
+            router: L.Routing.osrmv1({  
+            })
+        }).addTo(map);
     </script>
 </body>
 </html>
