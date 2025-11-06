@@ -15,45 +15,7 @@
     <title>Document</title>
 </head>
 <body>
-    <!-- Added: bubble styles and container (HTML/CSS for the on-page jeepney message) -->
-    <style>
-        /* Bubble message shown when a jeepney marker is clicked */
-        /* Simple CSS added for the floating bubble (position, colors, and animation) */
-        #jeepney-bubble {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: rgba(0,0,0,0.86);
-            color: #fff;
-            padding: 10px 14px;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-            display: none; /* hidden by default */
-            z-index: 10000;
-            max-width: 300px;
-            font-family: Poppins, Arial, sans-serif;
-            font-size: 14px;
-        }
-        /* 'show' class toggles visibility and plays a small fade animation */
-        #jeepney-bubble.show {
-            display: block;
-            animation: jb-fade 240ms ease-out;
-        }
-        /* Close button style (small × to dismiss) */
-        #jeepney-bubble .jb-close {
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: 16px;
-            line-height: 1;
-            float: right;
-            cursor: pointer;
-        }
-        @keyframes jb-fade { from { opacity: 0; transform: translateY(-6px);} to { opacity:1; transform: translateY(0);} }
-    </style>
-
-    <!-- Added: bubble container for showing a small message when a jeepney icon is clicked -->
-    <div id="jeepney-bubble" role="status" aria-live="polite"></div>
+        <div id="jeepney-bubble" role="status" aria-live="polite"></div>
 
     <!--Navigation Bar-->
     <nav>
@@ -125,7 +87,7 @@
             <div class="leaflet-map" id="map"></div>
 
             <!--Part of the website that shows all of the information-->
-            <button class="addwaitingarea-button"><i class="bi bi-plus-circle-fill"></i>Add a mark in your waiting area</button>
+            <!-- 'Add a mark in your waiting area' button removed as requested -->
 
             <!-- commuters-info panel removed from page; using popup template instead -->
 

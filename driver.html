@@ -11,11 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
-    <!-- Added: styles for passenger map icon (divIcon). Keeps icon crisp and tappable -->
-    <style>
-        .passenger-divicon svg { display: block; pointer-events: none; }
-        .passenger-divicon { line-height: 0; }
-    </style>
+    <!-- Styles moved to style.css for maintainability -->
     <title>Document</title>
 </head>
 <body>
@@ -62,41 +58,68 @@
     <div class="leaflet-map" id="map"></div>
 
     <!--Part of the website that shows most of the information-->
-    <button class="selectroute-button"><i class="bi bi-plus-circle-fill"></i>Please select your route.</button>
 
-    <div class="drivers-info">
-        <div class="driver-header">
-            <h5>Kenzhin Lester Lander Frank</h5>
-            <p>JEEP SMB-123</p>
-        </div>
+    <!-- Backdrop shown when the drivers panel is open. Clicking it will close the panel. -->
+    <div id="panel-backdrop"></div>
+
+    <div class="drivers-info" id="drivers-info">
+        <button class="panel-close-small" id="drivers-info-close" aria-label="Close">×</button>
+    <!-- select-route pill removed -->
 
         <div class="driverstatus-info">
-            <h3>Live Tracking Status:</h3>
-            <div class="information-line">
-                <span>Status:</span>
-                <span class="vehicle-status">Standby</span>
+
+            <div class="route-select" aria-label="Route selection">
+                <!-- Left icon column and stacked route inputs (matches provided screenshot) -->
+                <div class="route-input">
+                    <div class="route-icons" aria-hidden="true">
+                        <i class="bi bi-record-circle start-icon" title="Start"></i>
+                        <i class="bi bi-geo-alt-fill dest-icon" title="Destination"></i>
+                    </div>
+
+                    <div class="route-fields">
+                        <div class="route-field start-field" tabindex="0" data-type="start">
+                            <input readonly class="route-text start-input" aria-label="Starting point">
+                        </div>
+
+                        <div class="route-field dest-field" tabindex="0" data-type="dest">
+                            <input readonly class="route-text dest-input" aria-label="Destination">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="route-picker" aria-hidden="true" style="display:none">
+                    <ul class="route-options">
+                        <li class="route-option">Angat</li>
+                        <li class="route-option">Monumento</li>
+                        <li class="route-option">Sta Maria</li>
+                        <li class="route-option">Pulong Buhangin</li>
+                        <li class="route-option">Norzagaray</li>
+                    </ul>
+                </div>
             </div>
-            <div class="information-line">
-                <span>Speed:</span>
-                <span>20km/hour</span>
-            </div>
-            <div class="information-line">
-                <span>Route:</span>
-                <span>Angat - Monumento</span>
-            </div>
-            <div class="information-line">
-                <span>Distance Covered:</span>
-                <span>12.69 KM</span>
-            </div>
-            <div class="information-line">
-                <span>ETA at Destination:</span>
-                <span>1 Hour</span>
+
+            <!-- status removed per request -->
+
+        
+            <div class="recent-routes">
+                <h4>Recent routes</h4>
+                <ul class="recent-list">
+                    <li class="recent-item">Angat - Monumento</li>
+                    <li class="recent-item">Sta Maria - Pulong Buhangin</li>
+                    <li class="recent-item active">Norzagaray - Divisoria</li>
+                </ul>
             </div>
         </div>
 
-        <button class="livelocation-button">Start Showing Location</button>
-        <button class="stoplivelocation-button">Stop Showing Location</button>
+        <div class="driver-buttons">
+            <button id="trip-toggle" class="start-trip-button">Start Trip</button>
+        </div>
+        
+        </div>
     </div>
+
+    <!-- Bottom-center handle button to toggle the drivers-info panel -->
+    <button id="panel-handle-button" aria-label="Open panel" title="Open panel"></button>
 
     <!--Script for the leaflet map-->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
@@ -112,19 +135,75 @@
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
+        // Wire drivers-info close control and the bottom-center handle behavior
+        (function(){
+            function update(state){
+                var btn = document.getElementById('panel-handle-button');
+                var backdropEl = document.getElementById('panel-backdrop');
+                var panelEl = document.getElementById('drivers-info');
+                if(!btn) return;
+                if(state){
+                    // opening: remove forced inline hiding so CSS animation can run
+                    if(panelEl){
+                        panelEl.style.removeProperty('transform');
+                        panelEl.style.removeProperty('visibility');
+                        panelEl.style.removeProperty('pointer-events');
+                        panelEl.classList.add('open');
+                    }
+                    btn.classList.add('open'); btn.setAttribute('title','Close panel');
+                    if(backdropEl) backdropEl.classList.add('visible');
+                } else {
+                    // closing: force-hidden via inline !important to avoid any overrides from other stylesheets
+                    if(panelEl){
+                        panelEl.classList.remove('open');
+                        panelEl.style.setProperty('transform', 'translate(-50%, 110%)', 'important');
+                        panelEl.style.setProperty('visibility', 'hidden', 'important');
+                        panelEl.style.setProperty('pointer-events', 'none', 'important');
+                    }
+                    btn.classList.remove('open'); btn.setAttribute('title','Open panel');
+                    if(backdropEl) backdropEl.classList.remove('visible');
+                }
+            }
+            // expose so marker handlers can call it
+            window.updatePanelHandle = update;
+            // start closed — ensure panel and backdrop are definitely hidden on load
+            update(false);
+
+            var backdrop = document.getElementById('panel-backdrop');
+            var closeBtn = document.getElementById('drivers-info-close');
+            if(closeBtn){ closeBtn.addEventListener('click', function(){
+                var panel = document.getElementById('drivers-info'); if(panel) panel.classList.remove('open');
+                // hide backdrop and update handle
+                update(false);
+            }); }
+
+            // Clicking the backdrop should close the panel as well
+            if(backdrop){ backdrop.addEventListener('click', function(){
+                var panel = document.getElementById('drivers-info'); if(panel) panel.classList.remove('open');
+                update(false);
+            }); }
+
+            var handleBtn = document.getElementById('panel-handle-button');
+            if(handleBtn){
+                handleBtn.addEventListener('click', function(){
+                    var panel = document.getElementById('drivers-info'); if(!panel) return;
+                    var opening = !panel.classList.contains('open');
+                    if(opening) panel.classList.add('open'); else panel.classList.remove('open');
+                    update(opening);
+                });
+            }
+        })();
         map.zoomControl.setPosition('bottomleft');
 
         // Passenger icon
         var PassengerIcon = L.icon({
             iconUrl: 'https://image2url.com/images/1762271241467-09178dbf-94d7-4a82-88f4-4ee7626f1570.png',
-            iconSize: [55, 55],
-            iconAnchor: [25, 55],
+            iconSize: [50, 50],
+            iconAnchor: [25, 40],
             popupAnchor: [0, -46]
         });
 
-        // Add commuter marker with custom icon
-    var commuterMarker = L.marker([14.831341439952697, 120.97348565571966],
-     { icon: PassengerIcon, title: 'Passenger' }).addTo(map);
+    var commuterMarker = L.marker([14.831341439952697, 120.97348565571966], { icon: PassengerIcon, title: 'Passenger' }).addTo(map);
 
 
         // Simple custom icon for the jeepney marker (falls back to default if file missing)
@@ -149,11 +228,10 @@
             addWaypoints: false,        // Prevent users from adding/removing waypoints
                 createMarker: function(i, waypoint, n) {
                 // Custom marker only at the start (index 0)
-                if (i === 0) {
-                    var marker = L.marker(waypoint.latLng, { icon: jeepneyIcon });
-                    // Icon-only marker per user request: do not bind popups or popup handlers here.
-                    return marker;
-                }
+        if (i === 0) {
+            var marker = L.marker(waypoint.latLng, { icon: jeepneyIcon });
+            return marker;
+        }
                 return null;  // No markers for intermediate waypoints
             },
             lineOptions: {
@@ -162,6 +240,141 @@
             router: L.Routing.osrmv1({  
             })
         }).addTo(map);
+
+        // --- Driver UI interactions: start/destination selection, recent routes, and trip toggle ---
+        (function(){
+            var startInput = document.querySelector('.start-input');
+            var destInput = document.querySelector('.dest-input');
+            var routePicker = document.querySelector('.route-picker');
+            var routeOptions = document.querySelectorAll('.route-option');
+            var recentList = document.querySelector('.recent-list');
+            var tripToggle = document.getElementById('trip-toggle');
+            var currentRouteEl = document.querySelector('.current-route');
+
+            function updateTripToggleState(){
+                if(!tripToggle) return;
+                var ok = startInput && startInput.value.trim() && destInput && destInput.value.trim();
+                tripToggle.disabled = !ok;
+                if(!ok){ tripToggle.classList.add('disabled'); } else { tripToggle.classList.remove('disabled'); }
+            }
+
+            function setCurrentRouteCombined(){
+                var s = startInput ? startInput.value.trim() : '';
+                var d = destInput ? destInput.value.trim() : '';
+                var combined = (s && d) ? (s + ' - ' + d) : '—';
+                if(currentRouteEl) currentRouteEl.textContent = combined;
+                return combined;
+            }
+
+            function pushRecentRoute(name){
+                if(!recentList) return;
+                // remove existing matching
+                Array.from(recentList.children).forEach(function(li){ if(li.textContent.trim()===name) li.remove(); });
+                var li = document.createElement('li'); li.className='recent-item active'; li.textContent = name;
+                // clear active from others
+                Array.from(recentList.children).forEach(function(n){ n.classList.remove('active'); });
+                recentList.insertBefore(li, recentList.firstChild);
+                while(recentList.children.length>5) recentList.removeChild(recentList.lastChild);
+            }
+
+            // show/hide picker
+            function showPicker(targetType, anchorEl){
+                if(!routePicker) return;
+                routePicker.style.display = 'block';
+                routePicker.setAttribute('data-target', targetType);
+                routePicker.style.opacity = 0; routePicker.style.transition = 'opacity 180ms ease';
+                requestAnimationFrame(function(){ routePicker.style.opacity = 1; });
+                // position under the anchor
+                if(anchorEl){
+                    var rect = anchorEl.getBoundingClientRect();
+                    routePicker.style.position = 'absolute';
+                    routePicker.style.left = (rect.left) + 'px';
+                    routePicker.style.top = (rect.bottom + 6) + 'px';
+                    routePicker.style.zIndex = 13001;
+                }
+            }
+            function hidePicker(){ if(!routePicker) return; routePicker.style.display = 'none'; routePicker.removeAttribute('data-target'); }
+
+            // wire clicking the start/dest fields to open picker
+            document.addEventListener('click', function(ev){
+                var field = ev.target.closest('.route-field');
+                if(field){
+                    ev.preventDefault();
+                    var type = field.getAttribute('data-type');
+                    showPicker(type, field);
+                    return;
+                }
+                // click outside -> hide
+                if(!ev.target.closest('.route-picker')) hidePicker();
+            });
+
+            // select option from picker
+            if(routeOptions){
+                routeOptions.forEach(function(op){
+                    op.addEventListener('click', function(){
+                        var target = routePicker ? routePicker.getAttribute('data-target') : null;
+                        var name = op.textContent.trim();
+                        if(target==='start' && startInput){ startInput.value = name; }
+                        if(target==='dest' && destInput){ destInput.value = name; }
+                        hidePicker();
+                        var combined = setCurrentRouteCombined();
+                        if(combined && combined!=='—') pushRecentRoute(combined);
+                        updateTripToggleState();
+                    });
+                });
+            }
+
+            // recent list click: set both inputs if possible (expects 'Start - Dest')
+            if(recentList){
+                recentList.addEventListener('click', function(e){
+                    var li = e.target.closest('.recent-item'); if(!li) return;
+                    var text = li.textContent.trim();
+                    var parts = text.split(' - ');
+                    if(parts.length>=2){ if(startInput) startInput.value = parts[0]; if(destInput) destInput.value = parts.slice(1).join(' - '); }
+                    // mark active
+                    Array.from(recentList.children).forEach(function(n){ n.classList.remove('active'); });
+                    li.classList.add('active');
+                    setCurrentRouteCombined(); updateTripToggleState();
+                });
+            }
+
+            // trip toggle
+            var tripActive = false;
+            if(tripToggle){
+                // initialize disabled state
+                updateTripToggleState();
+                tripToggle.addEventListener('click', function(){
+                    if(tripToggle.disabled) return;
+                    tripActive = !tripActive;
+                    if(tripActive){
+                        tripToggle.textContent = 'End Trip';
+                        tripToggle.classList.remove('start-trip-button');
+                        tripToggle.classList.add('end-trip-button');
+                        if(vehicleStatus) vehicleStatus.textContent = 'On Trip';
+                    } else {
+                        tripToggle.textContent = 'Start Trip';
+                        tripToggle.classList.remove('end-trip-button');
+                        tripToggle.classList.add('start-trip-button');
+                        if(vehicleStatus) vehicleStatus.textContent = 'Standby';
+                    }
+                });
+            }
+
+            // expose helper for other code if needed
+            window.setDriverRoute = function(start, dest){ if(startInput) startInput.value=start; if(destInput) destInput.value=dest; setCurrentRouteCombined(); pushRecentRoute(setCurrentRouteCombined()); updateTripToggleState(); };
+
+            // init: populate current route if recent active exists
+            (function init(){
+                var firstActive = document.querySelector('.recent-item.active');
+                if(firstActive){
+                    var txt = firstActive.textContent.trim();
+                    var parts = txt.split(' - ');
+                    if(parts.length>=2){ if(startInput) startInput.value=parts[0]; if(destInput) destInput.value=parts.slice(1).join(' - '); }
+                    setCurrentRouteCombined();
+                }
+                updateTripToggleState();
+            })();
+        })();
     </script>
 </body>
 </html>

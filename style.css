@@ -221,50 +221,642 @@ nav
   z-index: 0;
 }
 
-/* Add waiting area button - Commuter Section */
-.addwaitingarea-button 
+
+
+/* Drivers styles are defined by the slide-up block later in this file.
+   Removed older top-right panel rules to avoid conflicting/duplicate styles. */
+
+@media (max-width: 740px)
 {
-  position: absolute;
-  top: 90px;         
-  right: 40px;       
-  background-color: #6fd16f97;
-  border: none;
-  color: rgb(40, 88, 46);
-  width: 355px;
+  .logo-text,
+  .menu-text
+  {
+    display: none;
+  }
+
+
+  .logo
+  {
+    margin-left: 10px;
+
+
+  }
+
+
+  .logo img
+  {
+    width: 30px;
+    height: 25px;
+    border-radius: 6px;
+  }
+
+
+  .controls
+  {
+    margin-right: 10px;
+  }
+
+
+  .search-bar
+  {
+    padding: 10px 25px;
+    border: none;
+    width: 80px;
+    margin-right: -6px;
+    font-size: 8px;
+    box-shadow: 1px 4px 7px #1f512b;
+  }
+
+
+  .search-icon
+  {
+    font-size: 10px;
+  }
+
+
+  .controls a
+  {
+    font-size: 8px;
+    padding: 10px 8px;
+    width: 80%;
+    box-shadow: 1px 4px 7px #1f512b;
+  }
+  .controls {
+    gap: 10px;
+    margin-top: 16px;
+    align-items: center;
+  }
+
+  .controls a i {
+    margin-right: 3px;
+    font-size: 7px;
+  }
+
+ /* when buttons sit on the green backdrop (outside white card), make them narrower and centered */
+  .drivers-info > .driver-buttons {
+    width: 86%;
+    margin: 10px auto 0;
+  }
+
+
+  .controls ul
+  {
+    gap: 11px;
+  }
+
+
+  .controls ul .main-menu a
+  {
+    padding: 7px 10px;          
+    width: auto;
+    border-radius: 10px;
+   
+  }
+
+
+  .controls ul .main-menu i
+  {
+    font-size: 13px;
+    margin-right: 0;
+    padding: 0;      
+  }
+ 
+  .controls a.active
+  {
+    box-shadow: 1px 4px 7px #1f512b;
+  }
+
+  /* .addwaitingarea-button removed */
+
+
+
+  .commuters-info
+  {
+    width: 65%;
+    height: 54vh;
+    bottom: 2vh;
+    left: 15%;
+    right: auto;    
+    top: auto;
+    box-shadow: 1px 2px 7px #1f512b;
+  }
+
+  .selectroute-button
+  {
+    width: 73%;
+    height: 5vh;
+    bottom: 59vh;
+    left: 15%;
+    right: auto;    
+    top: auto;
+    box-shadow: 1px 2px 7px #1f512b;
+    margin-bottom: 11%;
+  }
+
+  .drivers-info
+  {
+    width: 65%;
+    height: 58vh;
+    bottom: 2vh;
+    left: 15%;
+    right: auto;    
+    top: auto;
+    box-shadow: 1px 2px 7px #1f512b;
+  }
+}
+
+@media (max-height: 800px) and (min-width: 740px) {
+  .commuters-info 
+  {
+    height: 390px;     
+  }
+
+  .selectroute-button
+  {
+    top: 13vh;
+  }
+
+  .drivers-info
+  {
+    top: 21vh;
+    height: 420px;     
+  }
+}
+
+
+@media (max-width: 450px)
+{
+
+
+
+  .commuters-info
+  {
+    width: 75%;
+    height: 44vh;
+    bottom: 2vh;
+    left: 8%;
+    right: auto;    
+    top: auto;
+  }
+
+  .selectroute-button
+  {
+    width: 85%;
+    padding: 10px 20px;
+    height: 4vh;
+    bottom: 52vh;
+    left: 8%;
+  }
+
+  .drivers-info
+  {
+    width: 75%;
+    height: 49vh;
+    bottom: 2vh;
+    left: 8%;
+    right: auto;    
+    top: auto;
+  }
+
+  .livelocation-button
+  {
+    padding: 5px 10px;
+    width: 92%;
+  }
+
+  .stoplivelocation-button
+  {
+    padding: 5px 10px;
+    width: 92%;
+  }
+
+  .arrival-info
+  {
+    margin: 20px 0px 10px 0px;
+  }
+
+
+  .leaflet-control-zoom
+  {
+    display: none !important;  
+  }
+}
+
+
+@media (max-width: 376px)
+{
+  .search-bar
+  {
+    width: 40px;
+  }
+
+
+  /* .addwaitingarea-button removed */
+
+
+
+  .commuters-info
+  {
+    width: 80%;
+    height: 55vh;
+    left: 5%;
+  }
+
+  .selectroute-button
+  {
+    bottom: 67vh;
+    height: 5vh;
+    width: 90%;
+    left: 5%;
+  }
+
+  .drivers-info
+  {
+    width: 80%;
+    height: 63vh;
+    left: 5%;
+  }
+
+  .arrival-info
+  {
+    margin: 10px 0 5px 0;
+  }
+
+}
+
+
+@media (max-width: 361px)
+{
+  
+  .commuters-info
+  {
+    width: 81%;
+    height: 52vh;
+    left: 4%;
+  }
+
+  .selectroute-button
+  {
+    bottom: 59vh;
+    width: 92%;
+    left: 4%;
+  }
+
+  .drivers-info
+  {
+    width: 81%;
+    height: 56vh;
+    left: 4%;
+  }
+
+  .arrival-info
+  {
+    margin: 25px 0 5px 0;
+  }
+}
+
+
+@media (max-width: 345px)
+{
+ 
+
+
+  .commuters-info
+  {
+    width: 85%;
+    height: 45vh;
+    left: 2%;
+  }
+
+  .selectroute-button
+  {
+    bottom: 52vh;
+    height: 5vh;
+    width: 92%;
+    left: 4%;
+  }
+
+  .drivers-info
+  {
+    width: 81%;
+    height: 48vh;
+    left: 4%;
+  }
+
+  .arrival-info
+  {
+    margin: 25px 0 10px 0;
+  }
+
+}
+
+/* Hide Leaflet Routing Machine UI (routing instructions panel) - global */
+.leaflet-routing-container,
+.leaflet-routing-machine,
+.leaflet-routing-alt
+{
+  display: none !important;
+}
+
+/* Popup styling for small-panel look (used with className: 'small-popup') */
+.leaflet-popup.small-popup .leaflet-popup-content-wrapper {
+  max-width: 320px;               /* slightly wider to avoid cramped wrapping */
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(111, 209, 111, 0.65);
+  box-shadow: 6px 8px 18px rgba(46,111,64,0.35);
+}
+.leaflet-popup.small-popup .leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  color: #0b2d12;
+  line-height: 1.4;
+}
+
+.leaflet-popup.small-popup .commuters-info {
+  position: static;
+  width: 280px;
+  max-width: 100%;
+  height: auto;
+  background: transparent; /* wrapper already provides background */
+  box-shadow: none;
+  padding: 0;
+}
+
+.leaflet-popup.small-popup .waiting-area-section {
+  display: block;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.leaflet-popup.small-popup .waiting-area-section p {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.leaflet-popup.small-popup .vehicle-info {
+  background-color: white;
+  border-radius: 10px;
+  padding: 12px;
+  height: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+.leaflet-popup.small-popup .vehicle-info h3 { font-size: 15px; margin: 6px 0 10px 0; }
+
+/* Make information lines align: label fixed width, value flexible */
+.leaflet-popup.small-popup .information-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 6px 0;
+}
+.leaflet-popup.small-popup .information-line span:first-child {
+  flex: 0 0 80px;
+  font-weight: 600;
+}
+.leaflet-popup.small-popup .information-line span:last-child {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.leaflet-popup.small-popup .vehicle-status { margin-left: auto; }
+
+.leaflet-popup.small-popup .arrival-info {
+  margin: 12px 0;
   padding: 10px;
-  border-radius: 20px;
-  font-weight: bold;
+  background: #ffffff;
+  border-radius: 10px;
+  text-align: center;
+}
+.leaflet-popup.small-popup .arrival-time { display: inline-block; padding: 6px 14px; border-radius: 18px; background: #1e6b35; color: #fff; font-weight:700; }
+
+.leaflet-popup.small-popup .distance { margin-top: 8px; }
+
+.leaflet-popup.small-popup .set-notifications-button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 8px;
+  font-size: 14px;
+  border-radius: 10px;
+  background-color: #2e6f40;
+  color: #e1f9e2;
+  box-shadow: 3px 3px 8px rgba(46,111,64,0.25);
+  border: none;
   cursor: pointer;
-  z-index: 1001;
-  box-shadow: 4px 4px 10px #2E6F40;
-  transition: 
-    transform 0.3s ease, 
-    background-color 0.3s ease, 
-    box-shadow 0.3s ease, 
-    color 0.3s ease;
-  transform-origin: center;
+}
+.leaflet-popup.small-popup .set-notifications-button:hover { background-color: #3b8a49; }
+
+/* Ensure popups render above markers and reduce odd vertical spacing */
+.leaflet-popup { z-index: 10000 !important; }
+.leaflet-popup .leaflet-popup-content-wrapper { margin-top: 0; }
+.leaflet-popup-tip { margin-top: 0; }
+
+/* --- styles moved from inline <style> blocks in driver.html and commuter.html --- */
+
+/* passenger map icon / drivers panel (moved from driver.html) */
+.passenger-divicon svg { display: block; pointer-events: none; }
+.passenger-divicon { line-height: 0; }
+
+/* Make .drivers-info appear as a slide-up panel from the bottom */
+.drivers-info{
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translate(-50%, 110%); /* hidden by default */
+  width: 640px; /* wider for better readability */
+  max-width: calc(100% - 48px);
+  min-height: 300px; /* ensure extra vertical space for stacked inputs */
+  /* stronger green backdrop for the drivers-info container to match the design */
+  background: rgba(111,209,111,0.92);
+  padding: 28px; /* more breathing room */
+  border-radius: 18px;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.22);
+  z-index: 12000; /* above map but below the handle */
+  /* animate both transform and bottom so the panel can stop above the handle */
+  transition: transform 320ms cubic-bezier(.2,.9,.3,1), bottom 320ms cubic-bezier(.2,.9,.3,1);
+}
+/* When open, lift the whole panel higher (so it sits above the handle/arrow) */
+.drivers-info.open{ bottom: 150px; transform: translateX(-50%); }
+
+/* inner white card and header styles (keeps existing markup intact) */
+.drivers-info .driver-header{ background:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:14px;box-shadow:0 8px 20px rgba(0,0,0,0.08) }
+.drivers-info .driver-header h5{ margin:0;color:#0b6b3b }
+.drivers-info .driver-header p{ margin:6px 0 0 0;color:#666 }
+
+.drivers-info .driverstatus-info{ background:#fff;padding:22px;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,0.08); max-width:560px; margin: 0 auto; overflow: visible }
+.drivers-info .driverstatus-info h3{ color:#0b6b3b;margin-top:0 }
+.drivers-info .information-line{ display:flex;justify-content:space-between;padding:8px 0;color:#333 }
+
+.drivers-info .livelocation-button, .drivers-info .stoplivelocation-button{
+  display:block;width:100%;padding:12px;border-radius:18px;border:0;color:#fff;cursor:pointer;margin-top:12px;text-align:center
+}
+.drivers-info .livelocation-button{ background:linear-gradient(#3b8a53,#2f7a44);box-shadow:0 6px 12px rgba(47,122,68,0.18) }
+.drivers-info .stoplivelocation-button{ background:linear-gradient(#9a9a9a,#7a7a7a);box-shadow:0 6px 12px rgba(121,121,121,0.14) }
+
+/* Route selection and recent routes UI (driver panel) */
+.route-select{ display:flex; gap:12px; width:100%; justify-content:flex-start; margin:6px 0 14px 0; position:relative; align-items:flex-start }
+.route-input{ display:block; position:relative; width:100%; }
+.route-icons{ position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display:flex; flex-direction:column; align-items:center; gap:12px; width:28px; padding:0; margin:0; }
+.route-icons .start-icon, .route-icons .dest-icon{ font-size:18px; display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:#fff; border-radius:50%; box-shadow:0 4px 10px rgba(0,0,0,0.06); }
+.route-fields{ flex:1; display:flex; flex-direction:column; gap:12px }
+/*
+  .route-field: left padding is intentionally larger so text sits to the right of
+  the absolutely-positioned icons. Keep box-sizing: border-box to avoid width surprises.
+*/
+.route-field{ display:flex; align-items:center; gap:8px; background:#f3f6f7; padding:14px 46px 14px 62px; border-radius:12px; width:100%; box-shadow:0 6px 14px rgba(0,0,0,0.06); cursor:pointer; position:relative; box-sizing: border-box; }
+
+.floating-label{
+  /* Floating label that sits over each input when empty.
+     - left matches .route-field padding-left so text aligns with input content.
+     - pointer-events:none keeps label from blocking clicks inside the field.
+  */
+  position: absolute;
+  left: 62px; /* matches .route-field padding-left */
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(0,0,0,0.5);
+  font-weight: 600;
+  pointer-events: none;
+  font-size: 16px;
+  z-index: 2;
+  transition: transform 180ms ease, font-size 180ms ease, color 180ms ease;
 }
 
-.addwaitingarea-button:hover 
-{
-  background-color: #4ca84c; 
-  color: white;              
-  transform: scale(1.05);    
-  box-shadow: 2px 2px 14px #1f512b; 
-  filter: brightness(1.05);  
+/* When the field has a value (or focused), float the label up and reduce size */
+.route-field.has-value .floating-label,
+.route-field:focus-within .floating-label{
+  transform: translateY(-140%);
+  font-size: 12px;
+  color: #1e6b35;
 }
 
-.addwaitingarea-button i 
-{
-  margin-right: 5px;
-  transition: transform 0.3s ease, color 0.3s ease;
+@media (max-width: 740px){
+  .floating-label{ left: 54px; font-size: 14px; }
+  .route-field.has-value .floating-label,
+  .route-field:focus-within .floating-label{ transform: translateY(-140%); font-size: 11px; }
 }
+.route-field i{ font-size:18px }
+.route-text{ border:0; outline:none; background:transparent; font-weight:600; color:#234927; width:100%; font-size:16px }
+.route-picker{ background:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.14); padding:8px; }
+.route-options{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px }
+.route-option{ padding:10px 12px; border-radius:8px; cursor:pointer; color:#234927; font-size:15px }
+.route-option:hover{ background: rgba(47,122,68,0.06) }
 
-.addwaitingarea-button:hover i 
-{
-  transform: scale(1.2); 
-  color: white;           
+/* Right-side search icon inside each input */
+.route-field .input-search{ position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: rgba(0,0,0,0.45); font-size: 18px }
+.route-field .route-text{ background: transparent; border: 0; padding: 0; cursor: pointer }
+.route-field.start-field .start-icon{ color: #1e90ff } /* blue circle */
+.route-field.dest-field .dest-icon{ color: #e74c3c } /* red pin */
+.start-icon{ color:#1e90ff }
+.dest-icon{ color:#e74c3c }
+
+
+.recent-routes{ width:100%; margin-top:14px }
+.recent-routes h4{ font-size:14px; color:#0b6b3b; margin:6px 0 }
+.recent-list{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px }
+.recent-item{ background:#fff; padding:10px 14px; border-radius:12px; box-shadow: 0 8px 18px rgba(0,0,0,0.06); cursor:pointer; font-size:14px; color:#2f7a44 }
+.recent-item.active{ border: 2px solid rgba(47,122,68,0.12); background: linear-gradient(180deg,#dff2e0,#f6fff5); font-weight:700 }
+
+/* Place the trip button on the green backdrop and center it */
+.drivers-info .driver-buttons{ display:flex; justify-content:center; margin-top:18px }
+.drivers-info #trip-toggle{ width:92%; padding:14px 20px; border-radius:28px; font-size:16px; font-weight:800 }
+.drivers-info .start-trip-button{ background: linear-gradient(180deg,#2f7a44,#1e6b35); color:#fff; box-shadow: 0 10px 24px rgba(30,107,53,0.18) }
+.drivers-info .end-trip-button{ background: linear-gradient(180deg,#9a9a9a,#7a7a7a); color:#fff; box-shadow: 0 10px 24px rgba(0,0,0,0.14) }
+
+/* Compact information-line variant for smaller labels */
+.driverstatus-info .information-line.small span:first-child{ flex:0 0 36%; font-weight:600 }
+
+/* Single trip toggle button styles */
+#trip-toggle{ width:100%; padding:12px 18px; border-radius:20px; border:0; font-weight:800; cursor:pointer }
+.start-trip-button{ background: linear-gradient(180deg,#3b8a53,#2f7a44); color:#fff; box-shadow: 0 8px 18px rgba(47,122,68,0.18) }
+.end-trip-button{ background: linear-gradient(180deg,#9a9a9a,#7a7a7a); color:#fff; box-shadow: 0 8px 18px rgba(0,0,0,0.14) }
+.disabled{ opacity:0.6; pointer-events:none }
+
+/* Small close button inside the panel */
+.drivers-info .panel-close-small{ position:absolute; right:22px; top:12px; background:transparent;border:0;font-size:18px;color:#064e2e; cursor:pointer }
+
+/* Bottom-center panel handle button (uses arrow image) */
+#panel-handle-button{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%) rotate(180deg); /* closed = down */
+  bottom: 18px;
+  z-index: 13000;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: #ffffff url('https://image2url.com/images/1762338859546-944f829d-d983-414f-a3bf-17af590ba885.png') center / 60% no-repeat;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  border: 0;
+  display: block;
+  cursor: pointer;
+  transition: transform 200ms ease;
 }
+#panel-handle-button.open{ transform: translateX(-50%) rotate(0deg); }
+
+/* Top-centered select route pill (default placement when outside drivers-info) */
+.selectroute-button{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 12px;
+  z-index: 12000;
+  background: linear-gradient(180deg,#2f7a44,#3b8a53); /* stronger green */
+  color: #ffffff; /* make the text white */
+  border: 0;
+  padding: 12px 24px; /* slightly bigger */
+  border-radius: 22px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+.selectroute-button i{ color: rgba(255,255,255,0.95); font-size:18px }
+
+/* When the select pill is inside the drivers-info card, make it static and centered */
+.drivers-info .selectroute-button{ position: static; left: auto; top: auto; transform:none; margin: 0 auto 12px; display:inline-flex; background: rgba(34,139,34,0.12); padding:8px 16px; border-radius:14px; }
+
+/* Backdrop behind the panel that closes it when clicked */
+#panel-backdrop{ position: fixed; inset: 0; background: rgba(0,0,0,0.12); z-index: 11000; /* below the panel but above the map */ opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
+#panel-backdrop.visible{ opacity: 1; pointer-events: auto; }
+
+/* --- commuter: jeepney bubble (moved from commuter.html) --- */
+#jeepney-bubble {
+  /*
+    Jeepney on-page bubble (optional):
+    - This element is used by the JS helper in `commuter.html` to show a small
+      floating message when a jeepney marker is clicked.
+    - By default we hide it via CSS to avoid interfering with marker popups.
+      If you want to re-enable it, remove the `display:none !important` line
+      below (or change to display:block) and tweak positioning as needed.
+    - Keeping the element in DOM is helpful for progressive enhancement and
+      tests; the CSS below neutralizes its visual footprint.
+  */
+  display: none !important; /* force-hidden to respect the user's choice */
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: -1; /* keep under map just in case */
+  max-width: 0;
+  padding: 0;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+  font-family: Poppins, Arial, sans-serif;
+  font-size: 0;
+}
+#jeepney-bubble.show { display: none !important; }
+#jeepney-bubble .jb-close { background: transparent; border: none; color: #fff; font-size: 16px; line-height: 1; float: right; cursor: pointer; }
+@keyframes jb-fade { from { opacity: 0; transform: translateY(-6px);} to { opacity:1; transform: translateY(0);} }
+
+/* Commuter UI (grouped) */
+/* Add waiting area button - Commuter Section */
+/* .addwaitingarea-button rules removed (button deleted from HTML) */
 
 
 /* Commuters Information Panel */
@@ -426,604 +1018,5 @@ nav
   box-shadow: 6px 6px 14px #1f512b; 
 }
 
-/* Drivers Page */
 
-/* Select Route Button */
-.selectroute-button
-{
-  position: absolute;
-  top: 90px;         
-  right: 40px;       
-  background-color: #6fd16f97;
-  border: none;
-  color: rgb(40, 88, 46);
-  padding: 10px 100px;
-  border-radius: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 1001;
-  box-shadow: 4px 4px 10px #2E6F40;
-  transition: 
-    transform 0.3s ease, 
-    background-color 0.3s ease, 
-    box-shadow 0.3s ease, 
-    color 0.3s ease;
-  transform-origin: center;
-}
-
-.selectroute-button:hover 
-{
-  background-color: #4ca84c; 
-  color: white;              
-  transform: scale(1.05);    
-  box-shadow: 2px 2px 14px #1f512b; 
-  filter: brightness(1.05);  
-}
-
-.selectroute-button i 
-{
-  margin-right: 5px;
-  transition: transform 0.3s ease, color 0.3s ease;
-}
-
-.selectroute-button:hover i 
-{
-  transform: scale(1.1); 
-  color: white;           
-}
-
-/* Drivers Information Section Panel */
-.drivers-info
-{
-  position: absolute;
-  top: 140px;       
-  right: 40px;      
-  width: 330px;
-  max-width: 90vw; 
-  height: 440px;
-  background-color: #6fd16f8b;
-  box-shadow: 4px 4px 10px #2E6F40;
-  border-radius: 20px;
-  padding: 20px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.driver-header
-{
-  background-color: rgb(255, 255, 255);
-  padding: 10px 20px;
-  width: 250px;
-  border-radius: 10px;
-  text-align: center;
-  height: 40px;
-  margin: 5px;
-}
-
-.driver-header h5
-{
-  font-family: 'Poppins';
-  font-size: 13px;
-  margin: 0;
-  color:rgb(40, 88, 46);
-}
-
-.driver-header p
-{
-  font-family: 'Poppins';
-  font-size: 13px;
-  margin: 3px;
-}
-
-.driverstatus-info
-{
-  background-color: rgb(255, 255, 255);
-  border-radius: 15px;
-  padding: 20px;
-  height: 220px;
-  width: 250px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 10px;
-}
-
-.driverstatus-info h3
-{
-  font-weight: 600;
-  color:rgb(40, 88, 46);
-}
-
-
-/* Start Location */
-.livelocation-button
-{
-  font-weight: bold;
-  border-radius: 20px;
-  padding: 5px 70px;
-  margin: 10px;
-  background-color: #407736;
-  box-shadow: 4px 4px 10px #2E6F40;
-  color: rgb(225, 249, 226);
-  border: none;
-  cursor: pointer;
-  transition: 
-    transform 0.4s ease, 
-    background-color 0.4s ease, 
-    box-shadow 0.4s ease, 
-    filter 0.4s ease;
-  transform-origin: center;
-}
-
-.livelocation-button:hover
-{
-  background-color: #4ca84c; 
-  transform: scale(1.05);    
-  box-shadow: 6px 6px 14px #1f512b; 
-}
-
-.stoplivelocation-button
-{
-  font-weight: bold;
-  border-radius: 20px;
-  padding: 5px 70px;
-  margin: 0;
-  background-color: #717170;
-  box-shadow: 4px 4px 10px #444444;
-  color: rgb(201, 204, 201);
-  border: none;
-}
-
-@media (max-width: 740px)
-{
-  .logo-text,
-  .menu-text
-  {
-    display: none;
-  }
-
-
-  .logo
-  {
-    margin-left: 10px;
-
-
-  }
-
-
-  .logo img
-  {
-    width: 30px;
-    height: 25px;
-    border-radius: 6px;
-  }
-
-
-  .controls
-  {
-    margin-right: 10px;
-  }
-
-
-  .search-bar
-  {
-    padding: 10px 25px;
-    border: none;
-    width: 80px;
-    margin-right: -6px;
-    font-size: 8px;
-    box-shadow: 1px 4px 7px #1f512b;
-  }
-
-
-  .search-icon
-  {
-    font-size: 10px;
-  }
-
-
-  .controls a
-  {
-    font-size: 8px;
-    padding: 10px 8px;
-    width: 80%;
-    box-shadow: 1px 4px 7px #1f512b;
-  }
-
-
-  .controls a i
-  {
-    margin-right: 3px;    
-    font-size: 7px;      
-  }
-
-
-  .controls ul
-  {
-    gap: 11px;
-  }
-
-
-  .controls ul .main-menu a
-  {
-    padding: 7px 10px;          
-    width: auto;
-    border-radius: 10px;
-   
-  }
-
-
-  .controls ul .main-menu i
-  {
-    font-size: 13px;
-    margin-right: 0;
-    padding: 0;      
-  }
- 
-  .controls a.active
-  {
-    box-shadow: 1px 4px 7px #1f512b;
-  }
-
-  .addwaitingarea-button
-  {        
-    width: 73%;
-    height: 5vh;
-    bottom: 55vh;
-    left: 15%;
-    right: auto;    
-    top: auto;
-    box-shadow: 1px 2px 7px #1f512b;
-    margin-bottom: 11%;
-  }
-
-
-  .commuters-info
-  {
-    width: 65%;
-    height: 54vh;
-    bottom: 2vh;
-    left: 15%;
-    right: auto;    
-    top: auto;
-    box-shadow: 1px 2px 7px #1f512b;
-  }
-
-  .selectroute-button
-  {
-    width: 73%;
-    height: 5vh;
-    bottom: 59vh;
-    left: 15%;
-    right: auto;    
-    top: auto;
-    box-shadow: 1px 2px 7px #1f512b;
-    margin-bottom: 11%;
-  }
-
-  .drivers-info
-  {
-    width: 65%;
-    height: 58vh;
-    bottom: 2vh;
-    left: 15%;
-    right: auto;    
-    top: auto;
-    box-shadow: 1px 2px 7px #1f512b;
-  }
-}
-
-@media (max-height: 800px) and (min-width: 740px) {
-  .commuters-info 
-  {
-    height: 390px;     
-  }
-
-  .selectroute-button
-  {
-    top: 13vh;
-  }
-
-  .drivers-info
-  {
-    top: 21vh;
-    height: 420px;     
-  }
-}
-
-
-@media (max-width: 450px)
-{
-  .addwaitingarea-button
-  {        
-    width: 85%;
-    height: 5vh;
-    bottom: 47vh;
-    left: 8%;
-    right: auto;    
-    top: auto;
-  }
-
-
-  .commuters-info
-  {
-    width: 75%;
-    height: 44vh;
-    bottom: 2vh;
-    left: 8%;
-    right: auto;    
-    top: auto;
-  }
-
-  .selectroute-button
-  {
-    width: 85%;
-    padding: 10px 20px;
-    height: 4vh;
-    bottom: 52vh;
-    left: 8%;
-  }
-
-  .drivers-info
-  {
-    width: 75%;
-    height: 49vh;
-    bottom: 2vh;
-    left: 8%;
-    right: auto;    
-    top: auto;
-  }
-
-  .livelocation-button
-  {
-    padding: 5px 10px;
-    width: 92%;
-  }
-
-  .stoplivelocation-button
-  {
-    padding: 5px 10px;
-    width: 92%;
-  }
-
-  .arrival-info
-  {
-    margin: 20px 0px 10px 0px;
-  }
-
-
-  .leaflet-control-zoom
-  {
-    display: none !important;  
-  }
-}
-
-
-@media (max-width: 376px)
-{
-  .search-bar
-  {
-    width: 40px;
-  }
-
-
-  .addwaitingarea-button
-  {
-    bottom: 59vh;
-    width: 90%;
-    left: 5%;
-  }
-
-
-  .commuters-info
-  {
-    width: 80%;
-    height: 55vh;
-    left: 5%;
-  }
-
-  .selectroute-button
-  {
-    bottom: 67vh;
-    height: 5vh;
-    width: 90%;
-    left: 5%;
-  }
-
-  .drivers-info
-  {
-    width: 80%;
-    height: 63vh;
-    left: 5%;
-  }
-
-  .arrival-info
-  {
-    margin: 10px 0 5px 0;
-  }
-
-}
-
-
-@media (max-width: 361px)
-{
-  .addwaitingarea-button
-  {
-    bottom: 56vh;
-    width: 90%;
-    left: 5%;
-  }
-
-
-  .commuters-info
-  {
-    width: 81%;
-    height: 52vh;
-    left: 4%;
-  }
-
-  .selectroute-button
-  {
-    bottom: 59vh;
-    width: 92%;
-    left: 4%;
-  }
-
-  .drivers-info
-  {
-    width: 81%;
-    height: 56vh;
-    left: 4%;
-  }
-
-  .arrival-info
-  {
-    margin: 25px 0 5px 0;
-  }
-}
-
-
-@media (max-width: 345px)
-{
-  .addwaitingarea-button
-  {
-    bottom: 49vh;
-    width: 95%;
-    left: 2%;
-  }
-
-
-  .commuters-info
-  {
-    width: 85%;
-    height: 45vh;
-    left: 2%;
-  }
-
-  .selectroute-button
-  {
-    bottom: 52vh;
-    height: 5vh;
-    width: 92%;
-    left: 4%;
-  }
-
-  .drivers-info
-  {
-    width: 81%;
-    height: 48vh;
-    left: 4%;
-  }
-
-  .arrival-info
-  {
-    margin: 25px 0 10px 0;
-  }
-
-}
-
-/* Hide Leaflet Routing Machine UI (routing instructions panel) - global */
-.leaflet-routing-container,
-.leaflet-routing-machine,
-.leaflet-routing-alt
-{
-  display: none !important;
-}
-
-/* Popup styling for small-panel look (used with className: 'small-popup') */
-.leaflet-popup.small-popup .leaflet-popup-content-wrapper {
-  max-width: 320px;               /* slightly wider to avoid cramped wrapping */
-  padding: 14px;
-  border-radius: 12px;
-  background: rgba(111, 209, 111, 0.65);
-  box-shadow: 6px 8px 18px rgba(46,111,64,0.35);
-}
-.leaflet-popup.small-popup .leaflet-popup-content {
-  margin: 0;
-  padding: 0;
-  font-size: 14px;
-  color: #0b2d12;
-  line-height: 1.4;
-}
-
-.leaflet-popup.small-popup .commuters-info {
-  position: static;
-  width: 280px;
-  max-width: 100%;
-  height: auto;
-  background: transparent; /* wrapper already provides background */
-  box-shadow: none;
-  padding: 0;
-}
-
-.leaflet-popup.small-popup .waiting-area-section {
-  display: block;
-  text-align: center;
-  margin-bottom: 8px;
-}
-.leaflet-popup.small-popup .waiting-area-section p {
-  padding: 8px 16px;
-  font-size: 12px;
-}
-
-.leaflet-popup.small-popup .vehicle-info {
-  background-color: white;
-  border-radius: 10px;
-  padding: 12px;
-  height: auto;
-  width: 100%;
-  box-sizing: border-box;
-}
-.leaflet-popup.small-popup .vehicle-info h3 { font-size: 15px; margin: 6px 0 10px 0; }
-
-/* Make information lines align: label fixed width, value flexible */
-.leaflet-popup.small-popup .information-line {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin: 6px 0;
-}
-.leaflet-popup.small-popup .information-line span:first-child {
-  flex: 0 0 80px;
-  font-weight: 600;
-}
-.leaflet-popup.small-popup .information-line span:last-child {
-  flex: 1 1 auto;
-  text-align: left;
-}
-
-.leaflet-popup.small-popup .vehicle-status { margin-left: auto; }
-
-.leaflet-popup.small-popup .arrival-info {
-  margin: 12px 0;
-  padding: 10px;
-  background: #ffffff;
-  border-radius: 10px;
-  text-align: center;
-}
-.leaflet-popup.small-popup .arrival-time { display: inline-block; padding: 6px 14px; border-radius: 18px; background: #1e6b35; color: #fff; font-weight:700; }
-
-.leaflet-popup.small-popup .distance { margin-top: 8px; }
-
-.leaflet-popup.small-popup .set-notifications-button {
-  display: block;
-  width: 100%;
-  padding: 8px 10px;
-  margin-top: 8px;
-  font-size: 14px;
-  border-radius: 10px;
-  background-color: #2e6f40;
-  color: #e1f9e2;
-  box-shadow: 3px 3px 8px rgba(46,111,64,0.25);
-  border: none;
-  cursor: pointer;
-}
-.leaflet-popup.small-popup .set-notifications-button:hover { background-color: #3b8a49; }
-
-/* Ensure popups render above markers and reduce odd vertical spacing */
-.leaflet-popup { z-index: 10000 !important; }
-.leaflet-popup .leaflet-popup-content-wrapper { margin-top: 0; }
-.leaflet-popup-tip { margin-top: 0; }
 
