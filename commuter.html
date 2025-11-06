@@ -15,8 +15,6 @@
     <title>Document</title>
 </head>
 <body>
-        <div id="jeepney-bubble" role="status" aria-live="polite"></div>
-
     <!--Navigation Bar-->
     <nav>
         <div class="logo">
@@ -26,321 +24,292 @@
             <a href="index.html">
                 <span class="logo-text">Routify</span>
             </a>
-
-            <p class="distance">Distance: 6.9 KM remaining</p>
         </div>
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-            <link rel="preconnect" href="https://fonts.googleapis.com">
-            <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,700&display=swap" rel="stylesheet">
-            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-            <link rel="stylesheet" href="style.css">
-            <script src="node.js"></script>
-            <title>Document</title>
-        </head>
-        <body>
-            <!--Navigation Bar-->
-            <nav>
-                <div class="logo">
-                    <a href="index.html">
-                    <img src="logoo.png" alt="lakbay-logo">
-                    </a>
-                    <a href="index.html">
-                        <span class="logo-text">Routify</span>
-                    </a>
-                </div>
-                <div class="controls">
-                    <!--Search Bar-->
-                    <div class="search-container">
-                        <i class="bi bi-search search-icon"></i>
-                        <input list="routes" class="search-bar" placeholder="Select your route">
-                        <datalist id="routes">
-                            <option value="Angat - Monumento">
-                            <option value="Norzagaray - Divisoria">
-                            <option value="Sapangpalang - Manila">
-                            <option value="Santa Maria - Meycauayan">
-                        </datalist>
-                    </div>
-                    <!--Buttons for commuters, drivers, and profile-->
-                    <ul>
-                        <li><a href="commuter.html" class="active">
-                            <i class="bi bi-person-circle"></i> 
-                            <span>Commuter</span>
-                        </a></li>
-                        <li><a href="driver.html"><i class="bi bi-car-front-fill"></i> Driver</a></li>
-                        <li class="main-menu">
-                            <a href="#" id="menu-toggle">
-                            <i class="bi bi-list"></i>
-                            <span class="menu-text">Menu</span></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="notifications.html"><i class="bi bi-bell"></i> Notifications</a></li>
-                                <li><a href="profile.html"><i class="bi bi-person"></i> Profile</a></li>
-                                <li><a href="#"><i class="bi bi-gear"></i> Settings</a></li>
-                                <li><a href="about-us.html"><i class="bi bi-info-circle"></i> About Us</a></li>
-                                <li><a href="Log-in.html"><i class="bi bi-box-arrow-right"></i> Log Out</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-
-            <!--Div for the leaflet map to set as the website background image-->
-            <div class="leaflet-map" id="map"></div>
-
-            <!--Part of the website that shows all of the information-->
-            <!-- 'Add a mark in your waiting area' button removed as requested -->
-
-            <!-- commuters-info panel removed from page; using popup template instead -->
-
-            <!-- Hidden template for popup (clone this into Leaflet popups so the on-page UI stays visible) -->
-            <div id="popup-commuters-info-template" style="display:none;" aria-hidden="true">
-                <div class="commuters-info">
-                    <div class="waiting-area-section">
-                        <p>This location is your waiting area.</p>
-                    </div>
-                    <div class="vehicle-info">
-                        <h3>Public Vehicle Info:</h3>
-                        <div class="information-line">
-                            <span>Status:</span>
-                            <span class="vehicle-status">Active</span>
-                        </div>
-                        <div class="information-line">
-                            <span>Speed:</span>
-                            <span class="speed">20km/hour</span>
-                        </div>
-                        <div class="information-line">
-                            <span>Route:</span>
-                            <span class="route">Sta Maria - San Gabriel - Halang</span>
-                        </div>
-                        <div class="arrival-info">
-                            <h4>Estimated Time of Arrival in Waiting Area</h4>
-                            <div class="arrival-time">
-                                <span class="time">2:30 PM</span>
-                            </div>
-                            <p class="distance">Distance: 6.9 KM remaining</p>
-                        </div>
-                        <button class="set-notifications-button">Notify me!</button>
-                    </div>
-                </div>
+        <div class="controls">
+            <!--Search Bar-->
+            <div class="search-container">
+                <i class="bi bi-search search-icon"></i>
+                <input list="routes" class="search-bar" placeholder="Select your route">
+                <datalist id="routes">
+                    <option value="Angat - Monumento">
+                    <option value="Norzagaray - Divisoria">
+                    <option value="Sapangpalang - Manila">
+                    <option value="Santa Maria - Meycauayan">
+                </datalist>
             </div>
+            <!--Buttons for commuters, drivers, and profile-->
+            <ul>
+                <li><a href="commuter.html" class="active">
+                    <i class="bi bi-person-circle"></i> 
+                    <span>Commuter</span>
+                </a></li>
+                <li><a href="driver.html"><i class="bi bi-car-front-fill"></i> Driver</a></li>
+                <li class="main-menu">
+                    <a href="#" id="menu-toggle">
+                    <i class="bi bi-list"></i>
+                    <span class="menu-text">Menu</span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="notifications.html"><i class="bi bi-bell"></i> Notifications</a></li>
+                        <li><a href="profile.html"><i class="bi bi-person"></i> Profile</a></li>
+                        <li><a href="#"><i class="bi bi-gear"></i> Settings</a></li>
+                        <li><a href="about-us.html"><i class="bi bi-info-circle"></i> About Us</a></li>
+                        <li><a href="Log-in.html"><i class="bi bi-box-arrow-right"></i> Log Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
 
-            <!--Script for the leaflet map-->
-            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin="">
-            </script>
+    <!--Div for the leaflet map to set as the website background image-->
+    <div class="leaflet-map" id="map"></div>
 
-            <!--Dropdown Menu Script-->
-            <script>
-                const menuToggle = document.getElementById('menu-toggle');
-                const dropdownMenu = document.querySelector('.dropdown-menu');
+    <!--Part of the website that shows all of the information-->
+    <!-- 'Add a mark in your waiting area' button removed as requested -->
 
-                menuToggle.addEventListener('click', (e) => 
-                {
-                    e.preventDefault();
-                    dropdownMenu.classList.toggle('show');
-                });
+    <!-- commuters-info panel removed from page; using popup template instead -->
 
-                // Close dropdown when clicking outside
-                document.addEventListener('click', (e) => {
-                    if(!menuToggle.contains(e.target) && !dropdownMenu.contains(e.target)) 
-                {
-                    dropdownMenu.classList.remove('show');
-                    }
-                });
-            </script>
+    <!-- Hidden template for popup (clone this into Leaflet popups so the on-page UI stays visible) -->
+    <div id="popup-commuters-info-template" style="display:none;" aria-hidden="true">
+        <div class="commuters-info">
+            <div class="waiting-area-section">
+                <p>This location is your waiting area.</p>
+            </div>
+            <div class="vehicle-info">
+                <h3>Public Vehicle Info:</h3>
+                <div class="information-line">
+                    <span>Status:</span>
+                    <span class="vehicle-status">Active</span>
+                </div>
+                <div class="information-line">
+                    <span>Speed:</span>
+                    <span class="speed">20km/hour</span>
+                </div>
+                <div class="information-line">
+                    <span>Route:</span>
+                    <span class="route">Sta Maria - San Gabriel - Halang</span>
+                </div>
+                <div class="arrival-info">
+                    <h4>Estimated Time of Arrival in Waiting Area</h4>
+                    <div class="arrival-time">
+                        <span class="time">2:30 PM</span>
+                    </div>
+                    <p class="distance">Distance: 6.9 KM remaining</p>
+                </div>
+                <button class="set-notifications-button">Notify me!</button>
+            </div>
+        </div>
+    </div>
 
-            <!-- Leaflet Routing Machine JS -->
-            <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
-            <script>
-                 // Initialize Leaflet map (was missing — required so routingControl can .addTo(map))
-                const map = L.map('map').setView([14.831426, 120.976661], 13);
+    <!--Script for the leaflet map-->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin="">
+    </script>
 
-                // Add a basic OpenStreetMap tile layer
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                }).addTo(map);
+    <!--Dropdown Menu Script-->
+    <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const dropdownMenu = document.querySelector('.dropdown-menu');
 
-                // Simple custom icon for the jeepney marker (falls back to default if file missing)
-                var jeepneyIcon = L.icon({
-                    iconUrl: 'https://image2url.com/images/1761748252176-39f2cd27-02a7-4b73-b140-6171e24e62be.png',
-                    iconSize: [36, 36],
-                    iconAnchor: [18, 36],
-                    // lift the popup a bit higher so it doesn't overlap the icon
-                    popupAnchor: [0, -46]
-                });
+        menuToggle.addEventListener('click', (e) => 
+        {
+            e.preventDefault();
+            dropdownMenu.classList.toggle('show');
+        });
 
-                // Route Sta Maria - Guyong - Caypombo - Pulong Buhangin
-            var waypoints = [
-                L.latLng(14.821865560449373, 120.96157688030809), // Sta Maria - Starting point
-                L.latLng(14.831341439952697, 120.97348565571966), // Dulong
-                L.latLng(14.87136358444958, 121.00656357695095)  // Pulong Buhangin - Endpoint
-            ];
-        // Create the routing control (this replaces your polyline)
-        var routingControl = L.Routing.control({
-            waypoints: waypoints,
-            routeWhileDragging: false,  // Disable dragging to keep it static
-            addWaypoints: false,        // Prevent users from adding/removing waypoints
-                createMarker: function(i, waypoint, n) {
-                // Custom marker only at the start (index 0)
-                if (i === 0) {
-                    var marker = L.marker(waypoint.latLng, { icon: jeepneyIcon });
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if(!menuToggle.contains(e.target) && !dropdownMenu.contains(e.target)) 
+        {
+            dropdownMenu.classList.remove('show');
+            }
+        });
+    </script>
 
-                    // Use the same hidden template as the other route so all popups match
-                    var tpl = document.getElementById('popup-commuters-info-template');
-                    if (tpl) {
-                        var popupContent = tpl.cloneNode(true);
-                        popupContent.style.display = 'block';
-                        // populate dynamic fields for this route
-                        var speedEl = popupContent.querySelector('.speed');
-                        var timeEl = popupContent.querySelector('.time');
-                        var routeEl = popupContent.querySelector('.route');
-                        var statusEl = popupContent.querySelector('.vehicle-status');
-                        if (speedEl) speedEl.textContent = '30km/hour';
-                        if (timeEl) timeEl.textContent = '1:00 PM';
-                        if (routeEl) routeEl.textContent = 'Sta Maria - Guyong - Caypombo - Pulong Buhangin';
-                        if (statusEl) statusEl.textContent = 'Active';
+    <!-- Leaflet Routing Machine JS -->
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
+    <script>
+            // Initialize Leaflet map (was missing — required so routingControl can .addTo(map))
+        const map = L.map('map', { zoomControl: false }).setView([14.831426, 120.976661], 13);
 
-                        marker.bindPopup(popupContent, { maxWidth: 320, className: 'small-popup', offset: L.point(0, -46), autoPanPadding: [20, 20] });
-
-                        // Add a handler so Notify button works when popup opens
-                        marker.on('popupopen', function(e){
-                            var contentNode = e.popup && (e.popup._contentNode || e.popup.getContent && e.popup.getContent());
-                            // e.popup._contentNode is the DOM node when using an element as content
-                            var node = (typeof contentNode === 'object' && contentNode.querySelector) ? contentNode : e.popup._container;
-                            if (node) {
-                                var btn = node.querySelector && node.querySelector('.set-notifications-button');
-                                if (btn && !btn._addedNotify) {
-                                    btn._addedNotify = true; // avoid duplicate listeners
-                                    btn.addEventListener('click', function(){
-                                        alert('You will be notified when this vehicle approaches your waiting area.');
-                                    });
-                                }
-                            }
-                        });
-                        
-                        /* Added: show an on-page bubble when this jeepney marker is clicked.
-                           Use the popup clone values (route and time) as the bubble content.
-                           Simple, unobtrusive UI: reads values and calls showJeepneyBubble(html).
-                        */
-                        var __routeText = (routeEl && routeEl.textContent) ? routeEl.textContent : 'Route info';
-                        var __timeText = (timeEl && timeEl.textContent) ? timeEl.textContent : '';
-                        marker.on('click', function(){
-                            showJeepneyBubble('<strong>' + __routeText + '</strong><br>ETA: ' + __timeText);
-                        });
-                    }
-
-                    return marker;
-                }
-                return null;  // No markers for intermediate waypoints
-            },
-            lineOptions: {
-                styles: [{ color: 'green', weight: 4 }]  /* Lines of route */
-            },
-            router: L.Routing.osrmv1({  
-            })
+        // Add a basic OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-            /* Added: helper functions to show/hide the jeepney bubble (JS)
-               - showJeepneyBubble(html): display the floating bubble with provided HTML
-               - auto-hides after 6s, Esc to close, click outside to dismiss
-               These are lightweight helpers so marker click handlers can call them.
-            */
-            (function(){
-                var _jbTimer = null;
-                var bubble = document.getElementById('jeepney-bubble');
-                function hideJeepneyBubble(){
-                    if(!bubble) bubble = document.getElementById('jeepney-bubble');
-                    if(!bubble) return;
-                    bubble.classList.remove('show');
-                    // allow animation to finish before hiding completely
-                    setTimeout(function(){ if(bubble && !bubble.classList.contains('show')) bubble.style.display = 'none'; }, 260);
-                    if(_jbTimer){ clearTimeout(_jbTimer); _jbTimer = null; }
-                }
-                window.showJeepneyBubble = function(html){
-                    if(!bubble) bubble = document.getElementById('jeepney-bubble');
-                    if(!bubble) return;
-                    // Build inner content with close button
-                    bubble.innerHTML = '<button class="jb-close" aria-label="Close">&times;</button><div class="jb-content">' + html + '</div>';
-                    var btn = bubble.querySelector('.jb-close');
-                    if(btn){ btn.addEventListener('click', function(e){ e.stopPropagation(); hideJeepneyBubble(); }); }
-                    bubble.style.display = 'block';
-                    // force reflow then show class for animation
-                    void bubble.offsetWidth;
-                    bubble.classList.add('show');
-                    // auto hide after 6 seconds
-                    if(_jbTimer) clearTimeout(_jbTimer);
-                    _jbTimer = setTimeout(hideJeepneyBubble, 6000);
-                };
+        // Simple custom icon for the jeepney marker (falls back to default if file missing)
+        var jeepneyIcon = L.icon({
+            iconUrl: 'https://image2url.com/images/1761748252176-39f2cd27-02a7-4b73-b140-6171e24e62be.png',
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
+            // lift the popup a bit higher so it doesn't overlap the icon
+            popupAnchor: [0, -46]
+        });
 
-                // Hide bubble when clicking map or elsewhere
-                if(window.map && map.on){
-                    map.on('click', function(){ hideJeepneyBubble(); });
-                }
-                // Accessibility: Esc to close
-                document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hideJeepneyBubble(); });
-                // Also hide when clicking outside the bubble
-                document.addEventListener('click', function(e){
-                    if(!bubble) return;
-                    if(!bubble.contains(e.target)){
-                        hideJeepneyBubble();
-                    }
-                });
-            })();
+        // Route Sta Maria - Guyong - Caypombo - Pulong Buhangin
+    var waypoints = [
+        L.latLng(14.821865560449373, 120.96157688030809), // Sta Maria - Starting point
+        L.latLng(14.831341439952697, 120.97348565571966), // Dulong
+        L.latLng(14.87136358444958, 121.00656357695095)  // Pulong Buhangin - Endpoint
+    ];
+    // Create the routing control (this replaces your polyline)
+    var routingControl = L.Routing.control({
+        waypoints: waypoints,
+        routeWhileDragging: false,  // Disable dragging to keep it static
+        addWaypoints: false,        // Prevent users from adding/removing waypoints
+            createMarker: function(i, waypoint, n) {
+            // Custom marker only at the start (index 0)
+            if (i === 0) {
+                var marker = L.marker(waypoint.latLng, { icon: jeepneyIcon });
 
-          /* Route 2 sta Maria to Halang*/
-            var waypoints2 = [
-                L.latLng(14.817680556970652, 120.9596894399793), // Sta Maria - Starting point
-                L.latLng(14.809662089895063, 120.96345579935102), // San Gab
-                L.latLng(14.80746986684621, 121.01338170563866), // Halang - Endpoint
-            ];
-            var routingControl2 = L.Routing.control({
-                waypoints: waypoints2,
-                routeWhileDragging: false,  // Disable dragging to keep it static
-                addWaypoints: false,        // Prevent users from adding/removing waypoints
-                createMarker: function(i, waypoint, n) {
-                    // Custom marker only at the start (index 0)
-                    if (i === 0) {
-                        var marker = L.marker(waypoint.latLng, { icon: jeepneyIcon });
+                // Use the same hidden template as the other route so all popups match
+                var tpl = document.getElementById('popup-commuters-info-template');
+                if (tpl) {
+                    var popupContent = tpl.cloneNode(true);
+                    popupContent.style.display = 'block';
+                    // populate dynamic fields for this route
+                    var speedEl = popupContent.querySelector('.speed');
+                    var timeEl = popupContent.querySelector('.time');
+                    var routeEl = popupContent.querySelector('.route');
+                    var statusEl = popupContent.querySelector('.vehicle-status');
+                    if (speedEl) speedEl.textContent = '30km/hour';
+                    if (timeEl) timeEl.textContent = '1:00 PM';
+                    if (routeEl) routeEl.textContent = 'Sta Maria - Guyong - Caypombo - Pulong Buhangin';
+                    if (statusEl) statusEl.textContent = 'Active';
 
-                        // Try to use the hidden template (clone it so the on-page UI stays in place)
-                        var tpl = document.getElementById('popup-commuters-info-template');
-                        if (tpl) {
-                            var popupContent = tpl.cloneNode(true);
-                            popupContent.style.display = 'block';
-                            // Optionally update dynamic fields on the clone
-                            // popupContent.querySelector('.speed').textContent = '20km/hour';
-                            marker.bindPopup(popupContent, { maxWidth: 320, className: 'small-popup', offset: L.point(0, -46), autoPanPadding: [20, 20] });
-                            /* Added: show an on-page bubble when this jeepney marker is clicked.
-                               Read some fields from the popup clone and display them in the bubble.
-                            */
-                            var __rc = popupContent.querySelector('.route');
-                            var __tm = popupContent.querySelector('.time');
-                            var __routeText2 = __rc && __rc.textContent ? __rc.textContent : 'Route info';
-                            var __timeText2 = __tm && __tm.textContent ? __tm.textContent : '';
-                            marker.on('click', function(){
-                                showJeepneyBubble('<strong>' + __routeText2 + '</strong><br>ETA: ' + __timeText2);
-                            });
+                    marker.bindPopup(popupContent, { maxWidth: 320, className: 'small-popup', offset: L.point(0, -46), autoPanPadding: [20, 20] });
+
+                    // Add a handler so Notify button works when popup opens
+                    marker.on('popupopen', function(e){
+                        var contentNode = e.popup && (e.popup._contentNode || e.popup.getContent && e.popup.getContent());
+                        // e.popup._contentNode is the DOM node when using an element as content
+                        var node = (typeof contentNode === 'object' && contentNode.querySelector) ? contentNode : e.popup._container;
+                        if (node) {
+                            var btn = node.querySelector && node.querySelector('.set-notifications-button');
+                            if (btn && !btn._addedNotify) {
+                                btn._addedNotify = true; // avoid duplicate listeners
+                                btn.addEventListener('click', function(){
+                                    alert('You will be notified when this vehicle approaches your waiting area.');
+                                });
+                            }
                         }
-                        return marker;
-                    }
-                    return null;  // No markers for intermediate waypoints
-                },
-                lineOptions: {
-                    styles: [{ color: 'green', weight: 4 }]  /* Lines of route */
-                },
-                router: L.Routing.osrmv1({  
-                })
-            }).addTo(map);
-            
-            </script>
-        </body>
-        </html>
+                    });
+                    
+                    /* Added: show an on-page bubble when this jeepney marker is clicked.
+                        Use the popup clone values (route and time) as the bubble content.
+                        Simple, unobtrusive UI: reads values and calls showJeepneyBubble(html).
+                    */
+                    var __routeText = (routeEl && routeEl.textContent) ? routeEl.textContent : 'Route info';
+                    var __timeText = (timeEl && timeEl.textContent) ? timeEl.textContent : '';
+                    marker.on('click', function(){
+                        showJeepneyBubble('<strong>' + __routeText + '</strong><br>ETA: ' + __timeText);
+                    });
+                }
+
+                return marker;
+            }
+            return null;  // No markers for intermediate waypoints
+        },
+        lineOptions: {
+            styles: [{ color: 'green', weight: 4 }]  /* Lines of route */
+        },
+        router: L.Routing.osrmv1({  
+        })
+    }).addTo(map);
+
+    /* Added: helper functions to show/hide the jeepney bubble (JS)
+        - showJeepneyBubble(html): display the floating bubble with provided HTML
+        - auto-hides after 6s, Esc to close, click outside to dismiss
+        These are lightweight helpers so marker click handlers can call them.
+    */
+    (function(){
+        var _jbTimer = null;
+        var bubble = document.getElementById('jeepney-bubble');
+        function hideJeepneyBubble(){
+            if(!bubble) bubble = document.getElementById('jeepney-bubble');
+            if(!bubble) return;
+            bubble.classList.remove('show');
+            // allow animation to finish before hiding completely
+            setTimeout(function(){ if(bubble && !bubble.classList.contains('show')) bubble.style.display = 'none'; }, 260);
+            if(_jbTimer){ clearTimeout(_jbTimer); _jbTimer = null; }
+        }
+        window.showJeepneyBubble = function(html){
+            if(!bubble) bubble = document.getElementById('jeepney-bubble');
+            if(!bubble) return;
+            // Build inner content with close button
+            bubble.innerHTML = '<button class="jb-close" aria-label="Close">&times;</button><div class="jb-content">' + html + '</div>';
+            var btn = bubble.querySelector('.jb-close');
+            if(btn){ btn.addEventListener('click', function(e){ e.stopPropagation(); hideJeepneyBubble(); }); }
+            bubble.style.display = 'block';
+            // force reflow then show class for animation
+            void bubble.offsetWidth;
+            bubble.classList.add('show');
+            // auto hide after 6 seconds
+            if(_jbTimer) clearTimeout(_jbTimer);
+            _jbTimer = setTimeout(hideJeepneyBubble, 6000);
+        };
+
+        // Hide bubble when clicking map or elsewhere
+        if(window.map && map.on){
+            map.on('click', function(){ hideJeepneyBubble(); });
+        }
+        // Accessibility: Esc to close
+        document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hideJeepneyBubble(); });
+        // Also hide when clicking outside the bubble
+        document.addEventListener('click', function(e){
+            if(!bubble) return;
+            if(!bubble.contains(e.target)){
+                hideJeepneyBubble();
+            }
+        });
+    })();
+
+    /* Route 2 sta Maria to Halang*/
+    var waypoints2 = [
+        L.latLng(14.817680556970652, 120.9596894399793), // Sta Maria - Starting point
+        L.latLng(14.809662089895063, 120.96345579935102), // San Gab
+        L.latLng(14.80746986684621, 121.01338170563866), // Halang - Endpoint
+    ];
+    var routingControl2 = L.Routing.control({
+        waypoints: waypoints2,
+        routeWhileDragging: false,  // Disable dragging to keep it static
+        addWaypoints: false,        // Prevent users from adding/removing waypoints
+        createMarker: function(i, waypoint, n) {
+            // Custom marker only at the start (index 0)
+            if (i === 0) {
+                var marker = L.marker(waypoint.latLng, { icon: jeepneyIcon });
+
+                // Try to use the hidden template (clone it so the on-page UI stays in place)
+                var tpl = document.getElementById('popup-commuters-info-template');
+                if (tpl) {
+                    var popupContent = tpl.cloneNode(true);
+                    popupContent.style.display = 'block';
+                    // Optionally update dynamic fields on the clone
+                    // popupContent.querySelector('.speed').textContent = '20km/hour';
+                    marker.bindPopup(popupContent, { maxWidth: 320, className: 'small-popup', offset: L.point(0, -46), autoPanPadding: [20, 20] });
+                    /* Added: show an on-page bubble when this jeepney marker is clicked.
+                        Read some fields from the popup clone and display them in the bubble.
+                    */
+                    var __rc = popupContent.querySelector('.route');
+                    var __tm = popupContent.querySelector('.time');
+                    var __routeText2 = __rc && __rc.textContent ? __rc.textContent : 'Route info';
+                    var __timeText2 = __tm && __tm.textContent ? __tm.textContent : '';
+                    marker.on('click', function(){
+                        showJeepneyBubble('<strong>' + __routeText2 + '</strong><br>ETA: ' + __timeText2);
+                    });
+                }
+                return marker;
+            }
+            return null;  // No markers for intermediate waypoints
+        },
+        lineOptions: {
+            styles: [{ color: 'green', weight: 4 }]  /* Lines of route */
+        },
+        router: L.Routing.osrmv1({  
+        })
+    }).addTo(map);
+    
+    </script>
+</body>
+</html>

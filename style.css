@@ -290,330 +290,6 @@ nav, .controls, .main-menu
 /* Drivers styles are defined by the slide-up block later in this file.
    Removed older top-right panel rules to avoid conflicting/duplicate styles. */
 
-@media (max-width: 740px)
-{
-  .logo-text,
-  .menu-text
-  {
-    display: none;
-  }
-
-
-  .logo
-  {
-    margin-left: 10px;
-
-
-  }
-
-
-  .logo img
-  {
-    width: 30px;
-    height: 25px;
-    border-radius: 6px;
-  }
-
-
-  .controls
-  {
-    margin-right: 10px;
-  }
-
-
-  .search-bar
-  {
-    padding: 10px 25px;
-    border: none;
-    width: 80px;
-    margin-right: -6px;
-    font-size: 8px;
-    box-shadow: 1px 4px 7px #1f512b;
-  }
-
-
-  .search-icon
-  {
-    font-size: 10px;
-  }
-
-
-  .controls a
-  {
-    font-size: 8px;
-    padding: 10px 8px;
-    width: 80%;
-    box-shadow: 1px 4px 7px #1f512b;
-  }
-  .controls {
-    gap: 10px;
-    margin-top: 16px;
-    align-items: center;
-  }
-
-  .controls a i {
-    margin-right: 3px;
-    font-size: 7px;
-  }
-
- /* when buttons sit on the green backdrop (outside white card), make them narrower and centered */
-  .drivers-info > .driver-buttons {
-    width: 86%;
-    margin: 10px auto 0;
-  }
-
-
-  .controls ul
-  {
-    gap: 11px;
-  }
-
-
-  .controls ul .main-menu a
-  {
-    padding: 7px 10px;          
-    width: auto;
-    border-radius: 10px;
-   
-  }
-
-
-  .controls ul .main-menu i
-  {
-    font-size: 13px;
-    margin-right: 0;
-    padding: 0;      
-  }
- 
-  .controls a.active
-  {
-    box-shadow: 1px 4px 7px #1f512b;
-  }
-
-  /* .addwaitingarea-button removed */
-
-
-
-  .commuters-info
-  {
-    width: 65%;
-    height: 54vh;
-    bottom: 2vh;
-    left: 15%;
-    right: auto;    
-    top: auto;
-    box-shadow: 1px 2px 7px #1f512b;
-  }
-
-  .selectroute-button
-  {
-    width: 73%;
-    height: 5vh;
-    bottom: 59vh;
-    left: 15%;
-    right: auto;    
-    top: auto;
-    box-shadow: 1px 2px 7px #1f512b;
-    margin-bottom: 11%;
-  }
-
-  .drivers-info
-  {
-    width: 65%;
-    height: 58vh;
-    bottom: 2vh;
-    left: 15%;
-    right: auto;    
-    top: auto;
-    box-shadow: 1px 2px 7px #1f512b;
-  }
-}
-
-@media (max-height: 800px) and (min-width: 740px) {
-  .commuters-info 
-  {
-    height: 390px;     
-  }
-
-  .selectroute-button
-  {
-    top: 13vh;
-  }
-
-  .drivers-info
-  {
-    top: 21vh;
-    height: 420px;     
-  }
-}
-
-
-@media (max-width: 450px)
-{
-
-
-
-  .commuters-info
-  {
-    width: 75%;
-    height: 44vh;
-    bottom: 2vh;
-    left: 8%;
-    right: auto;    
-    top: auto;
-  }
-
-  .selectroute-button
-  {
-    width: 85%;
-    padding: 10px 20px;
-    height: 4vh;
-    bottom: 52vh;
-    left: 8%;
-  }
-
-  .drivers-info
-  {
-    width: 75%;
-    height: 49vh;
-    bottom: 2vh;
-    left: 8%;
-    right: auto;    
-    top: auto;
-  }
-
-  .livelocation-button
-  {
-    padding: 5px 10px;
-    width: 92%;
-  }
-
-  .stoplivelocation-button
-  {
-    padding: 5px 10px;
-    width: 92%;
-  }
-
-  .arrival-info
-  {
-    margin: 20px 0px 10px 0px;
-  }
-
-
-  .leaflet-control-zoom
-  {
-    display: none !important;  
-  }
-}
-
-
-@media (max-width: 376px)
-{
-  .search-bar
-  {
-    width: 40px;
-  }
-
-
-  /* .addwaitingarea-button removed */
-
-
-
-  .commuters-info
-  {
-    width: 80%;
-    height: 55vh;
-    left: 5%;
-  }
-
-  .selectroute-button
-  {
-    bottom: 67vh;
-    height: 5vh;
-    width: 90%;
-    left: 5%;
-  }
-
-  .drivers-info
-  {
-    width: 80%;
-    height: 63vh;
-    left: 5%;
-  }
-
-  .arrival-info
-  {
-    margin: 10px 0 5px 0;
-  }
-
-}
-
-
-@media (max-width: 361px)
-{
-  
-  .commuters-info
-  {
-    width: 81%;
-    height: 52vh;
-    left: 4%;
-  }
-
-  .selectroute-button
-  {
-    bottom: 59vh;
-    width: 92%;
-    left: 4%;
-  }
-
-  .drivers-info
-  {
-    width: 81%;
-    height: 56vh;
-    left: 4%;
-  }
-
-  .arrival-info
-  {
-    margin: 25px 0 5px 0;
-  }
-}
-
-
-@media (max-width: 345px)
-{
- 
-
-
-  .commuters-info
-  {
-    width: 85%;
-    height: 45vh;
-    left: 2%;
-  }
-
-  .selectroute-button
-  {
-    bottom: 52vh;
-    height: 5vh;
-    width: 92%;
-    left: 4%;
-  }
-
-  .drivers-info
-  {
-    width: 81%;
-    height: 48vh;
-    left: 4%;
-  }
-
-  .arrival-info
-  {
-    margin: 25px 0 10px 0;
-  }
-
-}
-
 /* Hide Leaflet Routing Machine UI (routing instructions panel) - global */
 .leaflet-routing-container,
 .leaflet-routing-machine,
@@ -796,11 +472,6 @@ nav, .controls, .main-menu
   color: #1e6b35;
 }
 
-@media (max-width: 740px){
-  .floating-label{ left: 54px; font-size: 14px; }
-  .route-field.has-value .floating-label,
-  .route-field:focus-within .floating-label{ transform: translateY(-140%); font-size: 11px; }
-}
 .route-field i{ font-size:18px }
 .route-text{ border:0; outline:none; background:transparent; font-weight:600; color:#234927; width:100%; font-size:16px }
 .route-picker{ background:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.14); padding:8px; }
@@ -1080,6 +751,328 @@ nav, .controls, .main-menu
   background-color: #4ca84c; 
   transform: scale(1.05);    
   box-shadow: 6px 6px 14px #1f512b; 
+}
+
+@media (max-width: 740px)
+{
+  nav
+  {
+    padding: 0;
+    margin: 0;
+  }
+
+  .logo-text,
+  .menu-text
+  {
+    display: none;
+  }
+
+  .logo
+  {
+    margin: 20px 0px 0px 15px ;
+  }
+
+  .logo img
+  {
+    width: 30px;
+    height: 25px;
+    border-radius: 6px;
+  }
+
+  .controls
+  {
+    margin-right: 10px;
+  }
+
+  .search-bar
+  {
+    padding: 10px 25px;
+    border: none;
+    width: 80px;
+    margin-right: -15px;
+    font-size: 8px;
+    box-shadow: 1px 4px 7px #1f512b;
+  }
+
+  .search-icon
+  {
+    font-size: 10px;
+  }
+
+  .controls a
+  {
+    font-size: 8px;
+    padding: 10px 8px;
+    width: 80%;
+    box-shadow: 1px 4px 7px #1f512b;
+  }
+  .controls {
+    gap: 10px;
+    margin-top: 16px;
+    align-items: center;
+  }
+
+  .controls a i {
+    margin-right: 3px;
+    font-size: 7px;
+  }
+
+ /* when buttons sit on the green backdrop (outside white card), make them narrower and centered */
+  .drivers-info > .driver-buttons {
+    width: 86%;
+    margin: 10px auto 0;
+  }
+
+  .controls ul
+  {
+    gap: 11px;
+  }
+
+  .controls ul .main-menu a
+  {
+    padding: 7px 10px;          
+    width: auto;
+    border-radius: 10px;
+  }
+
+  .controls ul .main-menu i
+  {
+    font-size: 13px;
+    margin-right: 0;
+    padding: 0;      
+  }
+ 
+  .controls a.active
+  {
+    box-shadow: 1px 4px 7px #1f512b;
+  }
+
+  .commuters-info
+  {
+    width: 65%;
+    height: 54vh;
+    bottom: 2vh;
+    left: 15%;
+    right: auto;    
+    top: auto;
+    box-shadow: 1px 2px 7px #1f512b;
+  }
+
+  .selectroute-button
+  {
+    width: 73%;
+    height: 5vh;
+    bottom: 59vh;
+    left: 15%;
+    right: auto;    
+    top: auto;
+    box-shadow: 1px 2px 7px #1f512b;
+    margin-bottom: 11%;
+  }
+
+  .drivers-info
+  {
+    width: 65%;
+    height: 58vh;
+    bottom: 2vh;
+    left: 15%;
+    right: auto;    
+    top: auto;
+    box-shadow: 1px 2px 7px #1f512b;
+  }
+
+  .floating-label
+  { 
+    left: 54px; font-size: 14px; 
+  }
+  .route-field.has-value .floating-label,
+  .route-field:focus-within .floating-label
+  {
+    transform: translateY(-140%); font-size: 11px; 
+  }
+
+}
+
+@media (max-height: 800px) and (min-width: 740px) {
+  .commuters-info 
+  {
+    height: 390px;     
+  }
+
+  .selectroute-button
+  {
+    top: 13vh;
+  }
+
+  .drivers-info
+  {
+    top: 21vh;
+    height: 420px;     
+  }
+}
+
+
+@media (max-width: 450px)
+{
+  .dropdown-menu a 
+  {
+    font-size: 10px !important;
+    width: 80px !important;
+  }
+
+  .dropdown-menu.show 
+  {
+    width: 100px;
+  }
+
+  .commuters-info
+  {
+    width: 75%;
+    height: 44vh;
+    bottom: 2vh;
+    left: 8%;
+    right: auto;    
+    top: auto;
+  }
+
+  .selectroute-button
+  {
+    width: 85%;
+    padding: 10px 20px;
+    height: 4vh;
+    bottom: 52vh;
+    left: 8%;
+  }
+
+  .drivers-info
+  {
+    width: 75%;
+    height: 49vh;
+    bottom: 2vh;
+    left: 8%;
+    right: auto;    
+    top: auto;
+  }
+
+  .livelocation-button
+  {
+    padding: 5px 10px;
+    width: 92%;
+  }
+
+  .stoplivelocation-button
+  {
+    padding: 5px 10px;
+    width: 92%;
+  }
+
+  .arrival-info
+  {
+    margin: 20px 0px 10px 0px;
+  }
+
+
+  .leaflet-control-zoom
+  {
+    display: none !important;  
+  }
+}
+
+
+@media (max-width: 376px)
+{
+  .search-bar
+  {
+    width: 40px;
+  }
+
+  .commuters-info
+  {
+    width: 80%;
+    height: 55vh;
+    left: 5%;
+  }
+
+  .selectroute-button
+  {
+    bottom: 67vh;
+    height: 5vh;
+    width: 90%;
+    left: 5%;
+  }
+
+  .drivers-info
+  {
+    width: 80%;
+    height: 63vh;
+    left: 5%;
+  }
+
+  .arrival-info
+  {
+    margin: 10px 0 5px 0;
+  }
+
+}
+
+@media (max-width: 361px)
+{
+  .commuters-info
+  {
+    width: 81%;
+    height: 52vh;
+    left: 4%;
+  }
+
+  .selectroute-button
+  {
+    bottom: 59vh;
+    width: 92%;
+    left: 4%;
+  }
+
+  .drivers-info
+  {
+    width: 81%;
+    height: 56vh;
+    left: 4%;
+  }
+
+  .arrival-info
+  {
+    margin: 25px 0 5px 0;
+  }
+}
+
+
+@media (max-width: 345px)
+{
+  .commuters-info
+  {
+    width: 85%;
+    height: 45vh;
+    left: 2%;
+  }
+
+  .selectroute-button
+  {
+    bottom: 52vh;
+    height: 5vh;
+    width: 92%;
+    left: 4%;
+  }
+
+  .drivers-info
+  {
+    width: 81%;
+    height: 48vh;
+    left: 4%;
+  }
+
+  .arrival-info
+  {
+    margin: 25px 0 10px 0;
+  }
 }
 
 
