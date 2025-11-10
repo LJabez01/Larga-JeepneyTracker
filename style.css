@@ -819,9 +819,25 @@ nav, .controls, .main-menu
 
  /* when buttons sit on the green backdrop (outside white card), make them narrower and centered */
   .drivers-info > .driver-buttons {
-    width: 86%;
+    width: auto;
+    justify-content: center;
     margin: 10px auto 0;
+    align-items: center;
   }
+
+  .panel-backdrop
+  {
+    height: 70%;
+  }
+
+  .driverstatus-info
+  {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px;
+  }
+
 
   .controls ul
   {

@@ -138,6 +138,17 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
         }).addTo(map);
 
+        // Passenger icon
+        var PassengerIcon = L.icon({
+            iconUrl: 'https://image2url.com/images/1762271241467-09178dbf-94d7-4a82-88f4-4ee7626f1570.png',
+            iconSize: [50, 50],
+            iconAnchor: [25, 40],
+            popupAnchor: [0, -46]
+        });
+
+        // Add passenger marker along the route
+        var commuterMarker = L.marker([14.840234, 120.980678], { icon: PassengerIcon, title: 'Your Location' }).addTo(map);
+
         // Simple custom icon for the jeepney marker (falls back to default if file missing)
         var jeepneyIcon = L.icon({
             iconUrl: 'https://image2url.com/images/1761748252176-39f2cd27-02a7-4b73-b140-6171e24e62be.png',

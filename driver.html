@@ -26,7 +26,7 @@
             </a>
         </div>
         <div class="controls">
-            <!--Search Bar-->
+            <!--Search Bar
             <div class="search-container">
                 <i class="bi bi-search search-icon"></i>
                 <input list="routes" class="search-bar" placeholder="Select your route">
@@ -37,6 +37,7 @@
                     <option value="Santa Maria - Meycauayan">
                 </datalist>
             </div>
+            -->
             <!--Buttons for commuters, drivers, and profile-->
             <ul>
                 <li><a href="commuter.html">
@@ -68,7 +69,7 @@
     <!--Part of the website that shows most of the information-->
 
     <!-- Backdrop shown when the drivers panel is open. Clicking it will close the panel. -->
-    <div id="panel-backdrop"></div>
+    <div id="panel-backdrop "></div>
 
     <div class="drivers-info" id="drivers-info">
         <button class="panel-close-small" id="drivers-info-close" aria-label="Close">×</button>
@@ -232,7 +233,10 @@
             popupAnchor: [0, -46]
         });
 
-    var commuterMarker = L.marker([14.831341439952697, 120.97348565571966], { icon: PassengerIcon, title: 'Passenger' }).addTo(map);
+    var commuterMarker = L.marker([14.831341439952697, 120.97348565571966], { icon: PassengerIcon, title: 'Passenger 1' }).addTo(map);
+    var commuterMarker2 = L.marker([14.845123, 120.982221], { icon: PassengerIcon, title: 'Passenger 2' }).addTo(map);
+    var commuterMarker3 = L.marker([14.860234, 120.989678], { icon: PassengerIcon, title: 'Passenger 3' }).addTo(map);
+
 
 
         // Simple custom icon for the jeepney marker (falls back to default if file missing)
