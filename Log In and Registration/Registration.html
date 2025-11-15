@@ -85,46 +85,24 @@
 
         <!-- Right Side - Green Curved Background -->
         <div class="split-right-green">
-            <h1 class="welcome-text">Never Miss a Ride with Routify!</h1>
+            <div class="hero">
+                <!-- Replace the src with the provided icon file if different -->
+                <h1 class="welcome-text">!</h1>
+
+                <!-- Onboarding controls: Skip, pagination dots, and circular next (visual only) -->
+                <div class="hero-controls" aria-hidden="false">
+                    <a href="#" class="skip-link">Skip</a>
+                    <ul class="hero-dots" aria-hidden="true">
+                        <li class="dot active"></li>
+                        <li class="dot"></li>
+                        <li class="dot"></li>
+                    </ul>
+                    <a href="#" class="hero-next" aria-label="Next">›</a>
+                </div>
+            </div>
         </div>
     </div> <!-- .split-container -->
 
-    <script>
-        // Show/hide fields based on role selection (safe checks to avoid runtime errors)
-        (function() {
-            const roleSelect = document.getElementById('role');
-
-            function updateRoleFields() {
-                const role = roleSelect ? roleSelect.value : '';
-                const commuterFields = document.getElementById('commuterFields');
-                const driverFields = document.getElementById('driverFields');
-                const identityDocument = document.getElementById('identityDocument');
-                const plateNumber = document.getElementById('plateNumber');
-
-                // Hide both by default
-                if (commuterFields) commuterFields.style.display = 'none';
-                if (driverFields) driverFields.style.display = 'none';
-
-                // Clear required attribute
-                if (identityDocument) identityDocument.removeAttribute('required');
-                if (plateNumber) plateNumber.removeAttribute('required');
-
-                // Show relevant fields and set required
-                if (role === 'commuter') {
-                    if (commuterFields) commuterFields.style.display = 'block';
-                    if (identityDocument) identityDocument.setAttribute('required', 'required');
-                } else if (role === 'driver') {
-                    if (driverFields) driverFields.style.display = 'block';
-                    if (plateNumber) plateNumber.setAttribute('required', 'required');
-                }
-            }
-
-            if (roleSelect) {
-                roleSelect.addEventListener('change', updateRoleFields);
-                document.addEventListener('DOMContentLoaded', updateRoleFields);
-                updateRoleFields();
-            }
-        })();
-    </script>
+    <script src="registration.js"></script>
 </body>
 </html>

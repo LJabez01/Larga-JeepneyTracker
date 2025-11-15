@@ -287,9 +287,6 @@ nav, .controls, .main-menu
 
 
 
-/* Drivers styles are defined by the slide-up block later in this file.
-   Removed older top-right panel rules to avoid conflicting/duplicate styles. */
-
 /* Hide Leaflet Routing Machine UI (routing instructions panel) - global */
 .leaflet-routing-container,
 .leaflet-routing-machine,
@@ -393,7 +390,6 @@ nav, .controls, .main-menu
 .leaflet-popup .leaflet-popup-content-wrapper { margin-top: 0; }
 .leaflet-popup-tip { margin-top: 0; }
 
-/* --- styles moved from inline <style> blocks in driver.html and commuter.html --- */
 
 /* passenger map icon / drivers panel (moved from driver.html) */
 .passenger-divicon svg { display: block; pointer-events: none; }
@@ -408,11 +404,11 @@ nav, .controls, .main-menu
   width: 640px; /* wider for better readability */
   max-width: calc(100% - 48px);
   min-height: 300px; /* ensure extra vertical space for stacked inputs */
-  /* stronger green backdrop for the drivers-info container to match the design */
-  background: rgba(111,209,111,0.92);
-  padding: 28px; /* more breathing room */
+  /* slightly softer green backdrop for reduced eye strain */
+  background: rgba(111,209,111,0.78);
+  padding: 22px; /* a touch less so white card has breathing room */
   border-radius: 18px;
-  box-shadow: 0 18px 44px rgba(0,0,0,0.22);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.16);
   z-index: 12000; /* above map but below the handle */
   /* animate both transform and bottom so the panel can stop above the handle */
   transition: transform 320ms cubic-bezier(.2,.9,.3,1), bottom 320ms cubic-bezier(.2,.9,.3,1);
@@ -425,7 +421,7 @@ nav, .controls, .main-menu
 .drivers-info .driver-header h5{ margin:0;color:#0b6b3b }
 .drivers-info .driver-header p{ margin:6px 0 0 0;color:#666 }
 
-.drivers-info .driverstatus-info{ background:#fff;padding:22px;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,0.08); max-width:560px; margin: 0 auto; overflow: visible }
+.drivers-info .driverstatus-info{ background:#fff;padding:26px;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,0.08); max-width:560px; margin: 0 auto; overflow: visible }
 .drivers-info .driverstatus-info h3{ color:#0b6b3b;margin-top:0 }
 .drivers-info .information-line{ display:flex;justify-content:space-between;padding:8px 0;color:#333 }
 
@@ -441,27 +437,28 @@ nav, .controls, .main-menu
 .route-icons{ position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display:flex; flex-direction:column; align-items:center; gap:12px; width:28px; padding:0; margin:0; }
 .route-icons .start-icon, .route-icons .dest-icon{ font-size:18px; display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:#fff; border-radius:50%; box-shadow:0 4px 10px rgba(0,0,0,0.06); }
 .route-fields{ flex:1; display:flex; flex-direction:column; gap:12px }
-/*
-  .route-field: left padding is intentionally larger so text sits to the right of
-  the absolutely-positioned icons. Keep box-sizing: border-box to avoid width surprises.
-*/
-.route-field{ display:flex; align-items:center; gap:8px; background:#f3f6f7; padding:14px 46px 14px 62px; border-radius:12px; width:100%; box-shadow:0 6px 14px rgba(0,0,0,0.06); cursor:pointer; position:relative; box-sizing: border-box; }
+
+/* Combined placeholder shown when both inputs are empty */
+.route-combined-placeholder{ display:flex; align-items:center; gap:8px; background:#f3f6f7; padding:14px 46px 14px 62px; border-radius:12px; width:100%; box-shadow:0 6px 14px rgba(0,0,0,0.06); box-sizing:border-box; color: rgba(0,0,0,0.55); font-weight:600; font-size:16px }
+.route-combined-placeholder .text{ flex:1 }
+.route-combined-placeholder .text::selection{ background: transparent }
+
+.route-field{ display:flex; align-items:center; gap:8px; background:#f3f6f7; padding:14px 46px 14px 62px; border-radius:12px; width:100%; box-shadow:0 6px 14px rgba(0,0,0,0.06); cursor:pointer; position:relative; box-sizing: border-box; min-height:48px; }
 
 .floating-label{
-  /* Floating label that sits over each input when empty.
-     - left matches .route-field padding-left so text aligns with input content.
-     - pointer-events:none keeps label from blocking clicks inside the field.
-  */
   position: absolute;
   left: 62px; /* matches .route-field padding-left */
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(0,0,0,0.5);
+  color: rgba(0,0,0,0.55);
   font-weight: 600;
   pointer-events: none;
   font-size: 16px;
-  z-index: 2;
+  z-index: 6; /* sit above input text and icons */
   transition: transform 180ms ease, font-size 180ms ease, color 180ms ease;
+  background: #ffffff; /* give small white backdrop so label is legible */
+  padding: 0 6px;
+  border-radius: 8px;
 }
 
 /* When the field has a value (or focused), float the label up and reduce size */
@@ -473,7 +470,8 @@ nav, .controls, .main-menu
 }
 
 .route-field i{ font-size:18px }
-.route-text{ border:0; outline:none; background:transparent; font-weight:600; color:#234927; width:100%; font-size:16px }
+.route-text{ border:0; outline:none; background:transparent; font-weight:600; color:#234927; width:100%; font-size:16px; caret-color: #1e6b35 }
+.route-text::placeholder { color: transparent; }
 .route-picker{ background:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.14); padding:8px; }
 .route-options{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px }
 .route-option{ padding:10px 12px; border-radius:8px; cursor:pointer; color:#234927; font-size:15px }
@@ -511,6 +509,21 @@ nav, .controls, .main-menu
 
 /* Small close button inside the panel */
 .drivers-info .panel-close-small{ position:absolute; right:22px; top:12px; background:transparent;border:0;font-size:18px;color:#064e2e; cursor:pointer }
+
+/* Your location quick action (moved from inline styles in HTML) */
+.drivers-info .your-location{ background:transparent; border:0; color:#0b6b3b; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:10px; padding:6px 0 }
+.drivers-info .your-location i{ font-size:18px }
+
+.your-location-row{ margin:12px 0 0 0; }
+
+/* When the destination is already chosen, hide the starting-point prompt */
+.route-field.start-field.hide-label .floating-label{ display: none !important; }
+
+/* When destination has a value, hide its floating label so the chosen place sits plainly in the box */
+.route-field.dest-field.has-value .floating-label { display: none !important; }
+
+/* Small helper to hide UI blocks cleanly */
+.hidden{ display: none !important; }
 
 /* Bottom-center panel handle button (uses arrow image) */
 #panel-handle-button{
@@ -553,7 +566,7 @@ nav, .controls, .main-menu
 }
 .selectroute-button i{ color: rgba(255,255,255,0.95); font-size:18px }
 
-/* When the select pill is inside the drivers-info card, make it static and centered */
+/* When the select pill is insie the drivers-info card, make it static and centered */
 .drivers-info .selectroute-button{ position: static; left: auto; top: auto; transform:none; margin: 0 auto 12px; display:inline-flex; background: rgba(34,139,34,0.12); padding:8px 16px; border-radius:14px; }
 
 /* Backdrop behind the panel that closes it when clicked */
@@ -562,16 +575,7 @@ nav, .controls, .main-menu
 
 /* --- commuter: jeepney bubble (moved from commuter.html) --- */
 #jeepney-bubble {
-  /*
-    Jeepney on-page bubble (optional):
-    - This element is used by the JS helper in `commuter.html` to show a small
-      floating message when a jeepney marker is clicked.
-    - By default we hide it via CSS to avoid interfering with marker popups.
-      If you want to re-enable it, remove the `display:none !important` line
-      below (or change to display:block) and tweak positioning as needed.
-    - Keeping the element in DOM is helpful for progressive enhancement and
-      tests; the CSS below neutralizes its visual footprint.
-  */
+ 
   display: none !important; /* force-hidden to respect the user's choice */
   position: fixed;
   top: 80px;
@@ -588,11 +592,6 @@ nav, .controls, .main-menu
 #jeepney-bubble.show { display: none !important; }
 #jeepney-bubble .jb-close { background: transparent; border: none; color: #fff; font-size: 16px; line-height: 1; float: right; cursor: pointer; }
 @keyframes jb-fade { from { opacity: 0; transform: translateY(-6px);} to { opacity:1; transform: translateY(0);} }
-
-/* Commuter UI (grouped) */
-/* Add waiting area button - Commuter Section */
-/* .addwaitingarea-button rules removed (button deleted from HTML) */
-
 
 /* Commuters Information Panel */
 .commuters-info
