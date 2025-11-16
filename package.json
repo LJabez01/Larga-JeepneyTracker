@@ -1,0 +1,24 @@
+{
+  "name": "larga-jeepneytracker",
+  "version": "1.0.0",
+  "description": "This will be our main repo",
+  "main": "commuter.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LJabez01/Larga-JeepneyTracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/LJabez01/Larga-JeepneyTracker/issues"
+  },
+  "homepage": "https://github.com/LJabez01/Larga-JeepneyTracker#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.81.1"
+  }
+}
