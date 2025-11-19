@@ -391,13 +391,5 @@ body
     font-size: 1.6rem;
     font-weight: 700;
     color: #121212;
-    text-align: left;
-}
-
-/* Responsive: stack columns on narrow screens */
-@media (max-width: 900px){
-    .split-container{flex-direction:column}
-    .split-left, .split-right, .split-left-form, .split-right-green{height:50vh;width:100%}
-    .slideshow{height:100%}
-    .form-card{max-width:640px;margin:18px}
+    text-align: center;
 }
