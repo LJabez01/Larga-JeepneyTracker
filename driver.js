@@ -19,11 +19,11 @@
 
     // Initialize Leaflet map
     if(typeof L !== 'undefined'){
-        window.map = L.map('map').setView([14.831426, 120.976661], 13);
+        const map = L.map('map').setView([14.831426, 120.976661], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(window.map);
+        }).addTo(map);
 
         // expose updatePanelHandle for panel UI
         (function(){
@@ -70,8 +70,8 @@
             }
         })();
 
-        if(window.map && window.map.zoomControl && window.map.zoomControl.setPosition){
-            window.map.zoomControl.setPosition('bottomleft');
+        if(map && map.zoomControl && map.zoomControl.setPosition){
+            map.zoomControl.setPosition('bottomleft');
         }
 
         // Passenger icon
@@ -82,9 +82,9 @@
             popupAnchor: [0, -46]
         });
 
-        L.marker([14.831341439952697, 120.97348565571966], { icon: PassengerIcon, title: 'Passenger 1' }).addTo(window.map);
-        L.marker([14.845123, 120.982221], { icon: PassengerIcon, title: 'Passenger 2' }).addTo(window.map);
-        L.marker([14.860234, 120.989678], { icon: PassengerIcon, title: 'Passenger 3' }).addTo(window.map);
+        L.marker([14.831341439952697, 120.97348565571966], { icon: PassengerIcon, title: 'Passenger 1' }).addTo(map);
+        L.marker([14.845123, 120.982221], { icon: PassengerIcon, title: 'Passenger 2' }).addTo(map);
+        L.marker([14.860234, 120.989678], { icon: PassengerIcon, title: 'Passenger 3' }).addTo(map);
 
         // Jeepney icon and routes
         var jeepneyIcon = L.icon({
@@ -108,7 +108,7 @@
                 createMarker: function(i, waypoint, n){ if(i===0) return L.marker(waypoint.latLng, { icon: jeepneyIcon }); return null; },
                 lineOptions: { styles: [{ color: 'green', weight: 4 }] },
                 router: L.Routing.osrmv1({})
-            }).addTo(window.map);
+            }).addTo(map);
         }
 
         // Driver UI interactions
@@ -214,7 +214,7 @@
             function showPicker(targetType, anchorEl){
                 if(!routePicker) return;
                 // Close any open leaflet popups so they don't cover the picker
-                try{ if(window.map && window.map.closePopup) window.map.closePopup(); }catch(e){}
+                try{ if(map && map.closePopup) map.closePopup(); }catch(e){}
 
                 routePicker.style.display = 'block';
                 routePicker.setAttribute('data-target', targetType);
@@ -266,13 +266,13 @@
                             if(startInput) startInput.value = label; // keep driver panel inputs in sync
                             try{ updateFieldClasses(); }catch(e){}
                         }, function(){
-                            var c = window.map && window.map.getCenter && window.map.getCenter();
+                            var c = map && map.getCenter && map.getCenter();
                             var label = c ? 'Your location' : 'Current location';
                             if(startInput) startInput.value = label;
                             try{ updateFieldClasses(); }catch(e){}
                         });
                     } else {
-                        var c = window.map && window.map.getCenter && window.map.getCenter();
+                        var c = map && map.getCenter && map.getCenter();
                         var label = c ? 'Your location' : 'Current location';
                         if(startInput) startInput.value = label;
                         try{ updateFieldClasses(); }catch(e){}

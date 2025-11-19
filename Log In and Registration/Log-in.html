@@ -9,15 +9,23 @@
 </head>
 <body class="split-screen-body">
     <div class="split-container">
-        <!-- Left Side - Green Curved Background -->
+        <!-- Left Side - Slideshow -->
         <div class="split-left">
-            <h1 class="welcome-text">Routify</h1>
+            <div class="slideshow" id="auth-slideshow">
+                <div class="slides"></div>
+                <div class="slide-overlay">
+                    <div class="quote-text" id="slide-quote"></div>
+                    <div class="quote-author" id="slide-author"></div>
+                    <div class="slide-indicators" id="slide-indicators"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Right Side - Login Form -->
         <div class="split-right">
             <div class="form-card">
                 <form id="loginForm" class="auth-form">
+                    <h2 class="form-title">Welcome back!</h2>
                     <div class="form-group">
                         <input type="text" id="username" name="username" placeholder="Username">
                     </div>
@@ -26,7 +34,7 @@
                     </div>
 
                     <div class="login-button">
-                        <a href="commuter.html">Log-in</a>
+                        <a class="auth-btn" href="../commuter.html">Log in</a>
                     </div>
                     
                     <div class="form-links">
@@ -40,5 +48,7 @@
             </div>
         </div>
     </div>
+        <script src="login-slideshow.js"></script>
+        <script src="login-handler.js"></script>
 </body>
 </html>

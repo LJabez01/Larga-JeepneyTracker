@@ -14,6 +14,7 @@
         <div class="split-left-form">
             <div class="form-card">
                 <form id="registrationForm" class="auth-form">
+                    <h2 class="form-title">Create an account</h2>
                     <div class="form-group">
                         <input type="text" id="username" name="username" placeholder="Username" required>
                     </div>
@@ -83,16 +84,21 @@
             </div>
         </div>
 
-        <!-- Right Side - Green Curved Background -->
+        <!-- Right Side - Slideshow -->
         <div class="split-right-green">
-            <div class="hero">
-                <!-- Replace the src with the provided icon file if different -->
-                <h1 class="welcome-text">hi niggas</h1>
+            <div class="slideshow" id="auth-slideshow">
+                <div class="slides"></div>
+                <div class="slide-overlay">
+                    <div class="quote-text" id="slide-quote"></div>
+                    <div class="quote-author" id="slide-author"></div>
+                    <div class="slide-indicators" id="slide-indicators"></div>
                 </div>
             </div>
+        </div>
         </div>
     </div> <!-- .split-container -->
 
     <script src="registration.js"></script>
+    <script src="login-slideshow.js"></script>
 </body>
 </html>

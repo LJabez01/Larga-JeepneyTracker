@@ -19,13 +19,18 @@
 (function(){
   // Initialize Leaflet map
   const map = L.map('map', { zoomControl: false }).setView([14.831426, 120.976661], 13);
-  // expose map globally for helpers that reference window.map
-  window.map = map;
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
   }).addTo(map);
+
+  // Ensure zoom control is visible and placed bottom-left (fallback adds a control if missing)
+  if (map && map.zoomControl && map.zoomControl.setPosition) {
+    map.zoomControl.setPosition('bottomleft');
+  } else {
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
+  }
 
   // Passenger icon
   var PassengerIcon = L.icon({
@@ -122,7 +127,7 @@
       _jbTimer = setTimeout(hideJeepneyBubble, 6000);
     };
 
-    if(window.map && map.on){ map.on('click', function(){ hideJeepneyBubble(); }); }
+    if(map && map.on){ map.on('click', function(){ hideJeepneyBubble(); }); }
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hideJeepneyBubble(); });
     document.addEventListener('click', function(e){ if(!bubble) return; if(!bubble.contains(e.target)) hideJeepneyBubble(); });
   })();
