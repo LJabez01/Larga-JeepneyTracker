@@ -88,3 +88,4 @@
     setSlides: function(newSlides){ if(Array.isArray(newSlides) && newSlides.length){ slides = newSlides; current = 0; renderIndicators(); showSlide(0); resetTimer(); } }
   };
 })();
+
