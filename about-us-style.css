@@ -2,16 +2,18 @@ body
 {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  background-color: #f5f8f5;
+  background-color: #eef6ee;
   color: #333;
+  transition: background 0.3s ease;
 }
 
 /* Navigation Bar */
 nav 
 {
-  background-color: #69b164;
+  background: linear-gradient(90deg, #5da85a, #76c96f);
   color: white;
-  padding: 12px 40px;
+  padding: 14px 45px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .navbar-items 
@@ -23,10 +25,10 @@ nav
 
 nav a 
 {
-  color: rgb(255, 255, 255);
-  background-color: #468e46;
-  border-radius: 20px;
-  padding: 10px 15px;
+  color: #ffffff;
+  background-color: #4b9649;
+  border-radius: 25px;
+  padding: 10px 18px;
   text-decoration: none;
   font-weight: 600;
   font-size: 15px;
@@ -36,27 +38,28 @@ nav a
 
 nav i
 {
-  margin-right: 5px;
+  margin-right: 6px;
 }
 
 nav a:hover 
 {
-  background-color: #2c582c;
-	color: #ffffff;
-  transform: scale(1.05);
+  background-color: #2e5d2e;
+  color: #ffffff;
+  transform: translateY(-3px) scale(1.07);
 }
 
 nav h1 
 {
-  font-size: 22px;
+  font-size: 24px;
   margin: 0;
+  letter-spacing: 1px;
 }
 
 /* About Section */
 .about-routify 
 {
   max-width: 900px;
-  margin: 60px auto;
+  margin: 70px auto;
   text-align: center;
   padding: 0 20px;
 }
@@ -64,47 +67,59 @@ nav h1
 .about-routify h1 
 {
   color: #3a9433;
-  font-size: 36px;
+  font-size: 40px;
   margin-bottom: 20px;
+  font-weight: 700;
 }
 
 .about-routify p 
 {
-  font-size: 16px;
-  line-height: 1.8;
+  font-size: 17px;
+  line-height: 1.9;
   color: #555;
+  max-width: 850px;
+  margin: auto;
 }
 
 /* Founders Section */
 .founders-Container 
 {
-  background-color: white;
-  padding: 60px 20px;
+  background-color: #ffffff;
+  padding: 70px 20px;
   text-align: center;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
 }
 
 .founders-Container h1 
 {
   color: #3a9433;
-  font-size: 32px;
-  margin-bottom: 40px;
+  font-size: 34px;
+  margin-bottom: 45px;
 }
 
-/* Founder Card Layout */
+/* Founder Cards */
 .founder-card 
 {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  max-width: 1000px;
-  height: 250px;
+  max-width: 1050px;
+  min-height: 270px;
   background: #f8fdf8;
   box-shadow: 0 6px 20px rgba(58, 148, 51, 0.2);
   border-radius: 20px;
-  margin: 20px auto 40px auto;
-  padding: 40px;
-  gap: 40px;
+  margin: 25px auto 50px auto;
+  padding: 45px;
+  gap: 45px;
   flex-wrap: wrap;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.founder-card:hover
+{
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(58, 148, 51, 0.28);
 }
 
 .founder-card.reverse 
@@ -113,41 +128,43 @@ nav h1
   text-align: center;
 }
 
-.founder-card.reverse .founder-right 
-{
-  align-items: center;
-}
-
-.founder-card.reverse .social-links 
-{
-  justify-content: flex-end; 
-  margin: 10px;
-}
-
 .founder-left 
 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  flex: 0 0 300px;
+  gap: 18px;
+  flex: 0 0 260px;
 }
 
 .founder-left img 
 {
   width: 200px;
   height: 200px;
-  border-radius: 10%;
+  border-radius: 12%;
   object-fit: cover;
-  box-shadow: 2px 2px 10px #2b6e26;
+  box-shadow: 2px 2px 12px #2b6e26;
+  transition: transform 0.3s ease;
+}
+
+.founder-left img:hover
+{
+  transform: scale(1.05);
 }
 
 .founder-left h3 
 {
-  font-size: 20px;
+  font-size: 22px;
   color: #2f6627;
   margin: 0;
   font-weight: 700;
+}
+
+.founder-left .role
+{
+  font-size: 14px;
+  color: #4c8a42;
+  font-weight: 600;
 }
 
 .founder-right 
@@ -155,36 +172,55 @@ nav h1
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 22px;
+  padding: 0 10px;
 }
 
 .founder-right p
 {
-  font-size: 15px;
+  font-size: 16px;
   color: #444;
-  line-height: 1.7;
+  line-height: 1.8;
   margin: 10px;
+  max-width: 650px;
 }
-
 
 .social-links 
 {
   display: flex;
-  gap: 20px;
+  gap: 22px;
 }
 
 .social-links a 
 {
   text-decoration: none;
   color: #3a9433;
-  font-size: 26px;
+  font-size: 28px;
   transition: color 0.3s, transform 0.2s;
 }
 
 .social-links a:hover 
 {
-  color: #2b6e26;
-  transform: scale(1.15);
+  color: #215a1d;
+  transform: scale(1.18);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px)
+{
+  .founder-card {
+    padding: 25px;
+    text-align: center;
+  }
+
+  .founder-left img {
+    width: 160px;
+    height: 160px;
+  }
+
+  .founder-right p {
+    font-size: 15px;
+  }
 }
