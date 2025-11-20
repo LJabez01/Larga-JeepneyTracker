@@ -16,7 +16,16 @@
                 <form id="registrationForm" class="auth-form">
                     <h2 class="form-title">Create an account</h2>
                     <div class="form-group">
-                        <input type="text" id="username" name="username" placeholder="Username" required>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            placeholder="Username"
+                            minlength="3" 
+                            maxlength="30" 
+                            pattern="^[a-zA-Z0-9_]+$" 
+                            title="Username must be 3-30 characters long and can only contain letters, numbers, and underscores (_)."
+                            required>
                     </div>
 
                     <div class="form-group">
@@ -24,7 +33,15 @@
                     </div>
 
                     <div class="form-group">
-                        <input type="password" id="password" name="password" placeholder="Password" required>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="Password" 
+                            minlength="8"
+                            pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}"
+                            title="Password must be at least 8 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character (@$!%*?&)."
+                            required>
                     </div>
 
                     <div class="form-group">
@@ -42,7 +59,18 @@
                     <!-- Commuter-Specific Fields -->
                     <div id="commuterFields" style="display: none;">
                         <div class="form-group">
-                            <input type="text" id="identityDocument" name="identityDocument" placeholder="Identity Document (ID Number)">
+                            <input 
+                                type="text" 
+                                id="identityDocument" 
+                                name="identityDocument" 
+                                placeholder="Identity Document (ID Number)" 
+                                minlength="5" 
+                                maxlength="20" 
+                                pattern="^\d+$" 
+                                inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                title="ID number is required, must be 5–20 digits long, and can only contain numbers."
+                                required>
                         </div><br>
 
                         <div class="form-group">
@@ -54,11 +82,39 @@
                     <!-- Driver-Specific Fields -->
                     <div id="driverFields" style="display: none;">
                         <div class="form-group">
-                            <input type="text" id="plateNumber" name="plateNumber" placeholder="Plate Number (Required)">
+                            <input 
+                                type="text" 
+                                id="plateNumber" 
+                                name="plateNumber" 
+                                placeholder="Plate Number (ABC123)" 
+                                pattern="^[A-Z]{3}\d{3}$" 
+                                maxlength="6"
+                                title="Plate number format: 3 uppercase letters followed by 3 digits (Example: ABC123)."
+                                style="text-transform:uppercase;"
+                                oninput="
+                                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+                                    if(this.value.length > 3 && !/^\D{3}/.test(this.value)) this.value = this.value.slice(0,3) + this.value.slice(3).replace(/\D/g,'');"
+                                required>
                         </div><br>
 
                         <div class="form-group">
-                            <input type="text" id="licenseNumber" name="licenseNumber" placeholder="License Number (Optional)">
+                            <input 
+                                type="text" 
+                                id="licenseNumber" 
+                                name="licenseNumber" 
+                                placeholder="License Number (A123-45-123456)" 
+                                pattern="^[A-Z]\d{3}-\d{2}-\d{6}$"
+                                maxlength="12" 
+                                title="License number format: 1 letter, 3 digits, 2 digits, 6 digits (Example: A123-45-123456)."
+                                style="text-transform:uppercase;"
+                                oninput="
+                                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+                                    if(this.value.length > 1 && this.value.length <= 4) this.value = this.value.slice(0,1) + this.value.slice(1).replace(/\D/g,'');
+                                    else if(this.value.length > 4 && this.value.length <= 6) this.value = this.value.slice(0,4) + this.value.slice(4).replace(/\D/g,'');
+                                    else if(this.value.length > 6) this.value = this.value.slice(0,6) + this.value.slice(6).replace(/\D/g,'');
+                                    if(this.value.length === 4) this.value = this.value.slice(0,4) + '-';
+                                    if(this.value.length === 7) this.value = this.value.slice(0,7) + '-';"
+                                required>
                         </div><br>
 
                         <div class="form-group">
