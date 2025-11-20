@@ -3,7 +3,6 @@
   var INTERVAL = 3000;
 
   var slides = [
-    { img: 'https://image2url.com/images/1763565711927-ffcbb390-8624-4701-909e-737cff9d74e9.png', text:"", author: '' },
     { img: 'https://image2url.com/images/1763569553548-d35bcf85-551a-46d5-88bb-0ee3296fbb32.png', text: '', author: '' },
     { img: 'https://image2url.com/images/1763569516027-86d25fd9-be5d-4b4f-868c-c2000727ea56.png', text: '', author: '' }
   ];
