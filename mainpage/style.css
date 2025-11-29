@@ -285,6 +285,195 @@ nav, .controls, .main-menu
   z-index: 0;
 }
 
+/* Route Selection - Drivers Side */
+.route-card 
+{
+  position: absolute;
+  z-index: 10;
+  top: 17vh;
+  right: 5vh;
+  width: 300px;
+  height: 500px;
+  padding: 5px 30px;
+  border-radius: 15px;
+  background-color: #0a714e;
+  text-align: center;
+}
+
+.route-card h2 
+{
+  color: white;
+  margin-bottom: 10px;
+}
+
+
+.dropdown-box 
+{
+  background: white;
+  padding: 17px;
+  border-radius: 8px;
+  margin-bottom: 7px;
+}
+
+.dropdown-box select 
+{
+  width: 100%;
+  border: none;
+  background: #ddd;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+  text-align: center;
+}
+
+
+.swap-icon 
+{
+  width: 45px;
+  height: 45px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -20px auto 10px auto;
+  font-size: 22px;
+}
+
+
+.info-box 
+{
+  background: #d8d8d8;
+  color: #333;
+  padding: 15px;
+  border-radius: 10px;
+  margin: 20px 0;
+  text-align: left;
+}
+
+
+.info-check 
+{
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.info-check input 
+{
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+}
+
+.info-check span 
+{
+  line-height: 1.4;
+  font-size: 12px;
+}
+
+
+.start-btn 
+{
+  width: 80%;
+  padding: 8px;
+  border: none;
+  background: #19c74d;
+  font-size: 14px;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.stop-btn 
+{
+  width: 80%;
+  padding: 14px;
+  border: none;
+  background: #7a8d7c;
+  font-size: 10px;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+
+.hide-btn 
+{
+  position: absolute;
+  z-index: 0;
+  left: -35px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 35px;
+  height: 60px;
+
+  background: #fefefe;
+  border: none;
+  border-radius: 10px 0px 0px 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Show Button when its already hidden */
+.show-btn 
+{
+  display: none;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 35px;
+  height: 60px;
+
+  background: #fefefe;
+  border: none;
+  border-radius: 10px 0px 0px 10px;
+
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  z-index: 999;
+}
+
+/* Slide Animations */
+.slide-in 
+{
+  animation: slideIn 0.4s forwards;
+}
+
+.slide-out 
+{
+  animation: slideOut 0.4s forwards;
+}
+
+@keyframes slideIn 
+{
+  from { right: -350px; }
+  to { right: 5vh; }
+}
+
+@keyframes slideOut 
+{
+  from { right: 5vh; }
+  to { right: -350px; }
+}
+
+
 
 
 /* Hide Leaflet Routing Machine UI (routing instructions panel) - global */
@@ -395,71 +584,7 @@ nav, .controls, .main-menu
 .passenger-divicon svg { display: block; pointer-events: none; }
 .passenger-divicon { line-height: 0; }
 
-/* Make .drivers-info appear as a slide-up panel from the bottom */
-.drivers-info{
-  position: fixed;
-  left: 50%;
-  bottom: 16px;
-  transform: translate(-50%, 110%); /* hidden by default */
-  width: 640px; /* wider for better readability */
-  max-width: calc(100% - 48px);
-  min-height: 300px; /* ensure extra vertical space for stacked inputs */
-  /* slightly softer green backdrop for reduced eye strain */
-  background: rgba(111,209,111,0.78);
-  padding: 22px; /* a touch less so white card has breathing room */
-  border-radius: 18px;
-  box-shadow: 0 18px 44px rgba(0,0,0,0.16);
-  z-index: 12000; /* above map but below the handle */
-  /* animate both transform and bottom so the panel can stop above the handle */
-  transition: transform 320ms cubic-bezier(.2,.9,.3,1), bottom 320ms cubic-bezier(.2,.9,.3,1);
-}
-/* When open, lift the whole panel higher (so it sits above the handle/arrow) */
-.drivers-info.open{ bottom: 150px; transform: translateX(-50%); }
 
-/* inner white card and header styles (keeps existing markup intact) */
-.drivers-info .driver-header{ background:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:14px;box-shadow:0 8px 20px rgba(0,0,0,0.08) }
-.drivers-info .driver-header h5{ margin:0;color:#0b6b3b }
-.drivers-info .driver-header p{ margin:6px 0 0 0;color:#666 }
-
-.drivers-info .driverstatus-info{ background:#fff;padding:26px;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,0.08); max-width:560px; margin: 0 auto; overflow: visible }
-.drivers-info .driverstatus-info h3{ color:#0b6b3b;margin-top:0 }
-.drivers-info .information-line{ display:flex;justify-content:space-between;padding:8px 0;color:#333 }
-
-.drivers-info .livelocation-button, .drivers-info .stoplivelocation-button{
-  display:block;width:100%;padding:12px;border-radius:18px;border:0;color:#fff;cursor:pointer;margin-top:12px;text-align:center
-}
-.drivers-info .livelocation-button{ background:linear-gradient(#3b8a53,#2f7a44);box-shadow:0 6px 12px rgba(47,122,68,0.18) }
-.drivers-info .stoplivelocation-button{ background:linear-gradient(#9a9a9a,#7a7a7a);box-shadow:0 6px 12px rgba(121,121,121,0.14) }
-
-/* Route selection and recent routes UI (driver panel) */
-.route-select{ display:flex; gap:12px; width:100%; justify-content:flex-start; margin:6px 0 14px 0; position:relative; align-items:flex-start }
-.route-input{ display:block; position:relative; width:100%; }
-.route-icons{ position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display:flex; flex-direction:column; align-items:center; gap:12px; width:28px; padding:0; margin:0; }
-.route-icons .start-icon, .route-icons .dest-icon{ font-size:18px; display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:#fff; border-radius:50%; box-shadow:0 4px 10px rgba(0,0,0,0.06); }
-.route-fields{ flex:1; display:flex; flex-direction:column; gap:12px }
-
-/* Combined placeholder shown when both inputs are empty */
-.route-combined-placeholder{ display:flex; align-items:center; gap:8px; background:#f3f6f7; padding:14px 46px 14px 62px; border-radius:12px; width:100%; box-shadow:0 6px 14px rgba(0,0,0,0.06); box-sizing:border-box; color: rgba(0,0,0,0.55); font-weight:600; font-size:16px }
-.route-combined-placeholder .text{ flex:1 }
-.route-combined-placeholder .text::selection{ background: transparent }
-
-.route-field{ display:flex; align-items:center; gap:8px; background:#f3f6f7; padding:14px 46px 14px 62px; border-radius:12px; width:100%; box-shadow:0 6px 14px rgba(0,0,0,0.06); cursor:pointer; position:relative; box-sizing: border-box; min-height:48px; }
-
-.floating-label{
-  position: absolute;
-  left: 62px; /* matches .route-field padding-left */
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(0,0,0,0.55);
-  font-weight: 600;
-  pointer-events: none;
-  font-size: 16px;
-  z-index: 6; /* sit above input text and icons */
-  transition: transform 180ms ease, font-size 180ms ease, color 180ms ease;
-  background: #ffffff; /* give small white backdrop so label is legible */
-  padding: 0 6px;
-  border-radius: 8px;
-}
 
 /* When the field has a value (or focused), float the label up and reduce size */
 .route-field.has-value .floating-label,
@@ -760,7 +885,12 @@ nav, .controls, .main-menu
     margin: 0;
   }
 
-  .logo-text,
+  .logo-text
+  {
+    font-size: 25px;
+    margin: 0px;
+  }
+
   .menu-text
   {
     display: none;
@@ -905,7 +1035,6 @@ nav, .controls, .main-menu
   {
     transform: translateY(-140%); font-size: 11px; 
   }
-
 }
 
 @media (max-height: 800px) and (min-width: 740px) {
@@ -986,10 +1115,31 @@ nav, .controls, .main-menu
     margin: 20px 0px 10px 0px;
   }
 
-
   .leaflet-control-zoom
   {
     display: none !important;  
+  }
+
+  .route-card
+  {
+    position: fixed;
+    padding: 15px 51px;
+    top: 46vh;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: top 0.4s ease;
+    width: 330px;
+    height: 500px;
+    padding-bottom: 0;
+    border-radius: 45px 45px 0px 0px;
+  }
+}
+
+@media (max-width: 400px)
+{
+  .route-card
+  {
+    top: 42vh;
   }
 }
 
@@ -1028,6 +1178,33 @@ nav, .controls, .main-menu
     margin: 10px 0 5px 0;
   }
 
+  .route-card
+  {
+    top: 37vh;
+    width: 300px;
+    height: 400px;
+    font-size: 12px;
+  }
+
+  .dropdown-box 
+  {
+    padding: 12px;
+  }
+
+  .dropdown-box select 
+  {
+    padding: 8px;
+  }
+
+  .info-box
+  {
+    padding: 5px;
+  }
+
+  .info-check span
+  {
+    font-size: 11px;
+  }
 }
 
 @media (max-width: 361px)
@@ -1056,6 +1233,12 @@ nav, .controls, .main-menu
   .arrival-info
   {
     margin: 25px 0 5px 0;
+  }
+
+  .route-card
+  {
+    top: 50vh;
+    height: 400px;
   }
 }
 
@@ -1087,6 +1270,13 @@ nav, .controls, .main-menu
   .arrival-info
   {
     margin: 25px 0 10px 0;
+  }
+
+  .route-card
+  {
+    top: 52vh;
+    width: 250px;
+    height: 450px;
   }
 }
 

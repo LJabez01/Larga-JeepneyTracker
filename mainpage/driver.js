@@ -295,3 +295,25 @@
         })();
     }
 })();
+
+document.addEventListener("DOMContentLoaded", function () {
+    const routeCard = document.querySelector(".route-card");
+    const hideBtn = document.getElementById("hideBtn");
+    const showBtn = document.getElementById("showBtn");
+
+    hideBtn.addEventListener("click", () => {
+        routeCard.classList.add("slide-out");
+        routeCard.classList.remove("slide-in");
+
+        hideBtn.classList.add("hidden");
+        showBtn.classList.remove("hidden");
+    });
+
+    showBtn.addEventListener("click", () => {
+        routeCard.classList.remove("slide-out");
+        routeCard.classList.add("slide-in");
+
+        showBtn.classList.add("hidden");
+        hideBtn.classList.remove("hidden");
+    });
+});

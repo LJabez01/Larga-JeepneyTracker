@@ -22,7 +22,7 @@
             <img src="../images/logoo.png" alt="lakbay-logo">
             </a>
             <a href="index.html">
-                <span class="logo-text">Routify</span>
+                <span class="logo-text">Larga</span>
             </a>
         </div>
         <div class="controls">
@@ -44,77 +44,51 @@
         </div>
     </nav>
 
-    <!-- Directions UI moved inside the drivers panel (no separate floating container) -->
-
     <!--Div for the leaflet map to set as the website background image-->
     <div class="leaflet-map" id="map"></div>
 
-    <!--Part of the website that shows most of the information-->
+    <!--Route Selection-->
+    <div class="route-card">
+        <button id="hideBtn" class="hide-btn">
+            <i class="bi bi-chevron-bar-right"></i>
+        </button>
 
-    <!-- Backdrop shown when the drivers panel is open. Clicking it will close the panel. -->
-    <div id="panel-backdrop"></div>
+        <h2>Select Your Route</h2>
 
-    <div class="drivers-info" id="drivers-info">
-        <button class="panel-close-small" id="drivers-info-close" aria-label="Close">×</button>
-    <!-- select-route pill removed -->
-
-        <div class="driverstatus-info">
-
-            <div class="route-select" aria-label="Route selection">
-                <!-- Left icon column and stacked route inputs (matches provided screenshot) -->
-                <div class="route-input">
-                    <div class="route-icons" aria-hidden="true">
-                        <i class="bi bi-record-circle start-icon" title="Start"></i>
-                        <i class="bi bi-geo-alt-fill dest-icon" title="Destination"></i>
-                    </div>
-
-                    <div class="route-fields">
-                        <div class="route-field start-field" tabindex="0" data-type="start">
-                            <span class="floating-label">Choose starting point</span>
-                            <input readonly class="route-text start-input" aria-label="Starting point">
-                            <i class="bi bi-search input-search" aria-hidden="true"></i>
-                        </div>
-
-                        <div class="route-field dest-field" tabindex="0" data-type="dest">
-                            <span class="floating-label">Choose destination</span>
-                            <input readonly class="route-text dest-input" aria-label="Destination">
-                            <i class="bi bi-search input-search" aria-hidden="true"></i>
-                        </div>
-                    </div>
-                </div>
-
-                
-            </div>
-
-            <!-- 'Your location' quick action inside the drivers panel -->
-            <div class="your-location-row">
-                <button class="your-location" type="button" title="Use your location">
-                    <i class="bi bi-geo-alt"></i>
-                    <span>Your location</span>
-                </button>
-            </div>
-
-        
-            <div class="recent-routes">
-                <h4>Recent routes</h4>
-                <ul class="recent-list">
-                    <li class="recent-item">Angat - Monumento</li>
-                    <li class="recent-item">Sta Maria - Pulong Buhangin</li>
-                    <li class="recent-item active">Norzagaray - Divisoria</li>
-                </ul>
-            </div>
-
+        <div class="dropdown-box">
+            <select>
+                <option disabled selected>Select a starting point</option>
+                <option>Location A</option>
+                <option>Location B</option>
+            </select>
         </div>
 
-        <div class="driver-buttons">
-            <button id="trip-toggle" class="start-trip-button">Start Trip</button>
+        <div class="dropdown-box">
+            <select>
+                <option disabled selected>Select a destination</option>
+                <option>Location X</option>
+                <option>Location Y</option>
+            </select>
         </div>
-        
+
+        <div class="info-box">
+            <label class="info-check">
+                <input type="checkbox">
+                <span>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+                    Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                </span>
+            </label>
         </div>
+
+        <button class="start-btn">Largaaaa!</button>
+        <button class="stop-btn">Stop Showing Live Location</button>
     </div>
 
-    <!-- Bottom-center handle button to toggle the drivers-info panel -->
-    <button id="panel-handle-button" aria-label="Open panel" title="Open panel"></button>
+    <button id="showBtn" class="show-btn hidden">
+        <i class="bi bi-chevron-bar-left"></i>
+    </button>
+
 
     <!--Script for the leaflet map-->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
@@ -122,8 +96,6 @@
     crossorigin="">
     </script>
 
-    <!-- Dropdown/menu and page behavior moved to external JS (driver.js) -->
-    
     <!-- Leaflet Routing Machine JS (required for L.Routing.control) -->
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
     <script src="driver.js"></script>
