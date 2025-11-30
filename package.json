@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/LJabez01/Larga-JeepneyTracker#readme",
   "dependencies": {
-    "@supabase/supabase-js": "^2.84.0",
+    "@supabase/supabase-js": "^2.86.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0"
   }

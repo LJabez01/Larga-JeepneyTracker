@@ -56,8 +56,8 @@
                         </select>
                     </div>
 
-                    <!-- Commuter-Specific Fields -->
-                    <div id="commuterFields" style="display: none;">
+                    <!-- Commuter-Specific Fields (dynamically required) -->
+                    <div id="commuterFields" style="display:none;">
                         <div class="form-group">
                             <input 
                                 type="text" 
@@ -69,18 +69,16 @@
                                 pattern="^\d+$" 
                                 inputmode="numeric"
                                 oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                title="ID number is required, must be 5–20 digits long, and can only contain numbers."
-                                required>
-                        </div><br>
-
+                                title="ID number must be 5–20 digits and numeric only.">
+                        </div>
                         <div class="form-group">
                             <label for="commuterIdUpload" class="upload-label">Upload ID Document</label>
-                            <input type="file" id="commuterIdUpload" name="commuterIdUpload" accept="image/*,.pdf">
+                            <input type="file" id="commuterIdUpload" name="commuterIdUpload" accept="image/*,application/pdf">
                         </div>
                     </div>
 
-                    <!-- Driver-Specific Fields -->
-                    <div id="driverFields" style="display: none;">
+                    <!-- Driver-Specific Fields (dynamically required) -->
+                    <div id="driverFields" style="display:none;">
                         <div class="form-group">
                             <input 
                                 type="text" 
@@ -89,14 +87,10 @@
                                 placeholder="Plate Number (ABC123)" 
                                 pattern="^[A-Z]{3}\d{3}$" 
                                 maxlength="6"
-                                title="Plate number format: 3 uppercase letters followed by 3 digits (Example: ABC123)."
+                                title="Format: 3 letters + 3 digits (ABC123)."
                                 style="text-transform:uppercase;"
-                                oninput="
-                                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-                                    if(this.value.length > 3 && !/^\D{3}/.test(this.value)) this.value = this.value.slice(0,3) + this.value.slice(3).replace(/\D/g,'');"
-                                required>
-                        </div><br>
-
+                                oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');">
+                        </div>
                         <div class="form-group">
                             <input 
                                 type="text" 
@@ -104,22 +98,21 @@
                                 name="licenseNumber" 
                                 placeholder="License Number (A123-45-123456)" 
                                 pattern="^[A-Z]\d{3}-\d{2}-\d{6}$"
-                                maxlength="12" 
-                                title="License number format: 1 letter, 3 digits, 2 digits, 6 digits (Example: A123-45-123456)."
+                                maxlength="14" 
+                                title="Format: A123-45-123456"
                                 style="text-transform:uppercase;"
                                 oninput="
-                                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-                                    if(this.value.length > 1 && this.value.length <= 4) this.value = this.value.slice(0,1) + this.value.slice(1).replace(/\D/g,'');
-                                    else if(this.value.length > 4 && this.value.length <= 6) this.value = this.value.slice(0,4) + this.value.slice(4).replace(/\D/g,'');
-                                    else if(this.value.length > 6) this.value = this.value.slice(0,6) + this.value.slice(6).replace(/\D/g,'');
-                                    if(this.value.length === 4) this.value = this.value.slice(0,4) + '-';
-                                    if(this.value.length === 7) this.value = this.value.slice(0,7) + '-';"
-                                required>
-                        </div><br>
-
+                                    let v=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+                                    if(v.length>1) v=v.slice(0,1)+v.slice(1);
+                                    if(v.length>4) v=v.slice(0,4)+v.slice(4);
+                                    if(v.length>6) v=v.slice(0,6)+v.slice(6);
+                                    if(v.length===4) v=v+'-';
+                                    if(v.length===7) v=v+'-';
+                                    this.value=v;">
+                        </div>
                         <div class="form-group">
                             <label for="driverLicenseUpload" class="upload-label">Upload Driver's License</label>
-                            <input type="file" id="driverLicenseUpload" name="driverLicenseUpload" accept="image/*,.pdf">
+                            <input type="file" id="driverLicenseUpload" name="driverLicenseUpload" accept="image/*,application/pdf">
                         </div>
                     </div>
                     
@@ -154,7 +147,30 @@
         </div>
     </div> <!-- .split-container -->
 
-    <script src="registration.js"></script>
+        <!-- Fallback script to ensure role fields appear even if module import fails -->
+        <script>
+            (function(){
+                function roleInit(){
+                    var r=document.getElementById('role');
+                    var c=document.getElementById('commuterFields');
+                    var d=document.getElementById('driverFields');
+                    if(!r||!c||!d) return;
+                    c.style.display='none';
+                    d.style.display='none';
+                    if(r.value==='commuter') c.style.display='block';
+                    else if(r.value==='driver') d.style.display='block';
+                }
+                document.addEventListener('DOMContentLoaded', function(){
+                    var r=document.getElementById('role');
+                    if(r){
+                        r.addEventListener('change', roleInit);
+                        roleInit();
+                    }
+                });
+            })();
+        </script>
+        <script type="module" src="supabaseClient.js"></script>
+        <script type="module" src="registration.js"></script>
     <script src="login-slideshow.js"></script>
 </body>
 </html>
