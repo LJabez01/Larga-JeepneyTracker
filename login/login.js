@@ -1,26 +1,59 @@
-const commuterBtn = document.getElementById('commuterBtn');
-const driverBtn = document.getElementById('driverBtn');
+// Login functionality using Supabase Auth
+// This file assumes supabaseClient.js is loaded as a module in the page.
 
-function loginRedirect(page) {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
+import { supabase, signIn } from './supabaseClient.js';
 
-    if (email === '' || password === '') {
-        alert('Please fill in both email and password.');
-        return false;
+const loginBtn = document.getElementById('loginBtn');
+const emailEl = document.getElementById('email');
+const passwordEl = document.getElementById('password');
+
+async function doLogin() {
+    const email = emailEl.value.trim();
+    const password = passwordEl.value.trim();
+    if (!email || !password) {
+        alert('Please enter both email and password.');
+        return;
     }
-
-    // Redirect to the selected page
-    window.location.href = page;
+    // disable button while processing
+    loginBtn.setAttribute('disabled', 'true');
+    try {
+        const { data, error } = await signIn(email, password);
+        if (error) {
+            const msg = (error.message || '').toLowerCase();
+            if (msg.includes('email') && msg.includes('confirm')) {
+                alert('Please verify your email first. Check your inbox for the confirmation link.');
+            } else {
+                alert('Invalid login credentials. Please check your email and password.');
+            }
+            return;
+        }
+        // Signed in: get role from profiles table using the auth user id
+        const userId = data?.user?.id;
+        let role = 'commuter';
+        if (userId) {
+            const { data: profile, error: roleErr } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', userId)
+                .single();
+            if (roleErr) {
+                console.warn('Role lookup failed:', roleErr.message);
+            } else if (profile && profile.role) {
+                role = profile.role;
+            }
+        }
+        // Redirect based on role
+        if (role === 'driver') {
+            window.location.href = '../mainpage/driver.html';
+        } else {
+            window.location.href = '../mainpage/commuter.html';
+        }
+    } finally {
+        loginBtn.removeAttribute('disabled');
+    }
 }
 
-// Add click event listeners
-commuterBtn.addEventListener('click', function(e) {
-    e.preventDefault(); // Prevent default anchor behavior
-    loginRedirect('../mainpage/commuter.html');
-});
-
-driverBtn.addEventListener('click', function(e) {
+loginBtn.addEventListener('click', function(e) {
     e.preventDefault();
-    loginRedirect('../mainpage/driver.html');
+    doLogin();
 });
