@@ -42,8 +42,6 @@
 
   // Add passenger markers
   var commuterMarker = L.marker([14.840234, 120.980678], { icon: PassengerIcon, title: 'Your Location' }).addTo(map);
-  var commuterMarker2 = L.marker([14.845123, 120.982221], { icon: PassengerIcon, title: 'Passenger 2' }).addTo(map);
-  var commuterMarker3 = L.marker([14.860234, 120.989678], { icon: PassengerIcon, title: 'Passenger 3' }).addTo(map);
 
   // Jeepney icon
   var jeepneyIcon = L.icon({
