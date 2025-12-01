@@ -1,4 +1,3 @@
-/* Split Screen Login/Registration Styles */
 
 :root{
     --bg: #f4f6f8;
@@ -7,6 +6,9 @@
     --accent: #4a9d4a;
     --accent-strong: #3f8a3f;
 }
+/* Make box-sizing consistent so padding doesn't create overflow on small screens */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { width: 100%; }
 .split-screen-body 
 {
     margin: 0;
@@ -16,6 +18,7 @@
     overflow: hidden;
 }
 
+/* Layout: split container (left slideshow / right form) */
 .split-container 
 {
     display: flex;
@@ -23,8 +26,12 @@
     width: 100%;
     background-color: transparent;
 }
+/* prevent the split container from growing past the viewport width on small screens */
+.split-container { max-width: 100%; }
 
-/* Login Page - Green on Left */
+/* panels use flex:1 (equal halves) — no explicit width to match original layout */
+
+/* Left panel: slideshow / visual area */
 .split-left 
 {
     flex: 1;
@@ -38,6 +45,7 @@
 
 }
 
+/* Right panel: authentication form */
 .split-right 
 {
     flex: 1;
@@ -48,8 +56,6 @@
     padding: 40px;
 }
 
-
-/* Registration Page - Green on Right */
 .split-left-form 
 {
     flex: 1;
@@ -79,6 +85,7 @@
     z-index: 10;
 }
 
+/* Form card: contains inputs, buttons and links */
 .form-card 
 {
     background: var(--panel);
@@ -88,6 +95,11 @@
     width: 100%;
     max-width: 460px;
 }
+
+.form-card::before { display: none !important; }
+.split-container::after { display: none !important; }
+
+/* Login & Registration styles: form card, inputs, buttons used by auth pages */
 
 .login-button
 {
@@ -107,12 +119,33 @@
 }
 
 .btn {
-   background-color: #4a9d4a;
-    padding: 12px 20px;
+    display: block;
+    width: 100%;
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
+    color: #fff;
+    padding: 12px 14px;
     border-radius: 10px;
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1;
     text-decoration: none;
-    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(74,157,74,0.12), inset 0 -2px 0 rgba(0,0,0,0.04);
+    transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 10px rgba(63,138,63,0.10);
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 6px rgba(74,157,74,0.08), 0 6px 16px rgba(74,157,74,0.12);
 }
 
 .form-group 
@@ -120,6 +153,26 @@
     margin: 5px;
     display: flex;
     flex-direction: column;
+}
+
+.form-group { position: relative; }
+.form-group select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px; /* room for arrow */
+}
+.form-group::after {
+    content: '\25BE'; 
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #6b6b6b;
+    font-size: 12px;
 }
 
 .form-group input,
@@ -214,11 +267,13 @@
     text-decoration: underline;
 }
 
-/* Terms and Agreement Styling */
 .terms-group 
 {
     margin: 10px 0;
 }
+
+
+/* Terms & Privacy: checkbox, label and link styles used on auth forms */
 
 .terms-label 
 {
@@ -258,7 +313,7 @@
     text-decoration: underline;
 }
 
-/* Slideshow / Picture card — replicated from attached design */
+/* Slideshow / hero area styles (images, overlays) */
 .slideshow {
     width: 100%;
     height: 100%;
@@ -273,7 +328,6 @@
 }
 
 .slideshow::before {
-    /* colored vertical accent at left edge */
     content: '';
     position: absolute;
     left: 0;
@@ -337,7 +391,6 @@
     width: 100%;
     padding: 20px 20px 18px 38px;
     color: #fff;
-    /* much lighter overlay so image remains visible */
     background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 55%, rgba(0,0,0,0.22) 100%);
     box-sizing: border-box;
     pointer-events: none;
@@ -349,7 +402,6 @@
     font-weight: 600;
     line-height: 1.28;
     max-width: 86%;
-    /* reduce heavy text shadow so image shows through more */
     text-shadow: 0 2px 8px rgba(0,0,0,0.45);
 }
 
@@ -404,4 +456,162 @@ body
     font-weight: 700;
     color: var(--accent);
     text-align: center;
+}
+
+/* Logo container placed at the top of the split container (phone mode).
+   Hidden by default and shown only on small screens. */
+.container-top {
+    display: none;
+}
+.container-top img { height: 44px; width: auto; display: block; }
+/* hide any in-form logo to avoid duplicates; we use the top container for mobile */
+.form-logo { display: none !important; }
+.modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    transition: background .18s ease, backdrop-filter .18s ease;
+}
+.modal-content{
+    background:#fff;
+    border-radius:10px;
+    max-width:560px;
+    width:100%;
+    max-height:70vh;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(0,0,0,0.25);
+    display:flex;
+    flex-direction:column;
+}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eef2f6}
+.modal-title{font-size:16px;font-weight:700;color:#0f172a}
+.modal-body{padding:12px 16px;font-size:13px;line-height:1.45;color:#1f2937;overflow:auto}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid #eef2f6}
+.modal-actions button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
+.btn-accept{background:#0b74e8;color:#fff}
+.btn-close{background:#f3f4f6;color:#111;border:1px solid #e5e7eb}
+.close-modal{background:transparent;border:0;font-size:18px;cursor:pointer}
+.modal-body::-webkit-scrollbar{width:8px}
+.modal-body::-webkit-scrollbar-track{background:transparent}
+.modal-body::-webkit-scrollbar-thumb{background:rgba(15,23,42,0.12);border-radius:8px}
+.modal-body{scrollbar-width:thin;scrollbar-color:rgba(15,23,42,0.12) transparent}
+@media (max-width:420px){.modal-content{max-width:95%;max-height:78vh}.modal-title{font-size:15px}}
+
+/* Responsive: consolidated mobile styles (max-width: 520px) */
+@media (max-width:520px){
+    /* mobile base */
+    body { height: auto; overflow: auto; background: linear-gradient(180deg,#f7fafc 0%, #f3f6f7 100%); }
+    .split-screen-body { height: auto; }
+
+    .split-container {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: env(safe-area-inset-top,20px) 16px env(safe-area-inset-bottom,20px);
+        position: relative;
+        max-width: 100%;
+    }
+
+    /* top badge logo for phones */
+    .container-top { display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 12px; z-index: 3; }
+    .container-top img { height: 56px; width: auto; max-width: 84%; border-radius: 999px; background: #fff; padding: 6px; box-shadow: 0 8px 22px rgba(15,23,42,0.08); }
+
+    /* hide large slideshow areas on phones */
+    .split-left, .split-right-green { display: none !important; }
+
+    .split-left-form, .split-right { flex: none; width: 100%; padding: 12px; display: flex; align-items: center; justify-content: center; }
+    .form-card {
+        position: relative;
+        margin: 12px auto;
+        max-width: 360px;
+        width: 100%;
+        border-radius: 14px;
+        padding: 26px;
+        box-shadow: 0 12px 36px rgba(15,23,42,0.08);
+        background: #fff;
+        border: 1px solid rgba(15,23,42,0.04);
+        z-index: 2;
+    }
+
+    .form-card::before { display: none !important; }
+    .split-container::after { display: none !important; }
+
+    .form-title { font-size: 1.45rem; margin-bottom: 8px; }
+    .form-group input, .form-group select { padding: 14px 14px; font-size: 16px; border-radius: 10px; }
+    .login-button { margin-top: 14px; }
+    .btn, .auth-btn { padding: 14px; font-size: 16px; border-radius: 10px; }
+
+    .form-group input:focus, .form-group select:focus { box-shadow: 0 0 0 6px rgba(74,157,74,0.08); }
+
+    .slide-overlay { display: none; }
+
+    /* subtle background textures */
+    .split-container::before{
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(45deg, rgba(0,0,0,0.015) 0 2px, transparent 2px 40px), radial-gradient(circle at 10% 10%, rgba(255,255,255,0.18), transparent 25%);
+        pointer-events: none;
+        z-index: 0;
+        border-radius: 12px;
+    }
+
+    .modal-content { max-width: 95%; max-height: 74vh; }
+    .modal-body { font-size: 13px; }
+
+}
+
+/* Mobile: ensure form controls behave and registration select fits container */
+@media (max-width:520px){
+    .form-group input,
+    .form-group select,
+    textarea,
+    select { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+
+    /* ensure form groups can shrink if needed */
+    .form-group { min-width: 0; }
+
+    /* Registration-specific: keep the role select constrained and allow option wrapping
+       Some browsers may expand native dropdowns; this makes the select itself fit the card
+       and lets long option text wrap inside the menu where supported. */
+    #registrationForm select,
+    #registrationForm .form-group select,
+    .split-left-form select {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 15px;
+    }
+
+    /* allow option text to wrap where browser supports it */
+    #registrationForm select option { white-space: normal; }
+
+}
+
+/* Second/mobile duplicate block removed — consolidated above. */
+
+@media (max-width:420px){
+    .form-card::before{ display: none !important; }
+    .split-container::after{ display: none !important; }
+}
+
+@media (min-width:521px){
+    .split-right .form-card .form-title,
+    .split-left-form .form-card .form-title { font-size: 1.6rem !important; }
+
+    .split-right .form-card .btn,
+    .split-left-form .form-card .btn,
+    .split-right .form-card .auth-btn,
+    .split-left-form .form-card .auth-btn { font-size: 16px !important; padding: 12px 14px !important; }
+
+    .split-right .form-card, .split-left-form .form-card { max-width: 460px; padding: 36px 36px; border-radius: 16px; }
 }
