@@ -165,7 +165,7 @@ html, body { width: 100%; }
     padding-right: 40px; /* room for arrow */
 }
 .form-group::after {
-    content: '\25BE'; 
+    content: '\25BE'; /* small down-triangle */
     position: absolute;
     right: 12px;
     top: 50%;
@@ -458,14 +458,6 @@ body
     text-align: center;
 }
 
-/* Logo container placed at the top of the split container (phone mode).
-   Hidden by default and shown only on small screens. */
-.container-top {
-    display: none;
-}
-.container-top img { height: 44px; width: auto; display: block; }
-/* hide any in-form logo to avoid duplicates; we use the top container for mobile */
-.form-logo { display: none !important; }
 .modal-overlay{
     display:none;
     position:fixed;
@@ -520,8 +512,8 @@ body
     }
 
     /* top badge logo for phones */
-    .container-top { display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 12px; z-index: 3; }
-    .container-top img { height: 56px; width: auto; max-width: 84%; border-radius: 999px; background: #fff; padding: 6px; box-shadow: 0 8px 22px rgba(15,23,42,0.08); }
+    .container-top { display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 10px; z-index: 3; }
+    .container-top img { height: 48px; width: auto; max-width: 78%; border-radius: 999px; background: #fff; padding: 5px; box-shadow: 0 8px 18px rgba(15,23,42,0.08); }
 
     /* hide large slideshow areas on phones */
     .split-left, .split-right-green { display: none !important; }
@@ -529,12 +521,12 @@ body
     .split-left-form, .split-right { flex: none; width: 100%; padding: 12px; display: flex; align-items: center; justify-content: center; }
     .form-card {
         position: relative;
-        margin: 12px auto;
+        margin: 10px auto;
         max-width: 360px;
         width: 100%;
-        border-radius: 14px;
-        padding: 26px;
-        box-shadow: 0 12px 36px rgba(15,23,42,0.08);
+        border-radius: 12px;
+        padding: 20px; /* reduced padding on mobile */
+        box-shadow: 0 10px 28px rgba(15,23,42,0.08);
         background: #fff;
         border: 1px solid rgba(15,23,42,0.04);
         z-index: 2;
@@ -543,10 +535,10 @@ body
     .form-card::before { display: none !important; }
     .split-container::after { display: none !important; }
 
-    .form-title { font-size: 1.45rem; margin-bottom: 8px; }
-    .form-group input, .form-group select { padding: 14px 14px; font-size: 16px; border-radius: 10px; }
-    .login-button { margin-top: 14px; }
-    .btn, .auth-btn { padding: 14px; font-size: 16px; border-radius: 10px; }
+    .form-title { font-size: 1.32rem; margin-bottom: 6px; }
+    .form-group input, .form-group select { padding: 10px 12px; font-size: 15px; border-radius: 8px; }
+    .login-button { margin-top: 10px; }
+    .btn, .auth-btn { padding: 12px; font-size: 15px; border-radius: 8px; }
 
     .form-group input:focus, .form-group select:focus { box-shadow: 0 0 0 6px rgba(74,157,74,0.08); }
 
@@ -563,9 +555,19 @@ body
         border-radius: 12px;
     }
 
-    .modal-content { max-width: 95%; max-height: 74vh; }
+    .modal-content { max-width: 94%; max-height: 72vh; }
     .modal-body { font-size: 13px; }
 
+}
+
+/* Extra small devices: tighten layout further for narrow phones */
+@media (max-width:360px){
+    .container-top img { height: 42px; max-width: 72%; padding: 4px; }
+    .form-card { max-width: 320px; padding: 16px; border-radius: 10px; }
+    .form-title { font-size: 1.15rem; }
+    .form-group input, .form-group select { padding: 9px 10px; font-size: 14px; }
+    .btn, .auth-btn { padding: 10px; font-size: 14px; }
+    .footer-text, .link-text { font-size: 12px; }
 }
 
 /* Mobile: ensure form controls behave and registration select fits container */
@@ -578,9 +580,6 @@ body
     /* ensure form groups can shrink if needed */
     .form-group { min-width: 0; }
 
-    /* Registration-specific: keep the role select constrained and allow option wrapping
-       Some browsers may expand native dropdowns; this makes the select itself fit the card
-       and lets long option text wrap inside the menu where supported. */
     #registrationForm select,
     #registrationForm .form-group select,
     .split-left-form select {
@@ -592,12 +591,10 @@ body
         font-size: 15px;
     }
 
-    /* allow option text to wrap where browser supports it */
     #registrationForm select option { white-space: normal; }
 
 }
 
-/* Second/mobile duplicate block removed — consolidated above. */
 
 @media (max-width:420px){
     .form-card::before{ display: none !important; }
