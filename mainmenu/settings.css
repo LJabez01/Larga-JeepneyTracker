@@ -1,0 +1,654 @@
+*
+{
+    font-family: 'Poppins', sans-serif;
+}
+
+.page-bg 
+{
+    position: fixed;
+    inset: 0;
+    background: url('/Larga-JeepneyTracker/images/adminbackground.jpg') center/cover no-repeat;
+    filter: brightness(0.7);
+    z-index: -1;
+}
+
+.main-wrapper 
+{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container-box 
+{
+    width: 900px;
+    height: 550px;
+    background: white;
+    border-radius: 15px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0px 8px 25px rgba(0,0,0,0.3);
+}
+
+.sidebar 
+{
+    width: 230px;
+    background: #3f8d5c;
+    padding: 20px;
+    color: white;
+}
+
+.back-btn 
+{
+    display: inline-flex; 
+    align-items: center;  
+    background: white;
+    padding: 7px 12px;
+    border: none;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    color: black;
+}
+
+.menu-item 
+{
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.menu-item i 
+{
+    font-size: 1.2em;
+}
+
+.menu-item.active 
+{
+    background: #2f7048;
+}
+
+.content 
+{
+    flex: 1;
+    padding: 25px 35px;
+    background: white;
+    overflow-y: auto;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* Profile Page */
+.divider 
+{
+    width: 100%;
+    height: 1px;
+    background-color: black;
+    margin: 5px 0 25px; /* spacing like your UI */
+}
+
+.username 
+{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.container 
+{
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.profile-icon
+{
+    width: 80px;
+    height: 80px;
+    background-color: #5E8764;
+    border-radius: 50%;
+    margin-left: 10px;
+}
+
+.info-group 
+{
+    display: flex;
+    flex-direction: column;
+}
+
+label 
+{
+    font-weight: bold;
+    font-size: 13px;
+    margin-left: 3px;
+    margin-bottom: 2px;
+}
+
+input 
+{
+    width: 200px;
+    padding: 8px;
+    border: none;
+    background-color: #ddd;
+    border-radius: 8px;
+    
+}
+
+.usernamebtn 
+{
+    padding: 8px 10px;
+    border: none;
+    background: #8ac884;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+a 
+{
+    margin-top: 8px;
+    margin-left: 3px;
+    color: #2a3bd8;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.info-row 
+{
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin: 20px 0;
+}
+
+.infoheader strong 
+{
+    font-size: 16px;
+}
+
+.infoheader p 
+{
+    margin: 2px 0 0;
+}
+
+.accountinfobtn 
+{
+    margin-top: 12px;
+    padding: 8px 10px;
+    border: none;
+    background: #8ac884;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Accesibility Page */
+.title 
+{
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.accessibilitytitle 
+{
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 0px;
+}
+
+.section-title
+{
+    margin: 30px 0px 10px 4px;
+}
+
+.description 
+{
+    font-size: 14px;
+    font-weight: normal;
+    margin: 0px 5px;
+    color: #555;
+}
+
+.description 
+{
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.language-option 
+{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.langauge-selection 
+{
+    padding: 5px 25px;
+    background: #d7d7d7;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.accesibilitybtn 
+{
+    padding: 7px 20px;
+    border: none;
+    background: #8ac884;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 10px;
+}
+
+.display-option 
+{
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.modebtn 
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+.modebtn.light 
+{
+    background: #d7d7d7;
+    color: #000;
+}
+
+.modebtn.dark 
+{
+    background: #000;
+    color: #fff;
+}
+
+.modebtn .dot 
+{
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+/* Support and Help Section */
+.support-title 
+{
+    font-size: 17px;
+    font-weight: 700;
+    margin: 5px 5px 10px 0px;
+}
+
+.support-desc 
+{
+    font-size: 14px;
+    margin-top: -6px;
+}
+
+.faq-list 
+{
+    margin-top: 0px;
+}
+
+.faq-item 
+{
+    display: flex;
+    gap: 5px;
+}
+
+.faq-icon-col 
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 20px;
+}
+
+.bullet-icon 
+{
+    font-size: 35px;
+    margin-top: -12px;
+    color: #3f8d5c;
+}
+
+.line-icon 
+{
+    font-size: 20px;
+    margin-top: -10px;
+    color: #999;
+}
+
+.faq-content 
+{
+    max-width: 800px;
+}
+
+.faq-question 
+{
+    font-weight: 700;
+    margin: 0;
+    font-size: 12px;
+}
+
+.faq-answer 
+{
+    margin-top: 1px;
+    line-height: 1.5;
+    font-size: 10px;
+}
+
+.row 
+{
+    display: flex;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.row input 
+{
+    flex: 1;
+    padding: 7px;
+    border-radius: 8px;
+    border: none;
+    background: #e4e4e4;
+    font-size: 12px;
+}
+
+.message-input 
+{
+    width: 98%;
+    padding: 5px;
+    height: 70px;    
+    border-radius: 8px;
+    border: none;
+    background: #e4e4e4;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block;
+    line-height: normal;
+}
+
+.message-input::placeholder 
+{
+    position: absolute;
+    font-size: 12px;
+    top: 12px;
+}
+
+.submit-btn 
+{
+    padding: 8px 25px;
+    border: none;
+    background: #8ac884;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.submit-btn:hover 
+{
+    background: #326f49;
+}
+
+.report-item 
+{
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.check 
+{
+    width: 10px;
+    height: 10px;
+    appearance: none;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+}
+
+.check:checked 
+{
+    background-color: #575757;
+}
+
+
+/* Feedback and Report */
+.report-item h3 
+{
+    margin: 1px 5px 0px 0px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.report-item p 
+{
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    color: #555;
+}
+
+.feedbackdescription
+{
+    font-size: 15px;
+    margin: -12px 0px 10px 0px;
+}
+
+.short-input
+{
+    width: 95%;
+    height: 30px;
+    margin-top: 5px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    background: #d8d8d8;
+    font-size: 14px;
+}
+
+.long-input 
+{
+    width: 95%;
+    height: 80px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    border: none;
+    outline: none;
+    background: #d8d8d8;
+    font-size: 14px;
+}
+
+.short-input::placeholder 
+{
+    font-size: 10px;
+}
+
+.long-input::placeholder 
+{
+    position: absolute;
+    font-size: 12px;
+    top: 12px;
+}
+
+@media (max-width: 750px) {
+
+    .container-box {
+        width: 95%;
+        height: 500px;
+    }
+
+    .sidebar {
+        width: 80px;
+        padding: 15px 10px;
+    }
+
+    h2
+    {
+        font-size: 15px;
+        margin: 0;
+    }
+
+    h3
+    {
+        font-size: 12px;
+        margin-top: 10px;
+    }
+
+    .menu-item {
+        font-size: 8px;
+        padding: 6px 8px;
+        gap: 6px;
+    }
+
+    .menu-item i {
+        font-size: 1em;
+    }
+
+    .back-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    /* Make the content responsive instead of fixed width */
+    .content {
+        padding: 20px 15px;
+        width: calc(100% - 150px);  /* Prevent overflow */
+        overflow-x: hidden;
+    }
+
+    /* Fix header text shrinking */
+    .title,
+    .accessibilitytitle {
+        font-size: 22px;
+    }
+
+    .info-group input,
+    .short-input,
+    .long-input,
+    .message-input {
+        width: 100%;  
+        font-size: 14px;
+    }
+
+    .info-row {
+        align-items: flex-start;  
+        flex-direction: column;   
+    }
+
+    .accountinfobtn,
+    .usernamebtn {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    .profile-icon
+    {
+        width: 60px;
+        height: 60px;
+    }
+
+    label
+    {
+        font-size: 7px;
+    }
+
+    .description
+    {
+        font-size: 10px;
+    }
+
+    .language-lbl
+    {
+        font-size: 12px;
+    }
+    
+    .usernamebtn
+    {
+        font-size: 5px;
+    }
+
+    a
+    {
+        font-size: 7px;
+    }
+
+    .language-option
+    {
+        align-items: flex-start;  
+        flex-direction: column;   
+    }
+
+    .modebtn
+    {
+       padding: 10px 15px; 
+       font-size: 10px;
+       margin: 0;
+    }
+
+    .support-desc
+    {
+        font-size: 10px;
+    }
+
+    .row
+    {
+        flex-wrap: wrap;
+    }
+
+    .message-input
+    {
+        width: 96%;
+    }
+
+    .short-input
+    {
+        width: 92%;
+        height: 50px;
+    }
+
+    .feedbackdescription
+    {
+        font-size: 12px;
+    }
+
+    .long-input
+    {
+        width: 92%;
+    }
+
+    .short-input::placeholder 
+    {
+        position: absolute;
+        font-size: 10px;
+        top: 12px;
+    }
+}
+

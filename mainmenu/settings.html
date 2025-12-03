@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="settings.css">
+    <title>Account Settings</title>
+</head>
+<body>
+    <div class="page-bg"></div>
+    <div class="main-wrapper">
+
+        <div class="container-box">
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+                <a href="../mainpage/commuter.html" class="back-btn"><i class="bi bi-arrow-left"></i> Back</a>
+
+                <div class="menu-item active" data-page="accountPage">
+                    <i class="bi bi-person-fill"></i> Account
+                </div>
+
+                <div class="menu-item" data-page="accessibilityPage">
+                    <i class="bi bi-universal-access"></i> Accessibility
+                </div>
+
+                <div class="menu-item" data-page="supportPage">
+                    <i class="bi bi-info-circle-fill"></i> Support / Help
+                </div>
+
+                <div class="menu-item" data-page="feedbackPage">
+                    <i class="bi bi-flag-fill"></i> Feedback / Report
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT -->
+            <main class="content">
+
+                <!-- ACCOUNT PAGE -->
+                <section id="accountPage" class="page active">
+                    <h2>Account</h2>
+                    <div class="divider"></div>
+
+                    <div class="container">
+                        <div class="profile-icon"></div>
+                        <div class="info-group">
+                            <label>Username:</label>
+                            <div class="username">
+                                <input type="text">
+                                <button class="usernamebtn">Change Username</button>
+                            </div>
+                            <a href="#">Change icon</a>
+                        </div>
+                    </div>
+
+                    <h3>Account Information</h3>
+                    <div class="divider"></div>
+
+                    <div class="info-row">
+                        <div class="infoheader">
+                            <strong>Email:</strong>
+                            <p>juandelacruz@gmail.com</p>
+                        </div>
+                        <button class="accountinfobtn">Change Email</button>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="infoheader">
+                            <strong>Phone:</strong>
+                            <p>091241243252</p>
+                        </div>
+                        <button class="accountinfobtn">Change Phone</button>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="infoheader">
+                            <strong>Password:</strong>
+                            <p>Change your password</p>
+                        </div>
+                        <button class="accountinfobtn">Change Password</button>
+                    </div>
+                </section>
+
+                <!-- ACCESSIBILITY PAGE -->
+                <section id="accessibilityPage" class="page">
+                    <div class="accessibility-container">
+
+                        <h2>Accessibility</h2>
+                        <div class="divider"></div>
+
+                        <div class="section-block">
+                            <h3 class="section-title">Language
+                                <span class="description">Change your language based on your liking</span>
+                            </h3>
+
+                            <div class="language-option">
+                                <label class="language-lbl">Choose your language:</label>
+                                <select class="langauge-selection">
+                                    <option>English</option>
+                                    <option>Filipino</option>
+                                </select>
+                                <button class="accesibilitybtn">Apply Changes</button>
+                            </div>
+                        </div>
+
+                        <!-- DISPLAY SECTION -->
+                        <div class="section-block">
+                            <h3 class="section-title">Display</h3>
+                            <p class="description">Personalize website color</p>
+
+                            <div class="display-option">
+                                <button class="modebtn light active">
+                                    <span class="dot"></span> Light Mode
+                                </button>
+
+                                <button class="modebtn dark">
+                                    <span class="dot"></span> Dark Mode
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!--Support and Help Page-->
+                <section id="supportPage" class="page">
+                    <div class="support-wrapper">
+
+                        <h2>Support and Help</h2>
+                        <div class="divider"></div>
+
+                        <!-- FAQ SECTION -->
+                        <h2 class="support-title">Frequently asked questions</h2>
+                        <div class="faq-list">
+
+                            <!-- FAQ ITEM -->
+                            <div class="faq-item">
+                                <div class="faq-icon-col">
+                                    <i class="bi bi-dot bullet-icon"></i>
+                                    <i class="bi bi-three-dots-vertical line-icon"></i>
+                                </div>
+
+                                <div class="faq-content">
+                                    <h3 class="faq-question">May tira ba ang ibang groups?</h3>
+                                    <p class="faq-answer">
+                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt 
+                                        ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco 
+                                        laboris nisi ut aliquip ex ea commodo consequat.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- FAQ ITEM -->
+                            <div class="faq-item">
+                                <div class="faq-icon-col">
+                                    <i class="bi bi-dot bullet-icon"></i>
+                                    <i class="bi bi-three-dots-vertical line-icon"></i>
+                                </div>
+
+                                <div class="faq-content">
+                                    <h3 class="faq-question">Tatagos kaba ya?</h3>
+                                    <p class="faq-answer">
+                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt 
+                                        ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco 
+                                        laboris nisi ut aliquip ex ea commodo consequat.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- FAQ ITEM -->
+                            <div class="faq-item">
+                                <div class="faq-icon-col">
+                                    <i class="bi bi-dot bullet-icon"></i>
+                                    <i class="bi bi-three-dots-vertical line-icon"></i>
+                                </div>
+
+                                <div class="faq-content">
+                                    <h3 class="faq-question">E kung bubugiin kita?</h3>
+                                    <p class="faq-answer">
+                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt 
+                                        ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco 
+                                        laboris nisi ut aliquip ex ea commodo consequat.
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- CONTACT FORM -->
+                        <h2 class="support-title">Contact us!</h2>
+                        <p class="support-desc">
+                            Got a specific question? Leave an email to us and we’ll answer as soon as possible!
+                        </p>
+
+                        <form class="contact-form">
+                            <div class="row">
+                                <input type="text" placeholder="Enter your name">
+                                <input type="email" placeholder="Enter your email">
+                            </div>
+
+                            <!-- Message input but styled like textarea -->
+                            <input type="text" class="message-input" placeholder="Enter your message">
+
+                            <button type="submit" class="submit-btn">Submit</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- FEEDBACK PAGE -->
+                <section id="feedbackPage" class="page">
+                    <h2>Feedback / Report</h2>
+                    <div class="divider"></div>
+
+                    <!-- Location Problem -->
+                    <h3>Report a Problem</h3>
+                    <div class="report-item">
+                        <input type="checkbox" class="check">
+                        <div>
+                            <h3>Location Problem</h3>
+                            <p>Location wont show in other commuters (driver side)</p>
+                        </div>
+                    </div>
+
+                    <!-- No jeepneys showing -->
+                    <div class="report-item">
+                        <input type="checkbox" class="check">
+                        <div>
+                            <h3>No jeepneys showing</h3>
+                            <p>Jeepneys location isn’t visible (commuter side)</p>
+                        </div>
+                    </div>
+
+                    <!-- Others -->
+                    <div class="report-item">
+                        <input type="checkbox" class="check">
+                        <div style="width: 100%;">
+                            <h3>Others:</h3>
+                            <input type="text" class="short-input" placeholder="Message your problem here.">
+                        </div>
+                    </div>
+
+                    <h3>Feedback</h3>
+                    <p class="feedbackdescription">Give us an idea on what things we can improve!</p>
+
+                    <input type="text" class="long-input" placeholder="Message your problem here.">
+
+                    <button class="submit-btn">Submit</button>
+                </section>
+
+            </main>
+
+        </div>
+    </div>
+
+<script src="settings.js"></script>
+</body>
+</html>
