@@ -26,7 +26,7 @@
         <!-- Right Side - Login Form -->
         <div class="split-right">
             <div class="form-card">
-                <form id="loginForm" class="auth-form">
+                <form id="loginForm" class="auth-form" novalidate>
                     <h2 class="form-title">Welcome back!</h2>
                     <div class="form-group">
                         <input type="email" id="email" name="email" placeholder="Email" required>
@@ -38,6 +38,7 @@
                     <div class="login-button">
                         <button id="loginBtn" class="btn" type="button">Log In</button>
                     </div>
+                    <div id="message" style="display:none;margin-top:12px;text-align:center;font-size:14px;padding:8px;border-radius:8px;"></div>
                     
                     <div class="form-links">
                         <a href="Forgot Password.html" class="link-text">Forgot password?</a>
@@ -52,6 +53,60 @@
     </div>
         <script src="login-slideshow.js"></script>
         <script src="login-handler.js"></script>
+
+        <!-- Inline message + small validation handler (mirrors Forgot Password UX) -->
+        <script>
+            (function(){
+                var msgEl = document.getElementById('message');
+                var email = document.getElementById('email');
+                var password = document.getElementById('password');
+                var form = document.getElementById('loginForm');
+                var btn = form ? form.querySelector('button[type="button"]') : document.getElementById('loginBtn');
+
+                function showInline(text, isError){
+                    if(!msgEl){ alert(text); return; }
+                    msgEl.textContent = text;
+                    msgEl.style.display = 'block';
+
+                    if(isError){
+                        msgEl.style.background = 'rgba(255,80,80,0.06)';
+                        msgEl.style.color = '#8a1f1f';
+                        msgEl.style.border = '1px solid rgba(255,80,80,0.14)';
+                    } else {
+                        msgEl.style.background = 'rgba(74,157,74,0.12)';
+                        msgEl.style.color = '#1f7a1f';
+                        msgEl.style.border = '1px solid rgba(74,157,74,0.18)';
+                    }
+                    clearTimeout(msgEl.__hide);
+                    msgEl.__hide = setTimeout(function(){ msgEl.style.display = 'none'; }, 6000);
+                }
+
+                // override global alert to show inline messages when possible
+                (function(){
+                    var nativeAlert = window.alert.bind(window);
+                    window.alert = function(txt){
+                        if(msgEl) showInline(String(txt), true);
+                        else nativeAlert(txt);
+                    };
+                })();
+
+                // validate before letting module/script handle login
+                if(btn){
+                    btn.addEventListener('click', function(e){
+                        // basic checks: email & password
+                        if(!email || !email.value || !email.checkValidity())
+                        { e.preventDefault();e.stopPropagation();
+                             showInline
+                            ('Please enter a valid email address.', true); 
+                            return; }
+
+                        if(!password || !password.value){ e.preventDefault(); showInline
+                            ('Please enter your password.', true); 
+                            return; }
+                    })
+                }
+            })();   
+        </script>
         <script type="module" src="supabaseClient.js"></script>
         <script type="module" src="login.js"></script>
 </body>

@@ -8,27 +8,29 @@
 </head>
 <body class="split-screen-body">
     <div class="split-container">
-        
+        <span class="form-badge"></span>
         <!-- Left Side - Registration Form -->
         <div class="split-left-form">
             <div class="form-card">
-                <form id="registrationForm" class="auth-form">
+                <form id="registrationForm" class="auth-form" novalidate>
                     <h2 class="form-title">Create an account</h2>
                     <div class="form-group">
                         <input 
                             type="text" 
                             id="username" 
                             name="username" 
-                            placeholder="Username"
-                            minlength="3" 
-                            maxlength="30" 
-                            pattern="^[a-zA-Z0-9_]+$" 
-                            title="Username must be 3-30 characters long and can only contain letters, numbers, and underscores (_)."
-                            required>
+                            placeholder="Username">
                     </div>
 
                     <div class="form-group">
-                        <input type="email" id="email" name="email" placeholder="Email" required>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="Email" 
+                            pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                            title="Please enter a valid email address"
+                            required>
                     </div>
 
                     <div class="form-group">
@@ -36,11 +38,7 @@
                             type="password" 
                             id="password" 
                             name="password" 
-                            placeholder="Password" 
-                            minlength="8"
-                            pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}"
-                            title="Password must be at least 8 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character (@$!%*?&)."
-                            required>
+                            placeholder="Password" >
                     </div>
 
                     <div class="form-group">
@@ -48,28 +46,37 @@
                     </div>
 
                     <div class="form-group">
-                        <select id="role" name="role" required>
-                            <option value="">Select Role</option>
-                            <option value="commuter">Commuter</option>
-                            <option value="driver">Driver</option>
-                        </select>
+                        <div class="select-wrapper">
+                            <select id="role" name="role" required>
+                                <option value="">Select Role</option>
+                                <option value="commuter">Commuter</option>
+                                <option value="driver">Driver</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Commuter-Specific Fields (dynamically required) -->
                     <div id="commuterFields" style="display:none;">
+                                <div class="form-group">
+                                    <div class="select-wrapper">
+                                         <select id="commuterDocType" name="commuterDocType" required aria-label="ID Document Type">
+                                                <option value="">Select ID Document Type</option>
+                                                <option value="student_id">Student ID</option>
+                                                <option value="voters_id">Voters ID</option>
+                                                <option value="national_id">National ID</option>
+                                         </select>
+                                    </div>
+                                </div>
                         <div class="form-group">
                             <input 
                                 type="text" 
                                 id="identityDocument" 
                                 name="identityDocument" 
-                                placeholder="Identity Document (ID Number)" 
-                                minlength="5" 
-                                maxlength="20" 
-                                pattern="^\d+$" 
-                                inputmode="numeric"
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                title="ID number must be 5–20 digits and numeric only.">
+                                placeholder="ID Number"
+                                pattern="[A-Za-z0-9-]+"
+                                title="Please enter a valid ID number (letters, numbers, and hyphens only)" >
                         </div>
+
                         <div class="form-group">
                             <label for="commuterIdUpload" class="upload-label">Upload ID Document</label>
                             <input type="file" id="commuterIdUpload" name="commuterIdUpload" accept="image/*,application/pdf">
@@ -83,33 +90,20 @@
                                 type="text" 
                                 id="plateNumber" 
                                 name="plateNumber" 
-                                placeholder="Plate Number (ABC123)" 
-                                pattern="^[A-Z]{3}\d{3}$" 
-                                maxlength="6"
-                                title="Format: 3 letters + 3 digits (ABC123)."
-                                style="text-transform:uppercase;"
-                                oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');">
+                                placeholder="Plate Number (ABC1234)"
+                                pattern="[A-Z]{3}[- ]?\d{3,4}"
+                                title="Format: ABC1234 or ABC-1234"
+                                style="text-transform: uppercase;" >
                         </div>
                         <div class="form-group">
                             <input 
                                 type="text" 
                                 id="licenseNumber" 
                                 name="licenseNumber" 
-                                placeholder="License Number (A123-45-123456)" 
-                                pattern="^[A-Z]\d{3}-?\d{2}-?\d{6}$"
-                                maxlength="14" 
-                                title="Accepted: A12345123456 or A123-45-123456"
-                                style="text-transform:uppercase;"
-                                oninput="
-                                    let v = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-                                    // enforce first char letter, rest digits
-                                    if(v.length>0){ v = v[0].replace(/[^A-Z]/g,'') + v.slice(1).replace(/\D/g,''); }
-                                    // auto-insert hyphens at positions 4 and 7 for readability
-                                    let out = v;
-                                    if(out.length > 4) out = out.slice(0,4) + '-' + out.slice(4);
-                                    if(out.length > 7) out = out.slice(0,7) + '-' + out.slice(7);
-                                    // cap to 14 chars including hyphens
-                                    this.value = out.slice(0,14);">
+                                placeholder="License Number (A12-34-123456)"
+                                pattern="[A-Z]\d{2}-\d{2}-\d{6}"
+                                title="Format: A12-34-123456"
+                                style="text-transform: uppercase;" >
                         </div>
                         <div class="form-group">
                             <label for="driverLicenseUpload" class="upload-label">Upload Driver's License</label>
@@ -126,6 +120,9 @@
                     </div>
                     
                     <button type="submit" class="auth-btn">Sign up</button>
+
+                    <!-- Inline message area (used for validation/success) -->
+                    <div id="formMessage" class="form-message" role="alert" aria-live="assertive" style="display:none;margin-top:12px;padding:10px;border-radius:6px;font-size:0.95rem;"></div>
 
                     <div class="form-footer">
                         <span class="footer-text">Already have an account? <a href="Log-in.html" class="link-text-bold">Sign in here</a></span>
@@ -144,7 +141,6 @@
                     <div class="slide-indicators" id="slide-indicators"></div>
                 </div>
             </div>
-        </div>
         </div>
     </div> <!-- .split-container -->
     <!-- Terms & Conditions Modal -->
@@ -293,6 +289,163 @@
         </script>
         <script type="module" src="supabaseClient.js"></script>
         <script type="module" src="registration.js"></script>
-    <script src="login-slideshow.js"></script>
+
+    <script>
+(function(){
+    var msgEl = document.getElementById('formMessage');
+    var form = document.getElementById('registrationForm');
+    var submit = form ? form.querySelector('button[type="submit"]') : document.getElementById('submitBtn');
+    var textInput = document.getElementById('username');
+    var email = document.getElementById('email');
+    var password = document.getElementById('password');
+    var confirmPassword = document.getElementById('confirmPassword');
+    var roleSelect = document.getElementById('role');
+    var identityDocument = document.getElementById('identityDocument');
+    var plateNumber = document.getElementById('plateNumber');
+    var licenseNumber = document.getElementById('licenseNumber');
+    var commuterDocType = document.getElementById('commuterDocType');
+
+    // Validation patterns
+    var patterns = {
+        email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+        idNumber: /^[A-Za-z0-9-]+$/,
+        plateNumber: /^[A-Z]{3}[- ]?\d{3,4}$/,
+        licenseNumber: /^[A-Z]\d{2}-\d{2}-\d{6}$/
+    };
+
+    function showInline(text, isError){
+        if(!msgEl){ alert(text); return; }
+        msgEl.textContent = text;
+        msgEl.style.display = 'block';
+        if(isError){
+            msgEl.style.background = 'rgba(255,80,80,0.06)';
+            msgEl.style.color = '#8a1f1f';
+            msgEl.style.border = '1px solid rgba(255,80,80,0.14)';
+        } else {
+            msgEl.style.background = 'rgba(74,157,74,0.12)';
+            msgEl.style.color = '#1f7a1f';
+            msgEl.style.border = '1px solid rgba(74,157,74,0.18)';
+        }
+        clearTimeout(msgEl.__hide);
+        msgEl.__hide = setTimeout(function(){ msgEl.style.display = 'none'; }, 6000);
+    }
+
+    // Auto-uppercase for plate and license number
+    if(plateNumber){
+        plateNumber.addEventListener('input', function(){
+            this.value = this.value.toUpperCase();
+        });
+    }
+    if(licenseNumber){
+        licenseNumber.addEventListener('input', function(){
+            this.value = this.value.toUpperCase();
+        });
+    }
+
+    // override global alert to show inline messages when possible
+    (function(){
+        var nativeAlert = window.alert.bind(window);
+        window.alert = function(txt){
+            if(msgEl) showInline(String(txt), true);
+            else nativeAlert(txt);
+        };
+    })();
+
+    // validate before letting module/script handle registration
+    if(form){
+        form.addEventListener('submit', function(e){
+            if(textInput && !textInput.value.trim()){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showInline('Please enter your username.', true);
+                return;
+            }
+          
+            if(!email || !email.value || !patterns.email.test(email.value)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showInline('Please enter a valid email address.', true);
+                return;
+            }
+
+            if(!password || !password.value){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showInline('Please enter your password.', true);
+                return;
+            }
+
+            if(!confirmPassword || !confirmPassword.value){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showInline('Please confirm your password.', true);
+                return;
+            }
+
+            if(password.value !== confirmPassword.value){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showInline('Passwords do not match.', true);
+                return;
+            }
+
+            if(!roleSelect || !roleSelect.value){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showInline('Please select a role.', true);
+                return;
+            }
+
+            if(roleSelect.value === 'commuter'){
+                if(!commuterDocType || !commuterDocType.value){
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    showInline('Please select an ID document type.', true);
+                    return;
+                }
+
+                if(!identityDocument || !identityDocument.value.trim()){
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    showInline('Please enter your identity document number.', true);
+                    return;
+                }
+
+                if(!patterns.idNumber.test(identityDocument.value.trim())){
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    showInline('ID number can only contain letters, numbers, and hyphens.', true);
+                    return;
+                }
+
+            } else if(roleSelect.value === 'driver'){
+                if(!plateNumber || !plateNumber.value.trim()){
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    showInline('Please enter your vehicle plate number.', true);
+                    return;
+                }
+
+                if(!patterns.plateNumber.test(plateNumber.value.trim())){
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    showInline('Invalid plate number format. Use ABC1234 or ABC-1234.', true);
+                    return;
+                }
+
+                if(!licenseNumber || !licenseNumber.value.trim()){
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    showInline('Please enter your license number.', true);
+                    return;
+                }
+            }
+            showInline('Creating account... ', false);
+        });
+    }
+})();
+</script>
+    </script>
+       <script src="login-slideshow.js"></script>
 </body>
 </html>
