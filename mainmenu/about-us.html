@@ -14,7 +14,7 @@
 <body>
     <nav>
         <div class="navbar-items">
-            <a href="../mainpage/driver.html"><i class="bi bi-arrow-left-square-fill"></i>Back</a>
+            <a href="#" id="backBtn"><i class="bi bi-arrow-left-square-fill"></i>Back</a>
             <h1>Larga</h1>
         </div>
     </nav>
@@ -134,4 +134,33 @@
 
     </div>
 </body>
+</html>
+<script type="module">
+    // Role-aware back navigation: commuter vs driver
+    const role = sessionStorage.getItem('userRole') || 'commuter';
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = role === 'driver' ? '../mainpage/driver.html' : '../mainpage/commuter.html';
+        });
+    }
+    // Fallback: if no cached role, attempt Supabase auth user metadata or profiles
+    if (!sessionStorage.getItem('userRole')) {
+        try {
+            import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm').then(async ({ createClient }) => {
+                const supabase = createClient('https://tydvoylhjojxzykdotxf.supabase.co','sb_publishable_A8lnpV3CPNxvieBXuMYmiA_hlSkQUUp');
+                const { data: { user } } = await supabase.auth.getUser();
+                let r = 'commuter';
+                if (user?.user_metadata?.role) {
+                    r = user.user_metadata.role;
+                } else if (user?.id) {
+                    const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+                    if (data?.role) r = data.role;
+                }
+                sessionStorage.setItem('userRole', r);
+            });
+        } catch {}
+    }
+</script>
 </html>

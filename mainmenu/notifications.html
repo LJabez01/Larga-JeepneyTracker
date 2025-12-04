@@ -15,7 +15,7 @@
     <div class="notif-box">
     <!--Header for the notification page-->
         <div class="Notification-header">
-            <a href="../mainpage/driver.html" class="back-button-notif">
+            <a href="#" id="backBtn" class="back-button-notif">
                 <i class="bi bi-arrow-left-square-fill"></i> Back
             </a>
             <h1><i class="bi bi-bell-fill"></i>Notifications</h1>
@@ -110,4 +110,31 @@
         </div>
     </div>
 </body>
+</html>
+<script type="module">
+    const role = sessionStorage.getItem('userRole') || 'commuter';
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = role === 'driver' ? '../mainpage/driver.html' : '../mainpage/commuter.html';
+        });
+    }
+    if (!sessionStorage.getItem('userRole')) {
+        try {
+            import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm').then(async ({ createClient }) => {
+                const supabase = createClient('https://tydvoylhjojxzykdotxf.supabase.co','sb_publishable_A8lnpV3CPNxvieBXuMYmiA_hlSkQUUp');
+                const { data: { user } } = await supabase.auth.getUser();
+                let r = 'commuter';
+                if (user?.user_metadata?.role) {
+                    r = user.user_metadata.role;
+                } else if (user?.id) {
+                    const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+                    if (data?.role) r = data.role;
+                }
+                sessionStorage.setItem('userRole', r);
+            });
+        } catch {}
+    }
+</script>
 </html>

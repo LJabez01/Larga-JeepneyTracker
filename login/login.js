@@ -43,6 +43,7 @@ async function doLogin() {
             }
         }
         // Redirect based on role
+        try { sessionStorage.setItem('userRole', role); } catch {}
         if (role === 'driver') {
             window.location.href = '../mainpage/driver.html';
         } else {
