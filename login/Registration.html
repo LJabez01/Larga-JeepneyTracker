@@ -312,11 +312,11 @@
         if(!msgEl){ alert(text); return; }
         msgEl.textContent = text;
         msgEl.style.display = 'block';
-        if(isError){
+        if(isError){ // Red when there's an error
             msgEl.style.background = 'rgba(255,80,80,0.06)';
             msgEl.style.color = '#8a1f1f';
             msgEl.style.border = '1px solid rgba(255,80,80,0.14)';
-        } else {
+        } else { // Green when the user action is successful
             msgEl.style.background = 'rgba(74,157,74,0.12)';
             msgEl.style.color = '#1f7a1f';
             msgEl.style.border = '1px solid rgba(74,157,74,0.18)';
