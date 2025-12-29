@@ -1,4 +1,7 @@
 ﻿// driver.js - cleaned and formatted
+// ES module so we can import the shared Supabase client used by login/registration
+import { supabase } from '../login/supabaseClient.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   'use strict';
 
@@ -27,8 +30,198 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize Leaflet map (only if Leaflet is loaded and the #map element exists)
   const mapRoot = q('#map');
+  let map = null;
+  let driverMarker = null;
+  let hasCenteredOnDriver = false;
+  let routesMeta = [];
+  let terminalsById = new Map();
+  let routesMetadataLoaded = false;
+  let activeRouteControl = null;
+  let activeRouteOverlay = null;
+  let activeRouteMarkers = [];
+  function clearActiveRoute() {
+    if (map) {
+      if (activeRouteControl) {
+        try {
+          map.removeControl(activeRouteControl);
+        } catch (e) {
+          console.warn('[Driver map] Failed to remove active route control', e);
+        }
+      }
+
+      if (activeRouteOverlay) {
+        try {
+          map.removeLayer(activeRouteOverlay);
+        } catch (e) {
+          console.warn('[Driver map] Failed to remove active route overlay', e);
+        }
+      }
+
+      if (Array.isArray(activeRouteMarkers) && activeRouteMarkers.length) {
+        activeRouteMarkers.forEach((m) => {
+          try {
+            map.removeLayer(m);
+          } catch (e) {
+            console.warn('[Driver map] Failed to remove route marker', e);
+          }
+        });
+      }
+    }
+
+    activeRouteControl = null;
+    activeRouteOverlay = null;
+    activeRouteMarkers = [];
+  }
+
+  async function drawSelectedRouteOnMap(routeId) {
+    if (!map || typeof L === 'undefined') return;
+    if (!routesMetadataLoaded || !Array.isArray(routesMeta) || !routesMeta.length) return;
+    if (!routeId) {
+      clearActiveRoute();
+      return;
+    }
+
+    const route = routesMeta.find((r) => r.route_id === routeId);
+    if (!route) return;
+
+    const origin = terminalsById.get(route.origin_terminal_id);
+    const dest = terminalsById.get(route.destination_terminal_id);
+    if (!origin || !dest) return;
+
+    if (
+      typeof origin.lat !== 'number' ||
+      typeof origin.lng !== 'number' ||
+      typeof dest.lat !== 'number' ||
+      typeof dest.lng !== 'number'
+    ) {
+      return;
+    }
+
+    clearActiveRoute();
+
+    const originLatLng = L.latLng(origin.lat, origin.lng);
+    const destLatLng = L.latLng(dest.lat, dest.lng);
+    const color = route.color || '#1e6b35';
+
+    if (L.Routing && typeof L.Routing.control === 'function') {
+      let overlayRoute = null;
+
+      activeRouteControl = L.Routing.control({
+        waypoints: [originLatLng, destLatLng],
+        addWaypoints: false,
+        draggableWaypoints: false,
+        fitSelectedRoutes: true,
+        show: false,
+        routeWhileDragging: false,
+        lineOptions: {
+          styles: [
+            { color, weight: 8, opacity: 0.95 }, // outer colored
+            { color, weight: 4, opacity: 0.7 } // inner same color, slightly lighter
+          ]
+        },
+        createMarker: (i, wp) => {
+          const label = i === 0 ? 'Origin' : 'Destination';
+          const marker = L.circleMarker(wp.latLng, {
+            radius: 7,
+            color,
+            weight: 3,
+            fillColor: '#ffffff',
+            fillOpacity: 1
+          }).bindTooltip(`${route.name} - ${label}`, {
+            permanent: false,
+            direction: 'top',
+            opacity: 0.95,
+            sticky: true
+          });
+
+          // Toggle tooltip visibility on click (click to show/hide)
+          marker._tooltipOpen = false;
+          marker.on('click', () => {
+            if (marker._tooltipOpen) {
+              marker.closeTooltip();
+            } else {
+              marker.openTooltip();
+            }
+            marker._tooltipOpen = !marker._tooltipOpen;
+          });
+
+          return marker;
+        },
+        router: L.Routing.osrmv1 ? L.Routing.osrmv1({}) : undefined
+      })
+        .addTo(map)
+        .on('routesfound', (e) => {
+          const r = e.routes && e.routes[0];
+          if (!r || !Array.isArray(r.coordinates) || !r.coordinates.length) return;
+
+          // Remove any previous clickable overlay for this route
+          if (overlayRoute) {
+            try {
+              map.removeLayer(overlayRoute);
+            } catch (err) {
+              console.warn('[Driver map] Failed to remove previous overlay route', err);
+            }
+          }
+
+          // Create a nearly invisible but clickable polyline over the route
+          overlayRoute = L.polyline(r.coordinates, {
+            color,
+            weight: 20,
+            opacity: 0.01,
+            interactive: true
+          }).addTo(map);
+
+          activeRouteOverlay = overlayRoute;
+
+          overlayRoute.on('click', (ev) => {
+            const meters = r.summary && r.summary.totalDistance;
+            const mins = r.summary && r.summary.totalTime / 60;
+            if (!meters || !mins) return;
+
+            L.popup({ closeButton: false, autoClose: true })
+              .setLatLng(ev.latlng)
+              .setContent(
+                `<strong>${route.name}</strong><br>` +
+                  `${(meters / 1000).toFixed(1)} km · ~${Math.round(mins)} min`
+              )
+              .openOn(map);
+          });
+        });
+    } else {
+      // Fallback: straight line if routing machine is not available
+      activeRouteOverlay = L.polyline([originLatLng, destLatLng], {
+        color,
+        weight: 8,
+        opacity: 0.95
+      }).addTo(map);
+
+      const markerOpts = {
+        radius: 7,
+        color,
+        fillColor: '#ffffff',
+        fillOpacity: 1,
+        weight: 3
+      };
+
+      const originMarker = L.circleMarker(originLatLng, markerOpts)
+        .addTo(map)
+        .bindTooltip(`${route.name} - Origin`, { direction: 'top' });
+      const destMarker = L.circleMarker(destLatLng, markerOpts)
+        .addTo(map)
+        .bindTooltip(`${route.name} - Destination`, { direction: 'top' });
+
+      activeRouteMarkers.push(originMarker, destMarker);
+
+      if (map && map.fitBounds) {
+        map.fitBounds(L.latLngBounds([originLatLng, destLatLng]), {
+          padding: [30, 30]
+        });
+      }
+    }
+  }
+
   if (typeof L !== 'undefined' && mapRoot) {
-    const map = L.map('map').setView([14.831426, 120.976661], 13);
+    map = L.map('map').setView([14.831426, 120.976661], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -39,43 +232,63 @@ document.addEventListener('DOMContentLoaded', () => {
       map.zoomControl.setPosition('bottomleft');
     }
 
-    // Passenger icon
-    const PassengerIcon = L.icon({
-      iconUrl: 'https://image2url.com/images/1762271241467-09178dbf-94d7-4a82-88f4-4ee7626f1570.png',
-      iconSize: [50, 50],
-      iconAnchor: [25, 40],
-      popupAnchor: [0, -46]
-    });
+    // Pre-load route and terminal metadata from Supabase (no drawing yet)
+    (async function loadRoutesMetadata() {
+      try {
+        const { data: routes, error: routesError } = await supabase
+          .from('routes')
+          .select('route_id, name, color, origin_terminal_id, destination_terminal_id')
+          .order('route_id', { ascending: true });
 
-    // sample passenger markers
-    L.marker([14.831341439952697, 120.97348565571966], { icon: PassengerIcon, title: 'Passenger 1' }).addTo(map);
-    L.marker([14.845123, 120.982221], { icon: PassengerIcon, title: 'Passenger 2' }).addTo(map);
-    L.marker([14.860234, 120.989678], { icon: PassengerIcon, title: 'Passenger 3' }).addTo(map);
+        if (routesError) {
+          console.error('[Driver map] Failed to load routes', routesError);
+          return;
+        }
 
-    // Jeepney icon and routing
-    const jeepneyIcon = L.icon({
-      iconUrl: 'https://image2url.com/images/1761748252176-39f2cd27-02a7-4b73-b140-6171e24e62be.png',
-      iconSize: [36, 36],
-      iconAnchor: [18, 36],
-      popupAnchor: [0, -46]
-    });
+        if (!Array.isArray(routes) || !routes.length) return;
+        routesMeta = routes;
 
-    const waypoints = [
-      L.latLng(14.821865560449373, 120.96157688030809),
-      L.latLng(14.831341439952697, 120.97348565571966),
-      L.latLng(14.87136358444958, 121.00656357695095)
-    ];
+        const terminalIds = new Set();
+        routesMeta.forEach((r) => {
+          if (r.origin_terminal_id) terminalIds.add(r.origin_terminal_id);
+          if (r.destination_terminal_id) terminalIds.add(r.destination_terminal_id);
+        });
 
-    if (L.Routing?.control) {
-      L.Routing.control({
-        waypoints,
-        routeWhileDragging: false,
-        addWaypoints: false,
-        createMarker: (i, waypoint) => (i === 0 ? L.marker(waypoint.latLng, { icon: jeepneyIcon }) : null),
-        lineOptions: { styles: [{ color: 'green', weight: 4 }] },
-        router: L.Routing.osrmv1({})
-      }).addTo(map);
-    }
+        if (!terminalIds.size) {
+          routesMetadataLoaded = true;
+          return;
+        }
+
+        const { data: terminals, error: terminalsError } = await supabase
+          .from('jeepney_terminals')
+          .select('terminal_id, name, lat, lng')
+          .in('terminal_id', Array.from(terminalIds));
+
+        if (terminalsError) {
+          console.error('[Driver map] Failed to load jeepney_terminals', terminalsError);
+          return;
+        }
+
+        terminalsById = new Map();
+        if (Array.isArray(terminals)) {
+          terminals.forEach((t) => {
+            if (typeof t.lat === 'number' && typeof t.lng === 'number') {
+              terminalsById.set(t.terminal_id, t);
+            }
+          });
+        }
+
+        routesMetadataLoaded = true;
+
+        // If a route is already selected when metadata finishes loading,
+        // draw it on the map.
+        if (typeof window !== 'undefined' && window.currentRouteId) {
+          drawSelectedRouteOnMap(window.currentRouteId);
+        }
+      } catch (err) {
+        console.error('[Driver map] Unexpected error while loading route metadata', err);
+      }
+    })();
 
     // Driver UI interactions
     (function initDriverUI() {
@@ -370,4 +583,286 @@ document.addEventListener('DOMContentLoaded', () => {
       hideBtn.classList.remove('hidden');
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // Resolve logged-in driver + load routes, set window.currentDriverId/RouteId
+  // ---------------------------------------------------------------------------
+  async function initDriverIdentityAndRoutes() {
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('[Driver init] Failed to get user', error);
+        return;
+      }
+      const user = data?.user;
+      if (!user) {
+        console.warn('[Driver init] No logged-in user; GPS uploads will be skipped.');
+        return;
+      }
+
+      // Resolve driver_id for this auth user
+      const { data: driverRow, error: driverError } = await supabase
+        .from('drivers')
+        .select('driver_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (driverError) {
+        console.error('[Driver init] Failed to resolve driver_id', driverError);
+      } else if (!driverRow?.driver_id) {
+        console.warn('[Driver init] No driver profile found for this user; GPS uploads will be skipped.');
+      } else if (typeof window !== 'undefined') {
+        window.currentDriverId = driverRow.driver_id;
+        console.log('[Driver init] currentDriverId set to', window.currentDriverId);
+      }
+
+      // Load available routes into the two dropdowns and wire selection to window.currentRouteId
+      const routeSelect = q('#driver-route');
+      const useLastRouteBtn = q('#use-last-route');
+      if (!routeSelect) return;
+
+      const { data: routes, error: routesError } = await supabase
+        .from('routes')
+        .select('route_id, name')
+        .order('name', { ascending: true });
+
+      if (routesError) {
+        console.error('[Driver init] Failed to load routes', routesError);
+        return;
+      }
+
+      const appendOptions = () => {
+        // keep first placeholder option; remove others
+        while (routeSelect.options.length > 1) {
+          routeSelect.remove(1);
+        }
+        if (!Array.isArray(routes)) return;
+        routes.forEach((r) => {
+          const opt = document.createElement('option');
+          opt.value = String(r.route_id);
+          opt.textContent = r.name || `Route ${r.route_id}`;
+          routeSelect.appendChild(opt);
+        });
+      };
+
+      appendOptions();
+
+      const handleRouteChange = (ev) => {
+        const val = ev.target.value;
+        if (!val) return;
+        const idNum = Number(val);
+        if (!Number.isNaN(idNum) && typeof window !== 'undefined') {
+          window.currentRouteId = idNum;
+          console.log('[Driver init] currentRouteId set to', window.currentRouteId);
+          if (window.currentDriverId) {
+            updateStartButtonState();
+          }
+        }
+          // Draw only the selected route on the map
+          if (window.currentRouteId) {
+            drawSelectedRouteOnMap(window.currentRouteId);
+          } else {
+            clearActiveRoute();
+          }
+      };
+
+      routeSelect.addEventListener('change', handleRouteChange);
+
+      // expose a 'Use last route' shortcut if we have one stored locally
+      if (window.currentDriverId && useLastRouteBtn) {
+        const last = loadLastRouteForDriver(window.currentDriverId);
+        if (last && last.routeId) {
+          const opt = routeSelect.querySelector(`option[value="${last.routeId}"]`);
+          if (opt) {
+            const label = last.routeName || opt.textContent || 'last route';
+            useLastRouteBtn.textContent = `Use last route (${label})`;
+            useLastRouteBtn.style.display = 'inline-block';
+            useLastRouteBtn.addEventListener('click', () => {
+              routeSelect.value = String(last.routeId);
+              const ev = new Event('change', { bubbles: true });
+              routeSelect.dispatchEvent(ev);
+            });
+          }
+        }
+      }
+
+      // after resolving driver and any initial route, update button state
+      updateStartButtonState();
+    } catch (err) {
+      console.error('[Driver init] Unexpected error', err);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // GPS tracking wiring for "Largaaaa!" and "Stop Showing Live Location"
+  // ---------------------------------------------------------------------------
+  const startBtn = q('.start-btn');
+  const stopBtn = q('.stop-btn');
+
+  // These should be set after login / route selection.
+  // For now we read optional globals you can populate from your auth/route logic.
+  const getDriverContext = () => ({
+    driverId: window.currentDriverId || null,
+    routeId: window.currentRouteId || null
+  });
+
+  const LAST_ROUTE_KEY_PREFIX = 'larga:lastRoute:';
+
+  function saveLastRouteForDriver(driverId, routeId, routeName) {
+    if (!driverId || !routeId || typeof window === 'undefined') return;
+    try {
+      const key = `${LAST_ROUTE_KEY_PREFIX}${driverId}`;
+      const payload = {
+        routeId,
+        routeName: routeName || null,
+        savedAt: new Date().toISOString()
+      };
+      window.localStorage.setItem(key, JSON.stringify(payload));
+    } catch (e) {
+      console.warn('[LastRoute] Failed to save last route', e);
+    }
+  }
+
+  function loadLastRouteForDriver(driverId) {
+    if (!driverId || typeof window === 'undefined') return null;
+    try {
+      const key = `${LAST_ROUTE_KEY_PREFIX}${driverId}`;
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !parsed.routeId) return null;
+      return parsed;
+    } catch (e) {
+      console.warn('[LastRoute] Failed to load last route', e);
+      return null;
+    }
+  }
+
+  function updateStartButtonState() {
+    if (!startBtn) return;
+    const { driverId, routeId } = getDriverContext();
+    const ready = Boolean(driverId && routeId);
+    startBtn.disabled = !ready;
+    startBtn.classList.toggle('disabled', !ready);
+  }
+
+  let geoWatchId = null;
+
+  async function sendDriverLocation(position) {
+    const { coords } = position || {};
+    if (!coords) return;
+
+    const { latitude, longitude, speed, heading } = coords;
+    const { driverId, routeId } = getDriverContext();
+
+    if (!driverId) {
+      console.warn('[GPS] No driverId set (window.currentDriverId). Skipping upload.');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('jeepney_locations')
+        .upsert({
+          driver_id: driverId,
+          route_id: routeId ?? null,
+          lat: latitude,
+          lng: longitude,
+          speed: typeof speed === 'number' ? speed : null,
+          heading: typeof heading === 'number' ? heading : null,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('[GPS] Failed to upsert jeepney_locations', error);
+      }
+    } catch (err) {
+      console.error('[GPS] Unexpected error while sending location', err);
+    }
+  }
+
+  function startGpsTracking() {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported on this device/browser.');
+      return;
+    }
+
+    if (geoWatchId !== null) {
+      // already tracking
+      return;
+    }
+
+    const success = (position) => {
+      const { latitude, longitude } = position.coords || {};
+
+      if (typeof latitude === 'number' && typeof longitude === 'number' && map) {
+        const pos = [latitude, longitude];
+        if (!driverMarker) {
+          driverMarker = L.marker(pos, { title: 'Your Location' }).addTo(map);
+        } else {
+          driverMarker.setLatLng(pos);
+        }
+
+        if (!hasCenteredOnDriver && typeof map.setView === 'function') {
+          hasCenteredOnDriver = true;
+          map.setView(pos, 16); // zoom closer to the driver on first fix
+        }
+      }
+
+      // Send to backend regardless of whether map centering ran
+      void sendDriverLocation(position);
+    };
+
+    const error = (err) => {
+      console.error('[GPS] watchPosition error', err);
+    };
+
+    geoWatchId = navigator.geolocation.watchPosition(success, error, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 15000
+    });
+
+    console.log('[GPS] Tracking started');
+  }
+
+  function stopGpsTracking() {
+    if (geoWatchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(geoWatchId);
+      geoWatchId = null;
+      console.log('[GPS] Tracking stopped');
+    }
+  }
+
+  if (startBtn) {
+    startBtn.addEventListener('click', () => {
+      if (startBtn.disabled) return;
+
+      const { driverId, routeId } = getDriverContext();
+      if (!driverId || !routeId) {
+        updateStartButtonState();
+        return;
+      }
+
+      // remember this as the driver's last route choice on this device
+      const routeSelect = q('#driver-route');
+      let routeName = null;
+      if (routeSelect) {
+        const opt = routeSelect.options[routeSelect.selectedIndex];
+        routeName = opt ? opt.textContent : null;
+      }
+      saveLastRouteForDriver(driverId, routeId, routeName);
+
+      startGpsTracking();
+    });
+  }
+
+  if (stopBtn) {
+    stopBtn.addEventListener('click', () => {
+      stopGpsTracking();
+    });
+  }
+
+  // Fire-and-forget; driver page does not depend on awaiting this for UI
+  void initDriverIdentityAndRoutes();
 });
