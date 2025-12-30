@@ -1,4 +1,4 @@
--- Cleaned Supabase-ready schema for Registration / Login + file metadata
+/*-- Cleaned Supabase-ready schema for Registration / Login + file metadata
 -- Run in Supabase Dashboard -> SQL Editor -> New query
 
 -- helper
@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid PRIMARY KEY,                 -- set to auth user id from supabase.auth
   email text NOT NULL,
   username text,
+  full_name text,
   role text,                           -- 'commuter' or 'driver'
   is_active boolean DEFAULT true,
   is_verified boolean DEFAULT true,
@@ -127,4 +128,197 @@ CREATE OR REPLACE VIEW public.user_profiles AS
 SELECT p.*, c.identity_document, d.plate_number, d.license_number
 FROM public.profiles p
 LEFT JOIN public.commuters c ON c.user_id = p.id
-LEFT JOIN public.drivers d ON d.user_id = p.id;
+LEFT JOIN public.drivers d ON d.user_id = p.id;*/
+
+/*
+SELECT tablename, policyname, cmd
+FROM pg_policies
+WHERE schemaname='public' AND tablename='documents';
+
+
+ALTER TABLE public.view_definition_backups
+  ENABLE ROW LEVEL SECURITY;*/
+
+  -- ROUTES (driver selects from this)
+CREATE TABLE IF NOT EXISTS public.routes (
+  route_id bigserial PRIMARY KEY,
+  name      text NOT NULL,
+  code      text UNIQUE,
+  color     text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- DRIVER LIVE LOCATION (one row per driver)
+CREATE TABLE IF NOT EXISTS public.jeepney_locations (
+  driver_id  bigint PRIMARY KEY
+             REFERENCES public.drivers(driver_id) ON DELETE CASCADE,
+  route_id   bigint REFERENCES public.routes(route_id) ON DELETE SET NULL,
+  lat        double precision NOT NULL,
+  lng        double precision NOT NULL,
+  speed      double precision,
+  heading    double precision,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- COMMUTER LIVE LOCATION (one row per commuter)
+CREATE TABLE IF NOT EXISTS public.commuter_locations (
+  commuter_id bigint PRIMARY KEY
+              REFERENCES public.commuters(commuter_id) ON DELETE CASCADE,
+  route_id    bigint REFERENCES public.routes(route_id) ON DELETE SET NULL,
+  lat         double precision NOT NULL,
+  lng         double precision NOT NULL,
+  updated_at  timestamptz NOT NULL DEFAULT now()
+);
+
+-- indexes for fast filtering by route and recency
+CREATE INDEX IF NOT EXISTS idx_jeepney_locations_route_updated
+  ON public.jeepney_locations (route_id, updated_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_commuter_locations_route_updated
+  ON public.commuter_locations (route_id, updated_at DESC);
+
+-- Enable RLS
+ALTER TABLE public.routes             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.jeepney_locations  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.commuter_locations ENABLE ROW LEVEL SECURITY;
+
+-- ROUTES:
+--  - everyone can read routes (public list)
+--  - only service role can insert/update/delete (you can relax this later)
+DROP POLICY IF EXISTS routes_select_all ON public.routes;
+CREATE POLICY routes_select_all
+  ON public.routes
+  FOR SELECT
+  USING (true);
+
+-- JEEPNEY LOCATIONS (drivers' GPS)
+DROP POLICY IF EXISTS jl_driver_rw ON public.jeepney_locations;
+DROP POLICY IF EXISTS jl_commuter_select ON public.jeepney_locations;
+
+-- Drivers: full read/write of *their own* location row
+CREATE POLICY jl_driver_rw
+  ON public.jeepney_locations
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.drivers d
+      WHERE d.driver_id = jeepney_locations.driver_id
+        AND d.user_id   = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.drivers d
+      WHERE d.driver_id = jeepney_locations.driver_id
+        AND d.user_id   = auth.uid()
+    )
+  );
+
+-- Commuters: can SELECT jeepney locations only for routes they are currently on
+CREATE POLICY jl_commuter_select
+  ON public.jeepney_locations
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.commuters c
+      JOIN public.commuter_locations cl
+        ON cl.commuter_id = c.commuter_id
+      WHERE c.user_id    = auth.uid()
+        AND cl.route_id  = jeepney_locations.route_id
+    )
+  );
+
+-- COMMUTER LOCATIONS
+DROP POLICY IF EXISTS cl_commuter_rw ON public.commuter_locations;
+DROP POLICY IF EXISTS cl_driver_select ON public.commuter_locations;
+
+-- Commuters: full read/write of their own live location row
+CREATE POLICY cl_commuter_rw
+  ON public.commuter_locations
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.commuters c
+      WHERE c.commuter_id = commuter_locations.commuter_id
+        AND c.user_id     = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.commuters c
+      WHERE c.commuter_id = commuter_locations.commuter_id
+        AND c.user_id     = auth.uid()
+    )
+  );
+
+-- Drivers: can see commuters only on their current route
+CREATE POLICY cl_driver_select
+  ON public.commuter_locations
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.drivers d
+      JOIN public.jeepney_locations jl
+        ON jl.driver_id = d.driver_id
+      WHERE d.user_id  = auth.uid()
+        AND jl.route_id = commuter_locations.route_id
+    )
+  );
+
+  -- JEEPNEY TERMINALS (from GPX waypoints)
+CREATE TABLE IF NOT EXISTS public.jeepney_terminals (
+  terminal_id bigserial PRIMARY KEY,
+  name        text NOT NULL,
+  description text,
+  lat         double precision NOT NULL,
+  lng         double precision NOT NULL,
+  created_at  timestamptz DEFAULT now()
+);
+
+-- Enable RLS for terminals
+ALTER TABLE public.jeepney_terminals ENABLE ROW LEVEL SECURITY;
+
+-- Everyone can read terminals; only service_role can modify (no insert/update/delete policy)
+DROP POLICY IF EXISTS jt_select_all ON public.jeepney_terminals;
+CREATE POLICY jt_select_all
+  ON public.jeepney_terminals
+  FOR SELECT
+  USING (true);
+
+  -- Link routes to terminals (safe to rerun)
+ALTER TABLE public.routes
+  ADD COLUMN IF NOT EXISTS origin_terminal_id      bigint REFERENCES public.jeepney_terminals(terminal_id),
+  ADD COLUMN IF NOT EXISTS destination_terminal_id bigint REFERENCES public.jeepney_terminals(terminal_id);
+
+INSERT INTO public.jeepney_terminals (name, description, lat, lng)
+VALUES
+  ('New Santa Maria Jeepney Terminal',
+   'Main jeepney terminal along C. De Jesus St, Poblacion, Santa Maria, Bulacan',
+   14.808, 121.033),
+  ('Muzon–Sta. Maria Jeepney Terminal',
+   'Jeepney terminal near Muzon area along Santa Maria–Tungkong Mangga Road',
+   14.802873, 121.032906),
+  ('Santa Maria Bypass Road Jeepney Terminal',
+   'Local jeepney terminal along Santa Maria Bypass Road',
+   14.8045, 121.0302),
+  ('North Luzon Express Terminal (NLET)',
+   'Bus and PUJ terminal near Philippine Arena area, used for Santa Maria connections',
+   14.829, 121.045),
+  ('Caypombo P2P Terminal',
+   'P2P bus terminal on Norzagaray–Santa Maria Road, Caypombo area',
+   14.816, 121.036)
+RETURNING terminal_id, name;
+
+INSERT INTO public.routes
+  (name, code, color, origin_terminal_id, destination_terminal_id)
+VALUES
+  ('Sta. Maria – Muzon',        'SM-MUZ',  '#1e6b35', 1, 2),
+  ('Sta. Maria – Bypass Road',  'SM-BYP',  '#8bc34a', 1, 3),
+  ('Sta. Maria – NLET',         'SM-NLET', '#2196f3', 1, 4),
+  ('Sta. Maria – Caypombo',     'SM-CAY',  '#ff9800', 1, 5);
