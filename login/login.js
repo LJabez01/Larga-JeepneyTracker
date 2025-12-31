@@ -14,9 +14,47 @@ async function doLogin() {
         alert('Please enter both email and password.');
         return;
     }
+
+    // Ensure reCAPTCHA token is present and valid via backend before logging in
+    let recaptchaToken = '';
+    if (window.grecaptcha) {
+        recaptchaToken = window.grecaptcha.getResponse();
+        if (!recaptchaToken) {
+            alert('Please complete the reCAPTCHA.');
+            return;
+        }
+    }
+
     // disable button while processing
     loginBtn.setAttribute('disabled', 'true');
     try {
+        // Verify reCAPTCHA token with backend (Express server)
+        if (recaptchaToken) {
+            try {
+                const resp = await fetch('http://localhost:3000/api/verify-recaptcha', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: recaptchaToken })
+                });
+
+                const result = await resp.json().catch(() => ({ success: false }));
+                if (!resp.ok || !result.success) {
+                    alert('reCAPTCHA verification failed. Please try again.');
+                    if (window.grecaptcha) {
+                        window.grecaptcha.reset();
+                    }
+                    return;
+                }
+            } catch (err) {
+                console.error('Error calling /api/verify-recaptcha:', err);
+                alert('Unable to verify reCAPTCHA. Please check your connection and try again.');
+                if (window.grecaptcha) {
+                    window.grecaptcha.reset();
+                }
+                return;
+            }
+        }
+
         const { data, error } = await signIn(email, password);
         if (error) {
             const msg = (error.message || '').toLowerCase();
