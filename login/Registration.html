@@ -288,7 +288,7 @@
 (function(){
     var msgEl = document.getElementById('formMessage');
     var form = document.getElementById('registrationForm');
-    var submit = form ? form.querySelector('button[type="submit"]') : document.getElementById('submitBtn');
+
     var textInput = document.getElementById('username');
     var email = document.getElementById('email');
     var password = document.getElementById('password');
@@ -322,7 +322,7 @@
             msgEl.style.border = '1px solid rgba(74,157,74,0.18)';
         }
         clearTimeout(msgEl.__hide);
-        msgEl.__hide = setTimeout(function(){ msgEl.style.display = 'none'; }, 6000);
+        msgEl.__hide = setTimeout(function(){ msgEl.style.display = 'none'; }, 3000);
     }
 
     // override global alert to show inline messages when possible
@@ -379,6 +379,12 @@
                 return;
             }
 
+            if(!email || !email.value){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showInline('Please enter your email address.', true);
+                return;
+            }
             if(!patterns.email.test(email.value)){
                 e.preventDefault();
                 e.stopImmediatePropagation();

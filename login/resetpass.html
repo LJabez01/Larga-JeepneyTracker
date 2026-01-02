@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - Larga Jeepney Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="resetpass-style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="reset-container">
+        <!-- Main Reset Form Card -->
+        <div class="reset-card">
+            <div class="card-header">
+                <svg class="lock-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M7 11V7C7 4.79086 8.79086 3 11 3H13C15.2091 3 17 4.79086 17 7V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+                </svg>
+                <h2 class="card-title">Reset your password</h2>
+                <p class="card-description">Enter your new password below. Make sure it's strong and secure.</p>
+            </div>
+
+            <form id="resetForm" class="reset-form" novalidate>
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="newPassword" class="form-label">New password</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            id="newPassword" 
+                            name="newPassword" 
+                            class="form-input"
+                            placeholder="Enter your new password"
+                            required
+                            minlength="8"
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="toggle-password" aria-label="Toggle password visibility" data-target="newPassword">
+                            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="field-hint">Use 8+ characters with uppercase, lowercase, number, and symbol (@$!%*?&)</div>
+                </div>
+
+                <!-- Confirm Password Field -->
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirm new password</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="confirmPassword" 
+                            class="form-input"
+                            placeholder="Confirm your new password"
+                            required
+                            minlength="8"
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="toggle-password" aria-label="Toggle password visibility" data-target="confirmPassword">
+                            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Password Strength Indicator -->
+                <div class="password-strength" id="passwordStrength" style="display: none;">
+                    <div class="strength-label">Password strength:</div>
+                    <div class="strength-bar">
+                        <div class="strength-bar-fill" id="strengthBar"></div>
+                    </div>
+                    <div class="strength-text" id="strengthText"></div>
+                </div>
+
+                <!-- Password Requirements -->
+                <div class="password-requirements">
+                    <div class="requirement-title">Password must contain:</div>
+                    <ul class="requirements-list">
+                        <li id="req-length" class="requirement-item">
+                            <svg class="check-icon" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            At least 8 characters
+                        </li>
+                        <li id="req-upper" class="requirement-item">
+                            <svg class="check-icon" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            At least one uppercase letter (A-Z)
+                        </li>
+                        <li id="req-lower" class="requirement-item">
+                            <svg class="check-icon" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            At least one lowercase letter (a-z)
+                        </li>
+                        <li id="req-number" class="requirement-item">
+                            <svg class="check-icon" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            At least one number (0-9)
+                        </li>
+                        <li id="req-special" class="requirement-item">
+                            <svg class="check-icon" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            At least one special character (@$!%*?&)
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Alert Message -->
+                <div id="alertMessage" class="alert-message" style="display: none;"></div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="resetBtn" class="reset-btn">
+                    Reset password
+                </button>
+
+                <!-- Footer Links -->
+                <div class="form-footer">
+                    <a href="Log-in.html" class="footer-link">Return to sign in</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Additional Help Section -->
+        <div class="help-section">
+            <p class="help-text">
+                Having trouble? <a href="mailto:support@larga-tracker.com" class="help-link">Contact support</a>
+            </p>
+        </div>
+    </div>
+
+    <script type="module" src="resetpass.js"></script>
+</body>
+</html>
