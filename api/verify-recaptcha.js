@@ -95,6 +95,7 @@ module.exports = async (req, res) => {
       success: !!result.success,
       score: result.score,
       action: result.action,
+      errorCodes: result['error-codes'] || result.errorCodes || null,
     }));
   } catch (err) {
     console.error('[reCAPTCHA] Unexpected error:', err);

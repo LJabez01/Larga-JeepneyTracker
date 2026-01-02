@@ -33,7 +33,7 @@ async function doLogin() {
             try {
                 const verifyUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
                     ? 'http://localhost:3000/api/verify-recaptcha'
-                    : '/api/verify-recaptcha';
+                    : '/api/verify-recaptcha';  
 
                 const resp = await fetch(verifyUrl, {
                     method: 'POST',
@@ -43,6 +43,7 @@ async function doLogin() {
 
                 const result = await resp.json().catch(() => ({ success: false }));
                 if (!resp.ok || !result.success) {
+                    console.warn('reCAPTCHA verification response:', result);
                     alert('reCAPTCHA verification failed. Please try again.');
                     if (window.grecaptcha) {
                         window.grecaptcha.reset();
