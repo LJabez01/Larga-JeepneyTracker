@@ -1,4 +1,4 @@
-'use strict';
+import { supabase } from './supabaseClient.js';
 
 const form = document.getElementById('resetForm');
 const newPasswordInput = document.getElementById('newPassword');
@@ -160,10 +160,65 @@ const toggleButtons = document.querySelectorAll('.toggle-password');
         return true;
     }
 
+    // --- Supabase password recovery session handling ---
+
+    let recoverySessionReady = false;
+
+    function parseRecoveryParams() {
+        const hash = window.location.hash || '';
+        const search = window.location.search || '';
+
+        const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+        const searchParams = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+
+        const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+
+        return { accessToken, refreshToken };
+    }
+
+    async function initRecoverySession() {
+        const { accessToken, refreshToken } = parseRecoveryParams();
+
+        if (!accessToken) {
+            // If there is no access token in the URL, this link is likely invalid/expired.
+            showAlert('This password reset link is invalid or has expired. Please request a new one.', 'error');
+            Array.from(form.elements).forEach(el => { el.disabled = true; });
+            return;
+        }
+
+        try {
+            const { error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+            });
+
+            if (error) {
+                console.error('Error setting Supabase recovery session:', error);
+                showAlert('Unable to validate reset link. Please request a new one.', 'error');
+                Array.from(form.elements).forEach(el => { el.disabled = true; });
+                return;
+            }
+
+            recoverySessionReady = true;
+        } catch (err) {
+            console.error('Unexpected error while initializing recovery session:', err);
+            showAlert('Unable to validate reset link. Please request a new one.', 'error');
+            Array.from(form.elements).forEach(el => { el.disabled = true; });
+        }
+    }
+
+    initRecoverySession();
+
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         if (!validateForm()) {
+            return;
+        }
+
+        if (!recoverySessionReady) {
+            showAlert('This password reset link is invalid or has expired. Please request a new one.', 'error');
             return;
         }
 
@@ -172,7 +227,15 @@ const toggleButtons = document.querySelectorAll('.toggle-password');
         resetBtn.textContent = 'Resetting password...';
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            const newPassword = newPasswordInput.value;
+
+            const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+            if (error) {
+                console.error('Supabase updateUser error:', error);
+                showAlert('Unable to reset password. The reset link may have expired. Please request a new one.', 'error');
+                return;
+            }
 
             showAlert('Password reset successfully! Redirecting to login...', 'success');
 
@@ -181,18 +244,10 @@ const toggleButtons = document.querySelectorAll('.toggle-password');
             }, 2000);
 
         } catch (error) {
+            console.error('Unexpected error during password reset:', error);
             showAlert(error.message || 'An error occurred. Please try again.', 'error');
+        } finally {
             resetBtn.disabled = false;
             resetBtn.textContent = originalText;
         }
     });
-
-    function getURLParameter(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);
-    }
-
-    const resetToken = getURLParameter('token');
-    if (!resetToken && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        
-    }

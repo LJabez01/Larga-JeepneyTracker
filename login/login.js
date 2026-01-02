@@ -31,7 +31,11 @@ async function doLogin() {
         // Verify reCAPTCHA token with backend (Express server)
         if (recaptchaToken) {
             try {
-                const resp = await fetch('http://localhost:3000/api/verify-recaptcha', {
+                const verifyUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                    ? 'http://localhost:3000/api/verify-recaptcha'
+                    : '/api/verify-recaptcha';
+
+                const resp = await fetch(verifyUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: recaptchaToken })
