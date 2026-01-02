@@ -1,3 +1,6 @@
+// commuter.js - ES module: dropdown, map, GPS for commuter, and live jeepney markers
+import { supabase } from '../login/supabaseClient.js';
+
 // Dropdown menu toggle
 (function () {
   const menuToggle = document.getElementById('menu-toggle');
@@ -18,8 +21,12 @@
   }
 })();
 
-// Map and routing initialization
+// Map + GPS + live jeepneys
 (function () {
+  const routeSearchInput = document.querySelector('.search-bar');
+  const routesDatalist = document.getElementById('routes');
+  const routeNameToId = new Map();
+
   // Initialize Leaflet map
   const map = L.map('map', { zoomControl: false }).setView([14.831426, 120.976661], 13);
 
@@ -35,53 +42,68 @@
     L.control.zoom({ position: 'bottomleft' }).addTo(map);
   }
 
-  // Passenger icon
-  const PassengerIcon = L.icon({
-    iconUrl: 'https://image2url.com/images/1762271241467-09178dbf-94d7-4a82-88f4-4ee7626f1570.png',
-    iconSize: [50, 50],
-    iconAnchor: [25, 40],
-    popupAnchor: [0, -46]
-  });
+  // Commuter marker (updated from GPS)
+  let commuterMarker = null;
+  let hasCenteredOnCommuter = false;
 
-  // Add passenger marker
-  L.marker([14.840234, 120.980678], {
-    icon: PassengerIcon,
-    title: 'Your Location'
-  }).addTo(map);
-
-  // Jeepney icon
-  const jeepneyIcon = L.icon({
-    iconUrl: 'https://image2url.com/images/1761748252176-39f2cd27-02a7-4b73-b140-6171e24e62be.png',
-    iconSize: [36, 36],
-    iconAnchor: [18, 36],
-    popupAnchor: [0, -46]
-  });
-
-  // Helper: Create jeepney marker with popup
-  function createJeepneyMarker(waypoint, routeText, timeText) {
-    const marker = L.marker(waypoint.latLng, { icon: jeepneyIcon });
-    const tpl = document.getElementById('popup-commuters-info-template');
-
-    if (tpl) {
-      const popupContent = tpl.cloneNode(true);
-      popupContent.style.display = 'block';
-
-      marker.bindPopup(popupContent, {
-        maxWidth: 320,
-        className: 'small-popup', /* class of pop up*/
-        offset: L.point(0, -46),
-        autoPanPadding: [20, 20]
-      });
-
-      marker.on('click', function () {
-        showJeepneyBubble(`<strong>${routeText}</strong><br>ETA: ${timeText}`);
-      });
+  function updateCommuterMarker(lat, lng) {
+    const pos = [lat, lng];
+    if (!commuterMarker) {
+      commuterMarker = L.marker(pos, { title: 'Your Location' }).addTo(map);
+    } else {
+      commuterMarker.setLatLng(pos);
     }
 
-    return marker;
+    if (!hasCenteredOnCommuter && map && typeof map.setView === 'function') {
+      hasCenteredOnCommuter = true;
+      map.setView(pos, 16); // zoom in closer to the commuter
+    }
   }
 
-  // Jeepney bubble helper
+  // Jeepney markers keyed by driver_id
+  const jeepneyMarkers = new Map();
+
+  function upsertJeepneyMarker(row) {
+    if (!row || typeof row.lat !== 'number' || typeof row.lng !== 'number') return;
+    const key = row.driver_id;
+    if (!key) return;
+
+    const pos = [row.lat, row.lng];
+    let marker = jeepneyMarkers.get(key);
+
+    if (!marker) {
+      const tpl = document.getElementById('popup-commuters-info-template');
+      let popupContent = null;
+      if (tpl) {
+        popupContent = tpl.cloneNode(true);
+        popupContent.style.display = 'block';
+      }
+
+      marker = L.marker(pos, { title: 'Jeepney' });
+      if (popupContent) {
+        marker.bindPopup(popupContent, {
+          maxWidth: 320,
+          className: 'small-popup',
+          offset: L.point(0, -46),
+          autoPanPadding: [20, 20]
+        });
+      }
+      marker.addTo(map);
+      jeepneyMarkers.set(key, marker);
+    } else {
+      marker.setLatLng(pos);
+    }
+  }
+
+  function removeJeepneyMarker(driverId) {
+    const marker = jeepneyMarkers.get(driverId);
+    if (marker) {
+      map.removeLayer(marker);
+      jeepneyMarkers.delete(driverId);
+    }
+  }
+
+  // Optional Jeepney bubble helper remains (no change to markup required)
   (function () {
     let _jbTimer = null;
     let bubble = document.getElementById('jeepney-bubble');
@@ -141,73 +163,216 @@
     });
   })();
 
-  // Route 1 waypoints
-  const waypoints1 = [
-    L.latLng(14.821865560449373, 120.96157688030809),
-    L.latLng(14.831341439952697, 120.97348565571966),
-    L.latLng(14.87136358444958, 121.00656357695095)
-  ];
+  // ---------------------------------------------------------------------------
+  // Supabase-backed GPS tracking for commuter + live jeepney locations
+  // ---------------------------------------------------------------------------
+  let commuterId = null; // from public.commuters.commuter_id
+  let geoWatchId = null;
 
-  L.Routing.control({
-    waypoints: waypoints1,
-    routeWhileDragging: false,
-    addWaypoints: false,
-    createMarker: function (i, waypoint) {
-      if (i === 0) {
-        const tpl = document.getElementById('popup-commuters-info-template');
-        if (tpl) {
-          const popupContent = tpl.cloneNode(true);
-          popupContent.style.display = 'block';
+  const getCommuterContext = () => ({
+    commuterId,
+    // Optional: set this from your UI search bar when route is chosen
+    routeId: window.currentRouteId || null
+  });
 
-          const speedEl = popupContent.querySelector('.speed');
-          const timeEl = popupContent.querySelector('.time');
-          const routeEl = popupContent.querySelector('.route');
-          const statusEl = popupContent.querySelector('.vehicle-status');
+  async function sendCommuterLocation(position) {
+    const { coords } = position || {};
+    if (!coords || !commuterId) return;
 
-          if (speedEl) speedEl.textContent = '30km/hour';
-          if (timeEl) timeEl.textContent = '1:00 PM';
-          if (routeEl) routeEl.textContent = 'Sta Maria - Guyong - Caypombo - Pulong Buhangin';
-          if (statusEl) statusEl.textContent = 'Active';
+    const { latitude, longitude } = coords;
+    const { routeId } = getCommuterContext();
 
-          const routeText = routeEl?.textContent || 'Route info';
-          const timeText = timeEl?.textContent || '';
+    try {
+      const { error } = await supabase
+        .from('commuter_locations')
+        .upsert({
+          commuter_id: commuterId,
+          route_id: routeId,
+          lat: latitude,
+          lng: longitude,
+          updated_at: new Date().toISOString()
+        });
 
-          return createJeepneyMarker(waypoint, routeText, timeText);
+      if (error) {
+        console.error('[Commuter GPS] Failed to upsert commuter_locations', error);
+      }
+    } catch (err) {
+      console.error('[Commuter GPS] Unexpected error while sending location', err);
+    }
+  }
+
+  function startCommuterTracking() {
+    if (!navigator.geolocation) {
+      console.warn('Geolocation is not supported on this device/browser.');
+      return;
+    }
+
+    if (geoWatchId !== null) return;
+
+    const success = (pos) => {
+      const { latitude, longitude } = pos.coords || {};
+      if (typeof latitude === 'number' && typeof longitude === 'number') {
+        updateCommuterMarker(latitude, longitude);
+        void sendCommuterLocation(pos);
+      }
+    };
+
+    const error = (err) => {
+      console.error('[Commuter GPS] watchPosition error', err);
+    };
+
+    geoWatchId = navigator.geolocation.watchPosition(success, error, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 15000
+    });
+
+    console.log('[Commuter GPS] Tracking started');
+  }
+
+  function stopCommuterTracking() {
+    if (geoWatchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(geoWatchId);
+      geoWatchId = null;
+      console.log('[Commuter GPS] Tracking stopped');
+    }
+  }
+
+  async function loadInitialJeepneys() {
+    try {
+      const { data, error } = await supabase
+        .from('jeepney_locations')
+        .select('driver_id, lat, lng, route_id')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('[Jeepneys] Failed to load initial jeepneys', error);
+        return;
+      }
+
+      if (Array.isArray(data)) {
+        data.forEach((row) => upsertJeepneyMarker(row));
+      }
+    } catch (err) {
+      console.error('[Jeepneys] Unexpected error while loading initial data', err);
+    }
+  }
+
+  function subscribeToJeepneys() {
+    const channel = supabase
+      .channel('jeepney-locations-commuter')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'jeepney_locations' },
+        (payload) => {
+          const row = payload.new || payload.old;
+          if (!row) return;
+
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            upsertJeepneyMarker(row);
+          } else if (payload.eventType === 'DELETE') {
+            removeJeepneyMarker(row.driver_id);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('[Jeepneys] Realtime subscription status:', status);
+      });
+
+    return channel;
+  }
+
+  async function initCommuterSide() {
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('[Commuter init] Failed to get user', error);
+        return;
+      }
+      const user = data?.user;
+      if (!user) {
+        console.warn('[Commuter init] No logged-in user; skipping GPS + jeepneys.');
+        return;
+      }
+
+      // Resolve commuter_id for this auth user
+      const { data: commuterRow, error: commuterError } = await supabase
+        .from('commuters')
+        .select('commuter_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (commuterError) {
+        console.error('[Commuter init] Failed to resolve commuter_id', commuterError);
+        return;
+      }
+
+      if (!commuterRow?.commuter_id) {
+        console.warn('[Commuter init] No commuter profile found for this user; skipping GPS + jeepneys.');
+        return;
+      }
+
+      commuterId = commuterRow.commuter_id;
+
+      // Load routes list for search bar and wire to window.currentRouteId
+      if (routesDatalist || routeSearchInput) {
+        try {
+          const { data: routes, error: routesError } = await supabase
+            .from('routes')
+            .select('route_id, name')
+            .order('name', { ascending: true });
+
+          if (routesError) {
+            console.error('[Commuter init] Failed to load routes', routesError);
+          } else if (Array.isArray(routes)) {
+            routeNameToId.clear();
+            routes.forEach((r) => {
+              const name = r.name || `Route ${r.route_id}`;
+              routeNameToId.set(name, r.route_id);
+              if (routesDatalist) {
+                const opt = document.createElement('option');
+                opt.value = name;
+                routesDatalist.appendChild(opt);
+              }
+            });
+
+            if (routeSearchInput) {
+              const onRouteChange = () => {
+                const val = routeSearchInput.value.trim();
+                if (!val) return;
+                const routeId = routeNameToId.get(val);
+                if (routeId && typeof window !== 'undefined') {
+                  window.currentRouteId = routeId;
+                  console.log('[Commuter] currentRouteId set to', window.currentRouteId);
+                }
+              };
+              routeSearchInput.addEventListener('change', onRouteChange);
+              routeSearchInput.addEventListener('blur', onRouteChange);
+            }
+          }
+        } catch (routesErr) {
+          console.error('[Commuter init] Unexpected error while loading routes', routesErr);
         }
       }
-      return null;
-    },
-    lineOptions: { styles: [{ color: 'green', weight: 4 }] },
-    router: L.Routing.osrmv1({})
-  }).addTo(map);
 
-  // Route 2 waypoints
-  const waypoints2 = [
-    L.latLng(14.817680556970652, 120.9596894399793),
-    L.latLng(14.809662089895063, 120.96345579935102),
-    L.latLng(14.80746986684621, 121.01338170563866)
-  ];
+      // Start GPS tracking automatically after login
+      startCommuterTracking();
 
-  L.Routing.control({
-    waypoints: waypoints2,
-    routeWhileDragging: false,
-    addWaypoints: false,
-    createMarker: function (i, waypoint) {
-      if (i === 0) {
-        const tpl = document.getElementById('popup-commuters-info-template');
-        if (tpl) {
-          const popupContent = tpl.cloneNode(true);
-          popupContent.style.display = 'block';
+      // Load existing jeepney locations that RLS allows this commuter to see
+      await loadInitialJeepneys();
 
-          const routeText = popupContent.querySelector('.route')?.textContent || 'Route info';
-          const timeText = popupContent.querySelector('.time')?.textContent || '';
+      // Subscribe to live updates
+      subscribeToJeepneys();
+    } catch (err) {
+      console.error('[Commuter init] Unexpected error', err);
+    }
+  }
 
-          return createJeepneyMarker(waypoint, routeText, timeText);
-        }
-      }
-      return null;
-    },
-    lineOptions: { styles: [{ color: 'green', weight: 4 }] },
-    router: L.Routing.osrmv1({})
-  }).addTo(map);
+  // Kick off Supabase-backed commuter behavior
+  initCommuterSide();
+
+  // Expose stop function if needed from other scripts
+  if (typeof window !== 'undefined') {
+    window.stopCommuterTracking = stopCommuterTracking;
+  }
 })();

@@ -55,30 +55,14 @@
         <h2>Select Your Route</h2>
 
         <div class="dropdown-box">
-            <select>
-                <option disabled selected>Select a starting point</option>
-                <option>Location A</option>
-                <option>Location B</option>
+            <select id="driver-route">
+                <option disabled selected value="">Select your route</option>
             </select>
         </div>
 
-        <div class="dropdown-box">
-            <select>
-                <option disabled selected>Select a destination</option>
-                <option>Location X</option>
-                <option>Location Y</option>
-            </select>
-        </div>
-
-        <div class="info-box">
-            <label class="info-check">
-                <input type="checkbox">
-                <span>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-                    Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                </span>
-            </label>
-        </div>
+        <button id="use-last-route" class="last-route-btn" type="button" style="display: none;">
+            Use last route
+        </button>
 
         <button class="start-btn">Largaaaa!</button>
         <button class="stop-btn">Stop Showing Live Location</button>
@@ -97,6 +81,7 @@
 
     <!-- Leaflet Routing Machine JS (required for L.Routing.control) -->
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
-    <script src="driver.js"></script>
+    <!-- Driver logic -->
+    <script type="module" src="driver.js"></script>
 </body>
 </html>

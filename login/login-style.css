@@ -155,6 +155,11 @@ html, body { width: 100%; }
     flex-direction: column;
 }
 
+/* Center reCAPTCHA widget inside its form group */
+.form-group .g-recaptcha {
+    align-self: center;
+}
+
 .form-group { position: relative; }
 .form-group select {
     -webkit-appearance: none;

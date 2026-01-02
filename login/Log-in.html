@@ -7,6 +7,7 @@
     <title>Login Form</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="login-style.css" rel="stylesheet">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body class="split-screen-body">
     <div class="split-container">
@@ -33,6 +34,10 @@
                     </div>
                     <div class="form-group">
                         <input type="password" id="password" name="password" placeholder="Password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="g-recaptcha" data-sitekey="6LfrUDssAAAAAJC3UJNvBXz5ZpW8MznirtdMp4NK"></div>
                     </div>
 
                     <div class="login-button">
@@ -103,6 +108,15 @@
                         if(!password || !password.value){ e.preventDefault(); showInline
                             ('Please enter your password.', true); 
                             return; }
+
+                        if (window.grecaptcha) {
+                            var token = window.grecaptcha.getResponse();
+                            if (!token) {
+                                e.preventDefault();
+                                showInline('Please complete the reCAPTCHA.', true);
+                                return;
+                            }
+                        }
                     })
                 }
             })();   

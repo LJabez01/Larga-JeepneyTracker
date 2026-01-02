@@ -4,7 +4,8 @@
   "description": "This will be our main repo",
   "main": "commuter.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/index.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
   "homepage": "https://github.com/LJabez01/Larga-JeepneyTracker#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.86.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0"
   }
