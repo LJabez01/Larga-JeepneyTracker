@@ -107,12 +107,21 @@ document.addEventListener('DOMContentLoaded', () => {
   let map = null;
   let driverMarker = null;
   let hasCenteredOnDriver = false;
-  let routesMeta = [];
   let terminalsById = new Map();
-  let routesMetadataLoaded = false;
   let activeRouteControl = null;
   let activeRouteOverlay = null;
   let activeRouteMarkers = [];
+
+  // Navigation state for dynamic driver -> terminal routing
+  const navState = {
+    activeTerminal: null, // { id, name, lat, lng }
+    routeCoords: [], // [{ lat, lng }, ...] from OSRM
+    cumulativeDistances: [], // meters along route for each coord index
+    totalDistance: 0, // meters
+    totalTimeSec: 0, // seconds
+    routeBounds: null, // { minLat, maxLat, minLng, maxLng }
+    lastRecalcAt: 0 // timestamp ms
+  };
   function clearActiveRoute() {
     if (map) {
       if (activeRouteControl) {
@@ -147,41 +156,32 @@ document.addEventListener('DOMContentLoaded', () => {
     activeRouteMarkers = [];
   }
 
-  async function drawSelectedRouteOnMap(routeId) {
+  // Build / rebuild OSRM route from current driver location to the active terminal
+  function recomputeRouteFromHere(currentLat, currentLng) {
     if (!map || typeof L === 'undefined') return;
-    if (!routesMetadataLoaded || !Array.isArray(routesMeta) || !routesMeta.length) return;
-    if (!routeId) {
-      clearActiveRoute();
-      return;
-    }
+    if (!navState.activeTerminal) return;
 
-    const route = routesMeta.find((r) => r.route_id === routeId);
-    if (!route) return;
+    const { lat: tLat, lng: tLng, name } = navState.activeTerminal;
+    if (typeof tLat !== 'number' || typeof tLng !== 'number') return;
 
-    const origin = terminalsById.get(route.origin_terminal_id);
-    const dest = terminalsById.get(route.destination_terminal_id);
-    if (!origin || !dest) return;
-
-    if (
-      typeof origin.lat !== 'number' ||
-      typeof origin.lng !== 'number' ||
-      typeof dest.lat !== 'number' ||
-      typeof dest.lng !== 'number'
-    ) {
-      return;
-    }
+    const fromLatLng = L.latLng(currentLat, currentLng);
+    const toLatLng = L.latLng(tLat, tLng);
+    const color = '#1e6b35';
 
     clearActiveRoute();
 
-    const originLatLng = L.latLng(origin.lat, origin.lng);
-    const destLatLng = L.latLng(dest.lat, dest.lng);
-    const color = route.color || '#1e6b35';
+    // Reset navigation metadata
+    navState.routeCoords = [];
+    navState.cumulativeDistances = [];
+    navState.totalDistance = 0;
+    navState.totalTimeSec = 0;
+    navState.routeBounds = null;
 
     if (L.Routing && typeof L.Routing.control === 'function') {
       let overlayRoute = null;
 
       activeRouteControl = L.Routing.control({
-        waypoints: [originLatLng, destLatLng],
+        waypoints: [fromLatLng, toLatLng],
         addWaypoints: false,
         draggableWaypoints: false,
         fitSelectedRoutes: true,
@@ -189,26 +189,25 @@ document.addEventListener('DOMContentLoaded', () => {
         routeWhileDragging: false,
         lineOptions: {
           styles: [
-            { color, weight: 8, opacity: 0.95 }, // outer colored
-            { color, weight: 4, opacity: 0.7 } // inner same color, slightly lighter
+            { color, weight: 8, opacity: 0.95 },
+            { color, weight: 4, opacity: 0.7 }
           ]
         },
         createMarker: (i, wp) => {
-          const label = i === 0 ? 'Origin' : 'Destination';
+          const label = i === 0 ? 'You' : 'Destination';
           const marker = L.circleMarker(wp.latLng, {
             radius: 7,
             color,
             weight: 3,
             fillColor: '#ffffff',
             fillOpacity: 1
-          }).bindTooltip(`${route.name} - ${label}`, {
+          }).bindTooltip(`${name} - ${label}`, {
             permanent: false,
             direction: 'top',
             opacity: 0.95,
             sticky: true
           });
 
-          // Toggle tooltip visibility on click (click to show/hide)
           marker._tooltipOpen = false;
           marker.on('click', () => {
             if (marker._tooltipOpen) {
@@ -227,6 +226,41 @@ document.addEventListener('DOMContentLoaded', () => {
         .on('routesfound', (e) => {
           const r = e.routes && e.routes[0];
           if (!r || !Array.isArray(r.coordinates) || !r.coordinates.length) return;
+
+          // Capture OSRM geometry + summary for guidance
+          navState.totalDistance = r.summary?.totalDistance || 0;
+          navState.totalTimeSec = r.summary?.totalTime || 0;
+
+          navState.routeCoords = r.coordinates.map((c) => ({ lat: c.lat, lng: c.lng }));
+          navState.cumulativeDistances = [];
+
+          let acc = 0;
+          navState.routeCoords.forEach((pt, idx) => {
+            if (idx === 0) {
+              navState.cumulativeDistances.push(0);
+            } else {
+              const prev = navState.routeCoords[idx - 1];
+              acc += distanceMeters(prev, pt);
+              navState.cumulativeDistances.push(acc);
+            }
+          });
+
+          // Compute simple bounding box for commuter queries
+          let minLat = Infinity;
+          let maxLat = -Infinity;
+          let minLng = Infinity;
+          let maxLng = -Infinity;
+          navState.routeCoords.forEach((pt) => {
+            if (pt.lat < minLat) minLat = pt.lat;
+            if (pt.lat > maxLat) maxLat = pt.lat;
+            if (pt.lng < minLng) minLng = pt.lng;
+            if (pt.lng > maxLng) maxLng = pt.lng;
+          });
+          if (Number.isFinite(minLat)) {
+            navState.routeBounds = { minLat, maxLat, minLng, maxLng };
+          }
+
+          navState.lastRecalcAt = Date.now();
 
           // Remove any previous clickable overlay for this route
           if (overlayRoute) {
@@ -255,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
             L.popup({ closeButton: false, autoClose: true })
               .setLatLng(ev.latlng)
               .setContent(
-                `<strong>${route.name}</strong><br>` +
+                `<strong>${name}</strong><br>` +
                   `${(meters / 1000).toFixed(1)} km · ~${Math.round(mins)} min`
               )
               .openOn(map);
@@ -263,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else {
       // Fallback: straight line if routing machine is not available
-      activeRouteOverlay = L.polyline([originLatLng, destLatLng], {
+      activeRouteOverlay = L.polyline([fromLatLng, toLatLng], {
         color,
         weight: 8,
         opacity: 0.95
@@ -277,20 +311,37 @@ document.addEventListener('DOMContentLoaded', () => {
         weight: 3
       };
 
-      const originMarker = L.circleMarker(originLatLng, markerOpts)
+      const originMarker = L.circleMarker(fromLatLng, markerOpts)
         .addTo(map)
-        .bindTooltip(`${route.name} - Origin`, { direction: 'top' });
-      const destMarker = L.circleMarker(destLatLng, markerOpts)
+        .bindTooltip('You', { direction: 'top' });
+      const destMarker = L.circleMarker(toLatLng, markerOpts)
         .addTo(map)
-        .bindTooltip(`${route.name} - Destination`, { direction: 'top' });
+        .bindTooltip(`${name} - Destination`, { direction: 'top' });
 
       activeRouteMarkers.push(originMarker, destMarker);
 
       if (map && map.fitBounds) {
-        map.fitBounds(L.latLngBounds([originLatLng, destLatLng]), {
+        map.fitBounds(L.latLngBounds([fromLatLng, toLatLng]), {
           padding: [30, 30]
         });
       }
+
+      // Straight line meta for guidance
+      navState.routeCoords = [
+        { lat: currentLat, lng: currentLng },
+        { lat: tLat, lng: tLng }
+      ];
+      const straightDist = distanceMeters(navState.routeCoords[0], navState.routeCoords[1]);
+      navState.cumulativeDistances = [0, straightDist];
+      navState.totalDistance = straightDist;
+      navState.totalTimeSec = (straightDist / 1000 / FALLBACK_SPEED_KMH) * 3600;
+      navState.routeBounds = {
+        minLat: Math.min(currentLat, tLat),
+        maxLat: Math.max(currentLat, tLat),
+        minLng: Math.min(currentLng, tLng),
+        maxLng: Math.max(currentLng, tLng)
+      };
+      navState.lastRecalcAt = Date.now();
     }
   }
 
@@ -305,64 +356,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (map?.zoomControl?.setPosition) {
       map.zoomControl.setPosition('bottomleft');
     }
-
-    // Pre-load route and terminal metadata from Supabase (no drawing yet)
-    (async function loadRoutesMetadata() {
-      try {
-        const { data: routes, error: routesError } = await supabase
-          .from('routes')
-          .select('route_id, name, color, origin_terminal_id, destination_terminal_id')
-          .order('route_id', { ascending: true });
-
-        if (routesError) {
-          console.error('[Driver map] Failed to load routes', routesError);
-          return;
-        }
-
-        if (!Array.isArray(routes) || !routes.length) return;
-        routesMeta = routes;
-
-        const terminalIds = new Set();
-        routesMeta.forEach((r) => {
-          if (r.origin_terminal_id) terminalIds.add(r.origin_terminal_id);
-          if (r.destination_terminal_id) terminalIds.add(r.destination_terminal_id);
-        });
-
-        if (!terminalIds.size) {
-          routesMetadataLoaded = true;
-          return;
-        }
-
-        const { data: terminals, error: terminalsError } = await supabase
-          .from('jeepney_terminals')
-          .select('terminal_id, name, lat, lng')
-          .in('terminal_id', Array.from(terminalIds));
-
-        if (terminalsError) {
-          console.error('[Driver map] Failed to load jeepney_terminals', terminalsError);
-          return;
-        }
-
-        terminalsById = new Map();
-        if (Array.isArray(terminals)) {
-          terminals.forEach((t) => {
-            if (typeof t.lat === 'number' && typeof t.lng === 'number') {
-              terminalsById.set(t.terminal_id, t);
-            }
-          });
-        }
-
-        routesMetadataLoaded = true;
-
-        // If a route is already selected when metadata finishes loading,
-        // draw it on the map.
-        if (typeof window !== 'undefined' && window.currentRouteId) {
-          drawSelectedRouteOnMap(window.currentRouteId);
-        }
-      } catch (err) {
-        console.error('[Driver map] Unexpected error while loading route metadata', err);
-      }
-    })();
   }
 
   // route-card show/hide behaviour (slide-in / slide-out)
@@ -387,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---------------------------------------------------------------------------
-  // Resolve logged-in driver + load routes, set window.currentDriverId/RouteId
+  // Resolve logged-in driver + load terminals, set window.currentDriverId/TerminalId
   // ---------------------------------------------------------------------------
   async function initDriverIdentityAndRoutes() {
     try {
@@ -421,31 +414,39 @@ document.addEventListener('DOMContentLoaded', () => {
         setDriverPhase(DriverPhase.IDLE);
       }
 
-      // Load available routes into the two dropdowns and wire selection to window.currentRouteId
+      // Load available terminals into the dropdown and wire selection to window.currentTerminalId
       const routeSelect = q('#driver-route');
       const useLastRouteBtn = q('#use-last-route');
       if (!routeSelect) return;
 
-      const { data: routes, error: routesError } = await supabase
-        .from('routes')
-        .select('route_id, name')
+      const { data: terminals, error: terminalsError } = await supabase
+        .from('jeepney_terminals')
+        .select('terminal_id, name, lat, lng')
         .order('name', { ascending: true });
 
-      if (routesError) {
-        console.error('[Driver init] Failed to load routes', routesError);
+      if (terminalsError) {
+        console.error('[Driver init] Failed to load jeepney_terminals', terminalsError);
         return;
       }
+
+      terminalsById = new Map();
+      const terminalsList = Array.isArray(terminals) ? terminals : [];
+      terminalsList.forEach((t) => {
+        if (typeof t.lat === 'number' && typeof t.lng === 'number') {
+          terminalsById.set(t.terminal_id, t);
+        }
+      });
 
       const appendOptions = () => {
         // keep first placeholder option; remove others
         while (routeSelect.options.length > 1) {
           routeSelect.remove(1);
         }
-        if (!Array.isArray(routes)) return;
-        routes.forEach((r) => {
+        if (!terminalsList.length) return;
+        terminalsList.forEach((t) => {
           const opt = document.createElement('option');
-          opt.value = String(r.route_id);
-          opt.textContent = r.name || `Route ${r.route_id}`;
+          opt.value = String(t.terminal_id);
+          opt.textContent = t.name || `Terminal ${t.terminal_id}`;
           routeSelect.appendChild(opt);
         });
       };
@@ -455,7 +456,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const handleRouteChange = (ev) => {
         const val = ev.target.value;
         if (!val) {
-          if (typeof window !== 'undefined') window.currentRouteId = null;
+          if (typeof window !== 'undefined') window.currentTerminalId = null;
+          navState.activeTerminal = null;
           clearActiveRoute();
           setDriverPhase(window.currentDriverId ? DriverPhase.IDLE : DriverPhase.NO_DRIVER);
           setGuidanceEmpty();
@@ -465,29 +467,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const idNum = Number(val);
         if (!Number.isNaN(idNum) && typeof window !== 'undefined') {
-          window.currentRouteId = idNum;
-          console.log('[Driver init] currentRouteId set to', window.currentRouteId);
+          window.currentTerminalId = idNum;
+          const terminal = terminalsById.get(idNum) || null;
+          if (terminal) {
+            navState.activeTerminal = {
+              id: terminal.terminal_id,
+              name: terminal.name || 'Selected terminal',
+              lat: terminal.lat,
+              lng: terminal.lng
+            };
+          } else {
+            navState.activeTerminal = null;
+          }
+          console.log('[Driver init] currentTerminalId set to', window.currentTerminalId, navState.activeTerminal);
           if (window.currentDriverId) {
             updateStartButtonState();
           }
         }
-          // Draw only the selected route on the map
-          if (window.currentRouteId) {
-            drawSelectedRouteOnMap(window.currentRouteId);
-            setDriverPhase(DriverPhase.ROUTE_SELECTED);
-            driverState.leg = 'TO_ORIGIN';
-            setGuidanceEmpty();
-            clearCommuterMarkers();
-          } else {
-            clearActiveRoute();
-            setGuidanceEmpty();
-            clearCommuterMarkers();
-          }
+        // Reset route geometry; a new OSRM route will be computed on next GPS fix
+        clearActiveRoute();
+        navState.routeCoords = [];
+        navState.cumulativeDistances = [];
+        navState.totalDistance = 0;
+        navState.totalTimeSec = 0;
+        navState.routeBounds = null;
+        navState.lastRecalcAt = 0;
+
+        setDriverPhase(navState.activeTerminal ? DriverPhase.ROUTE_SELECTED : DriverPhase.IDLE);
+        setGuidanceEmpty();
+        clearCommuterMarkers();
+
+        if (map && navState.activeTerminal) {
+          const tPos = [navState.activeTerminal.lat, navState.activeTerminal.lng];
+          map.setView(tPos, 15);
+        }
       };
 
       routeSelect.addEventListener('change', handleRouteChange);
 
-      // expose a 'Use last route' shortcut if we have one stored locally
+      // expose a 'Use last route/terminal' shortcut if we have one stored locally
       if (window.currentDriverId && useLastRouteBtn) {
         const last = loadLastRouteForDriver(window.currentDriverId);
         if (last && last.routeId) {
@@ -522,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // For now we read optional globals you can populate from your auth/route logic.
   const getDriverContext = () => ({
     driverId: window.currentDriverId || null,
-    routeId: window.currentRouteId || null
+    terminalId: window.currentTerminalId || null
   });
 
   const LAST_ROUTE_KEY_PREFIX = 'larga:lastRoute:';
@@ -559,8 +577,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateStartButtonState() {
     if (!startBtn) return;
-    const { driverId, routeId } = getDriverContext();
-    const ready = Boolean(driverId && routeId);
+    const { driverId, terminalId } = getDriverContext();
+    const ready = Boolean(driverId && terminalId);
     startBtn.disabled = !ready;
     startBtn.classList.toggle('disabled', !ready);
   }
@@ -575,57 +593,131 @@ document.addEventListener('DOMContentLoaded', () => {
   const ARRIVAL_RADIUS_METERS = 60;
   // Basic ETA assumptions (kept simple): use GPS speed when available, else fallback
   const FALLBACK_SPEED_KMH = 18;
+  const DRIVER_ROUTE_DRIFT_THRESHOLD_METERS = 60;
+  const DRIVER_ROUTE_RECALC_MIN_INTERVAL_MS = 20_000;
+  const COMMUTER_ROUTE_RADIUS_METERS = 50;
+  const COMMUTER_BBOX_PADDING_DEGREES = 0.01;
 
-  function getRouteEndpoints(routeId) {
-    if (!routesMetadataLoaded || !Array.isArray(routesMeta) || !routeId) return null;
-    const route = routesMeta.find((r) => r.route_id === routeId);
-    if (!route) return null;
-    const origin = terminalsById.get(route.origin_terminal_id);
-    const dest = terminalsById.get(route.destination_terminal_id);
-    if (!origin || !dest) return null;
-    if (typeof origin.lat !== 'number' || typeof origin.lng !== 'number') return null;
-    if (typeof dest.lat !== 'number' || typeof dest.lng !== 'number') return null;
-    return {
-      origin: { id: route.origin_terminal_id, name: origin.name || 'Origin terminal', lat: origin.lat, lng: origin.lng },
-      dest: { id: route.destination_terminal_id, name: dest.name || 'Destination terminal', lat: dest.lat, lng: dest.lng }
-    };
+  // Helpers to derive progress along the current OSRM route
+  function getNearestRoutePoint(here) {
+    if (!Array.isArray(navState.routeCoords) || !navState.routeCoords.length) {
+      return { index: -1, distance: Infinity };
+    }
+    let bestIndex = -1;
+    let bestDist = Infinity;
+    navState.routeCoords.forEach((pt, idx) => {
+      const d = distanceMeters(here, pt);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIndex = idx;
+      }
+    });
+    return { index: bestIndex, distance: bestDist };
+  }
+
+  function getRouteProgress(here) {
+    const { index, distance } = getNearestRoutePoint(here);
+    if (index < 0 || !Array.isArray(navState.cumulativeDistances) || !navState.cumulativeDistances.length) {
+      return { distanceAlong: 0, offRouteDistance: distance };
+    }
+    const distanceAlong = navState.cumulativeDistances[index] ?? 0;
+    return { distanceAlong, offRouteDistance: distance };
+  }
+
+  // Smooth speed based on recent fixes (meters/second)
+  function updateSpeedSamples(lat, lng) {
+    const now = Date.now();
+    const here = { lat, lng };
+
+    if (!driverState.speedSamples) {
+      driverState.speedSamples = [];
+    }
+
+    if (driverState.lastFix && Number.isFinite(driverState.lastFixAt)) {
+      const dtSec = (now - driverState.lastFixAt) / 1000;
+      if (dtSec > 0.5) {
+        const dist = distanceMeters(driverState.lastFix, here);
+        const instSpeed = dist / dtSec;
+        if (Number.isFinite(instSpeed) && instSpeed >= 0) {
+          driverState.speedSamples.push(instSpeed);
+          if (driverState.speedSamples.length > 8) {
+            driverState.speedSamples.shift();
+          }
+        }
+      }
+    }
+
+    driverState.lastFix = here;
+    driverState.lastFixAt = now;
+
+    if (!driverState.speedSamples.length) return null;
+    const sum = driverState.speedSamples.reduce((acc, v) => acc + v, 0);
+    const avg = sum / driverState.speedSamples.length;
+    return Number.isFinite(avg) ? avg : null;
   }
 
   function updateGuidanceFromFix(lat, lng, speedMps) {
-    const { routeId } = getDriverContext();
-    if (!routeId) {
-      setGuidanceEmpty();
-      return;
-    }
-
-    const endpoints = getRouteEndpoints(routeId);
-    if (!endpoints) {
-      setGuidanceEmpty();
-      return;
-    }
-
     const here = { lat, lng };
-    const dToOrigin = distanceMeters(here, endpoints.origin);
-    const dToDest = distanceMeters(here, endpoints.dest);
 
-    // Decide leg: if we are close to origin, start guiding to destination.
-    if (driverState.leg === 'TO_ORIGIN' && dToOrigin <= ARRIVAL_RADIUS_METERS) {
-      driverState.leg = 'TO_DEST';
+    if (!navState.activeTerminal) {
+      setGuidanceEmpty();
+      return;
     }
 
-    const next = driverState.leg === 'TO_DEST' ? endpoints.dest : endpoints.origin;
-    const dist = driverState.leg === 'TO_DEST' ? dToDest : dToOrigin;
+    if (dgNextTerminal) dgNextTerminal.textContent = navState.activeTerminal.name || 'Destination';
 
-    if (dgNextTerminal) dgNextTerminal.textContent = next.name;
-    if (dgDistance) dgDistance.textContent = formatDistance(dist);
+    // Decide whether to recompute OSRM route
+    const now = Date.now();
+    let offRouteDistance = null;
+    let hasRouteGeometry = Array.isArray(navState.routeCoords) && navState.routeCoords.length > 1;
 
-    // ETA: prefer GPS speed if it's valid and non-trivial, otherwise fallback speed
-    let etaMinutes = null;
-    if (typeof speedMps === 'number' && Number.isFinite(speedMps) && speedMps > 0.8) {
-      etaMinutes = (dist / speedMps) / 60;
+    if (hasRouteGeometry) {
+      const progress = getRouteProgress(here);
+      offRouteDistance = progress.offRouteDistance;
+    }
+
+    const tooOld = now - navState.lastRecalcAt > DRIVER_ROUTE_RECALC_MIN_INTERVAL_MS;
+    const tooFar = offRouteDistance !== null && offRouteDistance > DRIVER_ROUTE_DRIFT_THRESHOLD_METERS;
+
+    if (!hasRouteGeometry || tooOld || tooFar) {
+      recomputeRouteFromHere(lat, lng);
+      hasRouteGeometry = Array.isArray(navState.routeCoords) && navState.routeCoords.length > 1;
+    }
+
+    let remainingDistance;
+    let etaMinutes;
+
+    if (hasRouteGeometry && navState.totalDistance > 0) {
+      const { distanceAlong, offRouteDistance: offDist } = getRouteProgress(here);
+      remainingDistance = Math.max(navState.totalDistance - distanceAlong, 0);
+
+      // If we're extremely close, treat as arrived
+      if (remainingDistance <= ARRIVAL_RADIUS_METERS && offDist <= ARRIVAL_RADIUS_METERS) {
+        remainingDistance = 0;
+      }
+
+      // ETA: prefer smoothed GPS speed, else proportion of OSRM duration
+      if (typeof speedMps === 'number' && Number.isFinite(speedMps) && speedMps > 0.8) {
+        etaMinutes = (remainingDistance / speedMps) / 60;
+      } else if (navState.totalTimeSec > 0 && navState.totalDistance > 0) {
+        const fraction = remainingDistance / navState.totalDistance;
+        etaMinutes = (navState.totalTimeSec * fraction) / 60;
+      } else {
+        // final fallback to simple speed
+        const fallbackSpeedMps = (FALLBACK_SPEED_KMH * 1000) / 3600;
+        etaMinutes = (remainingDistance / fallbackSpeedMps) / 60;
+      }
     } else {
-      etaMinutes = ((dist / 1000) / FALLBACK_SPEED_KMH) * 60;
+      // No OSRM geometry yet: straight-line fallback
+      const dest = navState.activeTerminal;
+      remainingDistance = distanceMeters(here, dest);
+      const effectiveSpeed = (typeof speedMps === 'number' && Number.isFinite(speedMps) && speedMps > 0.8)
+        ? speedMps
+        : (FALLBACK_SPEED_KMH * 1000) / 3600;
+      etaMinutes = (remainingDistance / effectiveSpeed) / 60;
     }
+
+    if (dgDistance) dgDistance.textContent = formatDistance(remainingDistance);
     if (dgEta) dgEta.textContent = formatEtaMinutes(etaMinutes);
   }
 
@@ -641,8 +733,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function refreshCommutersForRoute() {
-    const { routeId } = getDriverContext();
-    if (!routeId || !map) return;
+    if (!map) return;
+    if (!navState.activeTerminal) return;
+    if (!navState.routeBounds || !Array.isArray(navState.routeCoords) || !navState.routeCoords.length) return;
 
     // Basic throttling for commuter refresh
     const now = Date.now();
@@ -651,11 +744,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const since = new Date(Date.now() - 5 * 60_000).toISOString();
+      const pad = COMMUTER_BBOX_PADDING_DEGREES;
+      const { minLat, maxLat, minLng, maxLng } = navState.routeBounds;
+
       const { data, error } = await supabase
         .from('commuter_locations')
         .select('commuter_id, lat, lng, updated_at')
-        .eq('route_id', routeId)
-        .gte('updated_at', since);
+        .gte('updated_at', since)
+        .gte('lat', (minLat ?? -90) - pad)
+        .lte('lat', (maxLat ?? 90) + pad)
+        .gte('lng', (minLng ?? -180) - pad)
+        .lte('lng', (maxLng ?? 180) + pad);
 
       if (error) {
         console.error('[Driver commuters] Failed to fetch commuter_locations', error);
@@ -663,15 +762,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const commuters = Array.isArray(data) ? data : [];
-      if (dgCommuters) dgCommuters.textContent = String(commuters.length);
 
       const seen = new Set();
+      let visibleCount = 0;
+
       commuters.forEach((c) => {
         if (!c || !c.commuter_id) return;
         if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
 
         const id = String(c.commuter_id);
         seen.add(id);
+
+        const point = { lat: c.lat, lng: c.lng };
+        const { distance: dToRoute } = getNearestRoutePoint(point);
+        if (!Number.isFinite(dToRoute) || dToRoute > COMMUTER_ROUTE_RADIUS_METERS) {
+          // Too far from the jeepney route; hide if marker exists
+          const existingFar = driverState.commutersMarkers.get(id);
+          if (existingFar) {
+            try { map.removeLayer(existingFar); } catch (e) { /* ignore */ }
+            driverState.commutersMarkers.delete(id);
+          }
+          return;
+        }
+
+        visibleCount += 1;
 
         const pos = [c.lat, c.lng];
         const existing = driverState.commutersMarkers.get(id);
@@ -699,6 +813,8 @@ document.addEventListener('DOMContentLoaded', () => {
         driverState.commutersMarkers.set(id, marker);
       });
 
+      if (dgCommuters) dgCommuters.textContent = String(visibleCount || 0);
+
       // Remove markers for commuters no longer present
       Array.from(driverState.commutersMarkers.keys()).forEach((id) => {
         if (seen.has(id)) return;
@@ -718,7 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!coords) return;
 
     const { latitude, longitude, speed, heading } = coords;
-    const { driverId, routeId } = getDriverContext();
+    const { driverId } = getDriverContext();
 
     if (!driverId) {
       console.warn('[GPS] No driverId set (window.currentDriverId). Skipping upload.');
@@ -743,7 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .from('jeepney_locations')
         .upsert({
           driver_id: driverId,
-          route_id: routeId ?? null,
+          route_id: null,
           lat: latitude,
           lng: longitude,
           speed: typeof speed === 'number' ? speed : null,
@@ -775,8 +891,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Update guidance (even if we skip upload due to throttling)
       if (typeof latitude === 'number' && typeof longitude === 'number') {
-        const speedMps = position?.coords?.speed;
-        updateGuidanceFromFix(latitude, longitude, speedMps);
+        const smoothSpeedMps = updateSpeedSamples(latitude, longitude);
+        updateGuidanceFromFix(latitude, longitude, smoothSpeedMps);
       }
 
       if (typeof latitude === 'number' && typeof longitude === 'number' && map) {
@@ -796,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Send to backend regardless of whether map centering ran
       void sendDriverLocation(position);
 
-      // Refresh commuters on this route only (lightweight + throttled)
+      // Refresh commuters along the current route only (lightweight + throttled)
       void refreshCommutersForRoute();
     };
 
@@ -813,27 +929,57 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[GPS] Tracking started');
   }
 
-  function stopGpsTracking() {
+  async function stopGpsTracking() {
+    // Stop browser-side GPS watcher
     if (geoWatchId !== null && navigator.geolocation) {
       navigator.geolocation.clearWatch(geoWatchId);
       geoWatchId = null;
       console.log('[GPS] Tracking stopped');
     }
 
+    // Remove driver marker from the driver map and reset centering state
+    if (map && driverMarker) {
+      try {
+        map.removeLayer(driverMarker);
+      } catch (e) {
+        console.warn('[GPS] Failed to remove driver marker', e);
+      }
+      driverMarker = null;
+      hasCenteredOnDriver = false;
+    }
+
+    // Stop periodic commuter refreshes on this page
     if (driverState.commutersTimer) {
       clearInterval(driverState.commutersTimer);
       driverState.commutersTimer = null;
     }
 
     clearCommuterMarkers();
+
+    // Also remove this driver's live location row so commuters stop seeing it
+    const { driverId } = getDriverContext();
+    if (driverId) {
+      try {
+        const { error } = await supabase
+          .from('jeepney_locations')
+          .delete()
+          .eq('driver_id', driverId);
+
+        if (error) {
+          console.error('[GPS] Failed to delete jeepney_locations row on stop', error);
+        }
+      } catch (err) {
+        console.error('[GPS] Unexpected error while deleting jeepney_locations row on stop', err);
+      }
+    }
   }
 
   if (startBtn) {
     startBtn.addEventListener('click', () => {
       if (startBtn.disabled) return;
 
-      const { driverId, routeId } = getDriverContext();
-      if (!driverId || !routeId) {
+      const { driverId, terminalId } = getDriverContext();
+      if (!driverId || !terminalId) {
         updateStartButtonState();
         return;
       }
@@ -845,7 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const opt = routeSelect.options[routeSelect.selectedIndex];
         routeName = opt ? opt.textContent : null;
       }
-      saveLastRouteForDriver(driverId, routeId, routeName);
+      saveLastRouteForDriver(driverId, terminalId, routeName);
 
       // Initialize trip phase and start periodic route-scoped commuter refresh
       driverState.leg = 'TO_ORIGIN';
@@ -866,8 +1012,8 @@ document.addEventListener('DOMContentLoaded', () => {
     stopBtn.addEventListener('click', () => {
       stopGpsTracking();
       // Back to ready state if a route is still selected
-      const { routeId } = getDriverContext();
-      setDriverPhase(routeId ? DriverPhase.ROUTE_SELECTED : DriverPhase.IDLE);
+      const { terminalId } = getDriverContext();
+      setDriverPhase(terminalId ? DriverPhase.ROUTE_SELECTED : DriverPhase.IDLE);
     });
   }
 
