@@ -6,7 +6,81 @@ document.addEventListener('DOMContentLoaded', () => {
   'use strict';
 
   const q = (sel) => document.querySelector(sel);
-  const qAll = (sel) => Array.from(document.querySelectorAll(sel));
+
+  // ---------------------------------------------------------------------------
+  // Minimal driver state + guidance UI (keeps existing behavior)
+  // ---------------------------------------------------------------------------
+  const DriverPhase = Object.freeze({
+    NO_DRIVER: 'NO_DRIVER',
+    IDLE: 'IDLE',
+    ROUTE_SELECTED: 'ROUTE_SELECTED',
+    NAVIGATING: 'NAVIGATING'
+  });
+
+  const driverState = {
+    phase: DriverPhase.IDLE,
+    leg: 'TO_ORIGIN', // TO_ORIGIN -> TO_DEST
+    lastSent: null,
+    lastSentAt: 0,
+    commutersTimer: null,
+    commutersMarkers: new Map(),
+    lastCommutersRefreshAt: 0
+  };
+
+  const dgStatus = q('#dg-status');
+  const dgNextTerminal = q('#dg-next-terminal');
+  const dgDistance = q('#dg-distance');
+  const dgEta = q('#dg-eta');
+  const dgCommuters = q('#dg-commuters');
+
+  function setDriverPhase(phase) {
+    driverState.phase = phase;
+    if (dgStatus) {
+      const label =
+        phase === DriverPhase.NAVIGATING ? 'On Trip' :
+          phase === DriverPhase.ROUTE_SELECTED ? 'Ready' :
+            phase === DriverPhase.NO_DRIVER ? 'Not logged in' : 'Standby';
+      dgStatus.textContent = label;
+    }
+  }
+
+  function setGuidanceEmpty() {
+    if (dgNextTerminal) dgNextTerminal.textContent = '—';
+    if (dgDistance) dgDistance.textContent = '—';
+    if (dgEta) dgEta.textContent = '—';
+    if (dgCommuters) dgCommuters.textContent = '—';
+  }
+
+  function toRad(d) {
+    return (d * Math.PI) / 180;
+  }
+
+  function distanceMeters(a, b) {
+    const R = 6371000;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const sinDLat = Math.sin(dLat / 2);
+    const sinDLng = Math.sin(dLng / 2);
+    const h = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  function formatDistance(meters) {
+    if (!Number.isFinite(meters)) return '—';
+    if (meters < 1000) return `${Math.round(meters)} m`;
+    return `${(meters / 1000).toFixed(2)} km`;
+  }
+
+  function formatEtaMinutes(minutes) {
+    if (!Number.isFinite(minutes)) return '—';
+    if (minutes < 1) return '< 1 min';
+    if (minutes < 60) return `${Math.round(minutes)} min`;
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    return `${h}h ${m}m`;
+  }
 
   // Dropdown menu behavior
   const menuToggle = q('#menu-toggle');
@@ -289,278 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('[Driver map] Unexpected error while loading route metadata', err);
       }
     })();
-
-    // Driver UI interactions
-    (function initDriverUI() {
-      // DOM helpers
-      const startInput = q('.start-input');
-      const destInput = q('.dest-input');
-      const routePicker = q('.route-picker');
-      const routeOptions = qAll('.route-option');
-      const recentList = q('.recent-list');
-      const tripToggle = q('#trip-toggle');
-      let currentRouteEl = q('.current-route');
-      let currentRouteText = currentRouteEl ? currentRouteEl.querySelector('.current-route-text') : null;
-      let combinedPlaceholderEl = q('.route-fields .route-combined-placeholder');
-      let combinedPlaceholderText = combinedPlaceholderEl ? combinedPlaceholderEl.querySelector('.text') : null;
-      const vehicleStatus = q('.vehicle-status');
-      const yourLocationBtn = q('.drivers-info .your-location');
-      const startFieldEl = q('.route-field.start-field');
-
-      const ensureCombinedPlaceholder = () => {
-        if (combinedPlaceholderEl) return;
-        const container = q('.route-fields');
-        if (!container) return;
-        const wrapper = document.createElement('div');
-        wrapper.className = 'route-combined-placeholder';
-        const txt = document.createElement('div');
-        txt.className = 'text';
-        txt.textContent = 'starting point and the choose destination';
-        wrapper.appendChild(txt);
-        container.insertBefore(wrapper, container.firstChild);
-        combinedPlaceholderEl = wrapper;
-        combinedPlaceholderText = txt;
-      };
-
-      const updateTripToggleState = () => {
-        if (!tripToggle) return;
-        const ok = startInput?.value?.trim() && destInput?.value?.trim();
-        tripToggle.disabled = !ok;
-        tripToggle.classList.toggle('disabled', !ok);
-      };
-
-      const updateStartLabelVisibility = () => {
-        try {
-          const hasDest = Boolean(destInput?.value?.trim());
-          if (startFieldEl) startFieldEl.classList.toggle('hide-label', hasDest);
-        } catch (e) { /* ignore */ }
-      };
-
-      const setCurrentRouteCombined = () => {
-        const s = startInput?.value?.trim() || '';
-        const d = destInput?.value?.trim() || '';
-        let combined = '';
-        if (s && d) combined = `${s} - ${d}`;
-        else if (!s && !d) combined = 'starting point and the choose destination';
-        else if (s && !d) combined = `${s} - Choose destination`;
-        else if (!s && d) combined = `Choose starting point - ${d}`;
-
-        if (currentRouteText) currentRouteText.textContent = combined;
-        if (combinedPlaceholderText) combinedPlaceholderText.textContent = combined === '' ? 'starting point and the choose destination' : combined;
-        return combined;
-      };
-
-      const updateFieldClasses = () => {
-        try {
-          if (startInput) {
-            const sf = startInput.closest('.route-field');
-            if (sf) sf.classList.toggle('has-value', Boolean(startInput.value?.trim()));
-          }
-          if (destInput) {
-            const df = destInput.closest('.route-field');
-            if (df) df.classList.toggle('has-value', Boolean(destInput.value?.trim()));
-          }
-        } catch (e) { /* ignore */ }
-
-        updateStartLabelVisibility();
-
-        try {
-          const hasStart = Boolean(startInput?.value?.trim());
-          const hasDest = Boolean(destInput?.value?.trim());
-
-          if (hasStart && hasDest) {
-            if (currentRouteEl && currentRouteEl.parentNode) {
-              currentRouteEl.parentNode.removeChild(currentRouteEl);
-              currentRouteEl = null;
-            }
-            if (combinedPlaceholderEl && combinedPlaceholderEl.parentNode) {
-              combinedPlaceholderEl.parentNode.removeChild(combinedPlaceholderEl);
-              combinedPlaceholderEl = null;
-              combinedPlaceholderText = null;
-            }
-          } else {
-            ensureCombinedPlaceholder();
-            if (currentRouteEl) {
-              currentRouteEl.classList.toggle('hidden', hasDest);
-              setCurrentRouteCombined();
-            }
-            if (combinedPlaceholderEl) {
-              combinedPlaceholderEl.classList.remove('hidden');
-              combinedPlaceholderText.textContent = (startInput?.value?.trim() || destInput?.value?.trim()) ? setCurrentRouteCombined() : 'starting point and the choose destination';
-            }
-          }
-        } catch (e) { /* ignore */ }
-      };
-
-      const pushRecentRoute = (name) => {
-        if (!recentList) return;
-        Array.from(recentList.children).forEach((li) => { if (li.textContent.trim() === name) li.remove(); });
-        const li = document.createElement('li');
-        li.className = 'recent-item active';
-        li.textContent = name;
-        Array.from(recentList.children).forEach((n) => n.classList.remove('active'));
-        recentList.insertBefore(li, recentList.firstChild);
-        while (recentList.children.length > 5) recentList.removeChild(recentList.lastChild);
-      };
-
-      const _pickerStopHandler = (e) => e.stopPropagation();
-
-      const showPicker = (targetType, anchorEl) => {
-        if (!routePicker) return;
-        try { if (map?.closePopup) map.closePopup(); } catch (e) { /* ignore */ }
-
-        routePicker.style.display = 'block';
-        routePicker.setAttribute('data-target', targetType);
-        routePicker.style.opacity = 0;
-        routePicker.style.transition = 'opacity 180ms ease';
-        requestAnimationFrame(() => { routePicker.style.opacity = 1; });
-
-        try {
-          if (!routePicker._pickerStopHandler) {
-            routePicker.addEventListener('mousedown', _pickerStopHandler, true);
-            routePicker.addEventListener('click', _pickerStopHandler, true);
-            routePicker._pickerStopHandler = _pickerStopHandler;
-          }
-        } catch (e) { /* ignore */ }
-
-        if (anchorEl) {
-          const rect = anchorEl.getBoundingClientRect();
-          const left = rect.left + (window.scrollX || window.pageXOffset || 0);
-          const top = rect.bottom + 6 + (window.scrollY || window.pageYOffset || 0);
-          routePicker.style.position = 'absolute';
-          routePicker.style.left = `${left}px`;
-          routePicker.style.top = `${top}px`;
-          routePicker.style.zIndex = 13001;
-        }
-      };
-
-      const hidePicker = () => {
-        if (!routePicker) return;
-        routePicker.style.display = 'none';
-        routePicker.removeAttribute('data-target');
-        try {
-          if (routePicker._pickerStopHandler) {
-            routePicker.removeEventListener('mousedown', routePicker._pickerStopHandler, true);
-            routePicker.removeEventListener('click', routePicker._pickerStopHandler, true);
-            delete routePicker._pickerStopHandler;
-          }
-        } catch (e) { /* ignore */ }
-      };
-
-      if (yourLocationBtn) {
-        yourLocationBtn.addEventListener('mousedown', (e) => e.stopPropagation(), true);
-        yourLocationBtn.addEventListener('click', (e) => e.stopPropagation(), true);
-        yourLocationBtn.addEventListener('click', () => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(() => {
-              const label = 'Your location';
-              if (startInput) startInput.value = label;
-              updateFieldClasses();
-            }, () => {
-              const c = map?.getCenter?.();
-              const label = c ? 'Your location' : 'Current location';
-              if (startInput) startInput.value = label;
-              updateFieldClasses();
-            });
-          } else {
-            const c = map?.getCenter?.();
-            const label = c ? 'Your location' : 'Current location';
-            if (startInput) startInput.value = label;
-            updateFieldClasses();
-          }
-        });
-      }
-
-      document.addEventListener('click', (ev) => {
-        const field = ev.target.closest('.route-field');
-        if (field) {
-          ev.preventDefault();
-          const type = field.getAttribute('data-type');
-          showPicker(type, field);
-          return;
-        }
-        if (!ev.target.closest('.route-picker')) hidePicker();
-      });
-
-      if (routeOptions?.length) {
-        routeOptions.forEach((op) => {
-          op.addEventListener('click', () => {
-            const target = routePicker?.getAttribute('data-target');
-            const name = op.textContent.trim();
-            if (target === 'start' && startInput) startInput.value = name;
-            if (target === 'dest' && destInput) destInput.value = name;
-            hidePicker();
-            const combined = setCurrentRouteCombined();
-            if (combined && combined !== '') pushRecentRoute(combined);
-            updateTripToggleState();
-            updateFieldClasses();
-          });
-        });
-      }
-
-      if (recentList) {
-        recentList.addEventListener('click', (e) => {
-          const li = e.target.closest('.recent-item');
-          if (!li) return;
-          const text = li.textContent.trim();
-          const parts = text.split(' - ');
-          if (parts.length >= 2) {
-            if (startInput) startInput.value = parts[0];
-            if (destInput) destInput.value = parts.slice(1).join(' - ');
-          }
-          Array.from(recentList.children).forEach((n) => n.classList.remove('active'));
-          li.classList.add('active');
-          setCurrentRouteCombined();
-          updateTripToggleState();
-          updateFieldClasses();
-        });
-      }
-
-      let tripActive = false;
-      if (tripToggle) {
-        updateTripToggleState();
-        tripToggle.addEventListener('click', () => {
-          if (tripToggle.disabled) return;
-          tripActive = !tripActive;
-          if (tripActive) {
-            tripToggle.textContent = 'End Trip';
-            tripToggle.classList.remove('start-trip-button');
-            tripToggle.classList.add('end-trip-button');
-            if (vehicleStatus) vehicleStatus.textContent = 'On Trip';
-          } else {
-            tripToggle.textContent = 'Start Trip';
-            tripToggle.classList.remove('end-trip-button');
-            tripToggle.classList.add('start-trip-button');
-            if (vehicleStatus) vehicleStatus.textContent = 'Standby';
-          }
-        });
-      }
-
-      window.setDriverRoute = (start, dest) => {
-        if (startInput) startInput.value = start;
-        if (destInput) destInput.value = dest;
-        setCurrentRouteCombined();
-        pushRecentRoute(setCurrentRouteCombined());
-        updateTripToggleState();
-        updateFieldClasses();
-      };
-
-      // initialize values from any existing recent-item
-      (function init() {
-        const firstActive = q('.recent-item.active');
-        if (firstActive) {
-          const txt = firstActive.textContent.trim();
-          const parts = txt.split(' - ');
-          if (parts.length >= 2) {
-            if (startInput) startInput.value = parts[0];
-            if (destInput) destInput.value = parts.slice(1).join(' - ');
-          }
-          setCurrentRouteCombined();
-        }
-        updateTripToggleState();
-        updateFieldClasses();
-      })();
-    })();
   }
 
   // route-card show/hide behaviour (slide-in / slide-out)
@@ -597,6 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const user = data?.user;
       if (!user) {
         console.warn('[Driver init] No logged-in user; GPS uploads will be skipped.');
+        setDriverPhase(DriverPhase.NO_DRIVER);
         return;
       }
 
@@ -611,9 +414,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('[Driver init] Failed to resolve driver_id', driverError);
       } else if (!driverRow?.driver_id) {
         console.warn('[Driver init] No driver profile found for this user; GPS uploads will be skipped.');
+        setDriverPhase(DriverPhase.NO_DRIVER);
       } else if (typeof window !== 'undefined') {
         window.currentDriverId = driverRow.driver_id;
         console.log('[Driver init] currentDriverId set to', window.currentDriverId);
+        setDriverPhase(DriverPhase.IDLE);
       }
 
       // Load available routes into the two dropdowns and wire selection to window.currentRouteId
@@ -649,7 +454,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const handleRouteChange = (ev) => {
         const val = ev.target.value;
-        if (!val) return;
+        if (!val) {
+          if (typeof window !== 'undefined') window.currentRouteId = null;
+          clearActiveRoute();
+          setDriverPhase(window.currentDriverId ? DriverPhase.IDLE : DriverPhase.NO_DRIVER);
+          setGuidanceEmpty();
+          clearCommuterMarkers();
+          updateStartButtonState();
+          return;
+        }
         const idNum = Number(val);
         if (!Number.isNaN(idNum) && typeof window !== 'undefined') {
           window.currentRouteId = idNum;
@@ -661,8 +474,14 @@ document.addEventListener('DOMContentLoaded', () => {
           // Draw only the selected route on the map
           if (window.currentRouteId) {
             drawSelectedRouteOnMap(window.currentRouteId);
+            setDriverPhase(DriverPhase.ROUTE_SELECTED);
+            driverState.leg = 'TO_ORIGIN';
+            setGuidanceEmpty();
+            clearCommuterMarkers();
           } else {
             clearActiveRoute();
+            setGuidanceEmpty();
+            clearCommuterMarkers();
           }
       };
 
@@ -748,6 +567,152 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let geoWatchId = null;
 
+  // GPS write throttling (efficiency)
+  const GPS_MIN_MOVE_METERS = 20;
+  const GPS_MIN_INTERVAL_MS = 10_000;
+
+  // Guidance: consider we "arrived" at a terminal if within this radius
+  const ARRIVAL_RADIUS_METERS = 60;
+  // Basic ETA assumptions (kept simple): use GPS speed when available, else fallback
+  const FALLBACK_SPEED_KMH = 18;
+
+  function getRouteEndpoints(routeId) {
+    if (!routesMetadataLoaded || !Array.isArray(routesMeta) || !routeId) return null;
+    const route = routesMeta.find((r) => r.route_id === routeId);
+    if (!route) return null;
+    const origin = terminalsById.get(route.origin_terminal_id);
+    const dest = terminalsById.get(route.destination_terminal_id);
+    if (!origin || !dest) return null;
+    if (typeof origin.lat !== 'number' || typeof origin.lng !== 'number') return null;
+    if (typeof dest.lat !== 'number' || typeof dest.lng !== 'number') return null;
+    return {
+      origin: { id: route.origin_terminal_id, name: origin.name || 'Origin terminal', lat: origin.lat, lng: origin.lng },
+      dest: { id: route.destination_terminal_id, name: dest.name || 'Destination terminal', lat: dest.lat, lng: dest.lng }
+    };
+  }
+
+  function updateGuidanceFromFix(lat, lng, speedMps) {
+    const { routeId } = getDriverContext();
+    if (!routeId) {
+      setGuidanceEmpty();
+      return;
+    }
+
+    const endpoints = getRouteEndpoints(routeId);
+    if (!endpoints) {
+      setGuidanceEmpty();
+      return;
+    }
+
+    const here = { lat, lng };
+    const dToOrigin = distanceMeters(here, endpoints.origin);
+    const dToDest = distanceMeters(here, endpoints.dest);
+
+    // Decide leg: if we are close to origin, start guiding to destination.
+    if (driverState.leg === 'TO_ORIGIN' && dToOrigin <= ARRIVAL_RADIUS_METERS) {
+      driverState.leg = 'TO_DEST';
+    }
+
+    const next = driverState.leg === 'TO_DEST' ? endpoints.dest : endpoints.origin;
+    const dist = driverState.leg === 'TO_DEST' ? dToDest : dToOrigin;
+
+    if (dgNextTerminal) dgNextTerminal.textContent = next.name;
+    if (dgDistance) dgDistance.textContent = formatDistance(dist);
+
+    // ETA: prefer GPS speed if it's valid and non-trivial, otherwise fallback speed
+    let etaMinutes = null;
+    if (typeof speedMps === 'number' && Number.isFinite(speedMps) && speedMps > 0.8) {
+      etaMinutes = (dist / speedMps) / 60;
+    } else {
+      etaMinutes = ((dist / 1000) / FALLBACK_SPEED_KMH) * 60;
+    }
+    if (dgEta) dgEta.textContent = formatEtaMinutes(etaMinutes);
+  }
+
+  function clearCommuterMarkers() {
+    if (!map || !driverState.commutersMarkers) return;
+    driverState.commutersMarkers.forEach((marker) => {
+      try {
+        map.removeLayer(marker);
+      } catch (e) { /* ignore */ }
+    });
+    driverState.commutersMarkers.clear();
+    if (dgCommuters) dgCommuters.textContent = '—';
+  }
+
+  async function refreshCommutersForRoute() {
+    const { routeId } = getDriverContext();
+    if (!routeId || !map) return;
+
+    // Basic throttling for commuter refresh
+    const now = Date.now();
+    if (now - driverState.lastCommutersRefreshAt < 8_000) return;
+    driverState.lastCommutersRefreshAt = now;
+
+    try {
+      const since = new Date(Date.now() - 5 * 60_000).toISOString();
+      const { data, error } = await supabase
+        .from('commuter_locations')
+        .select('commuter_id, lat, lng, updated_at')
+        .eq('route_id', routeId)
+        .gte('updated_at', since);
+
+      if (error) {
+        console.error('[Driver commuters] Failed to fetch commuter_locations', error);
+        return;
+      }
+
+      const commuters = Array.isArray(data) ? data : [];
+      if (dgCommuters) dgCommuters.textContent = String(commuters.length);
+
+      const seen = new Set();
+      commuters.forEach((c) => {
+        if (!c || !c.commuter_id) return;
+        if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
+
+        const id = String(c.commuter_id);
+        seen.add(id);
+
+        const pos = [c.lat, c.lng];
+        const existing = driverState.commutersMarkers.get(id);
+
+        if (existing) {
+          existing.setLatLng(pos);
+          return;
+        }
+
+        // Use existing palette: border uses #0a714e and white fill
+        const marker = L.circleMarker(pos, {
+          radius: 5,
+          color: '#0a714e',
+          weight: 2,
+          fillColor: '#ffffff',
+          fillOpacity: 1
+        }).bindTooltip('Commuter (same route)', {
+          permanent: false,
+          direction: 'top',
+          opacity: 0.95,
+          sticky: true
+        });
+
+        marker.addTo(map);
+        driverState.commutersMarkers.set(id, marker);
+      });
+
+      // Remove markers for commuters no longer present
+      Array.from(driverState.commutersMarkers.keys()).forEach((id) => {
+        if (seen.has(id)) return;
+        const marker = driverState.commutersMarkers.get(id);
+        if (marker) {
+          try { map.removeLayer(marker); } catch (e) { /* ignore */ }
+        }
+        driverState.commutersMarkers.delete(id);
+      });
+    } catch (err) {
+      console.error('[Driver commuters] Unexpected error while fetching commuters', err);
+    }
+  }
+
   async function sendDriverLocation(position) {
     const { coords } = position || {};
     if (!coords) return;
@@ -759,6 +724,19 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('[GPS] No driverId set (window.currentDriverId). Skipping upload.');
       return;
     }
+
+    // Throttle writes (avoid hammering DB): only send if moved enough or enough time passed
+    const now = Date.now();
+    const curr = { lat: latitude, lng: longitude };
+    if (driverState.lastSent && Number.isFinite(driverState.lastSentAt)) {
+      const moved = distanceMeters(driverState.lastSent, curr);
+      const dt = now - driverState.lastSentAt;
+      if (moved < GPS_MIN_MOVE_METERS && dt < GPS_MIN_INTERVAL_MS) {
+        return;
+      }
+    }
+    driverState.lastSent = curr;
+    driverState.lastSentAt = now;
 
     try {
       const { error } = await supabase
@@ -795,6 +773,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const success = (position) => {
       const { latitude, longitude } = position.coords || {};
 
+      // Update guidance (even if we skip upload due to throttling)
+      if (typeof latitude === 'number' && typeof longitude === 'number') {
+        const speedMps = position?.coords?.speed;
+        updateGuidanceFromFix(latitude, longitude, speedMps);
+      }
+
       if (typeof latitude === 'number' && typeof longitude === 'number' && map) {
         const pos = [latitude, longitude];
         if (!driverMarker) {
@@ -811,6 +795,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Send to backend regardless of whether map centering ran
       void sendDriverLocation(position);
+
+      // Refresh commuters on this route only (lightweight + throttled)
+      void refreshCommutersForRoute();
     };
 
     const error = (err) => {
@@ -832,6 +819,13 @@ document.addEventListener('DOMContentLoaded', () => {
       geoWatchId = null;
       console.log('[GPS] Tracking stopped');
     }
+
+    if (driverState.commutersTimer) {
+      clearInterval(driverState.commutersTimer);
+      driverState.commutersTimer = null;
+    }
+
+    clearCommuterMarkers();
   }
 
   if (startBtn) {
@@ -853,6 +847,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       saveLastRouteForDriver(driverId, routeId, routeName);
 
+      // Initialize trip phase and start periodic route-scoped commuter refresh
+      driverState.leg = 'TO_ORIGIN';
+      setDriverPhase(DriverPhase.NAVIGATING);
+
+      if (driverState.commutersTimer) {
+        clearInterval(driverState.commutersTimer);
+      }
+      driverState.commutersTimer = setInterval(() => {
+        void refreshCommutersForRoute();
+      }, 15_000);
+
       startGpsTracking();
     });
   }
@@ -860,9 +865,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (stopBtn) {
     stopBtn.addEventListener('click', () => {
       stopGpsTracking();
+      // Back to ready state if a route is still selected
+      const { routeId } = getDriverContext();
+      setDriverPhase(routeId ? DriverPhase.ROUTE_SELECTED : DriverPhase.IDLE);
     });
   }
 
   // Fire-and-forget; driver page does not depend on awaiting this for UI
   void initDriverIdentityAndRoutes();
+
+  // Initialize default guidance UI state
+  setDriverPhase(window.currentDriverId ? DriverPhase.IDLE : DriverPhase.NO_DRIVER);
+  setGuidanceEmpty();
 });

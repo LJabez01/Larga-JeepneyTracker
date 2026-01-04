@@ -300,6 +300,30 @@ nav, .controls, .main-menu
   text-align: center;
 }
 
+/* Driver Guidance panel (uses existing palette) */
+.driver-guidance {
+  width: 100%;
+  margin: 10px 0 14px 0;
+  background: #d8d8d8;
+  color: #333;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.driver-guidance .dg-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 4px 0;
+}
+
+.driver-guidance .dg-label {
+  font-weight: 700;
+}
+
 .route-card h2 
 {
   color: white;
