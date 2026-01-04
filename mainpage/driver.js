@@ -108,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let driverMarker = null;
   let hasCenteredOnDriver = false;
   let terminalsById = new Map();
+  let routesByDestTerminalId = new Map();
   let activeRouteControl = null;
   let activeRouteOverlay = null;
   let activeRouteMarkers = [];
@@ -437,6 +438,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
+      // Load routes so we can map the selected destination terminal -> route_id
+      try {
+        const { data: routes, error: routesError } = await supabase
+          .from('routes')
+          .select('route_id, name, origin_terminal_id, destination_terminal_id');
+
+        if (routesError) {
+          console.error('[Driver init] Failed to load routes', routesError);
+        } else if (Array.isArray(routes)) {
+          const mapByDest = new Map();
+          routes.forEach((r) => {
+            if (r && typeof r.destination_terminal_id === 'number') {
+              mapByDest.set(r.destination_terminal_id, r);
+            }
+          });
+          routesByDestTerminalId = mapByDest;
+        }
+      } catch (routesErr) {
+        console.error('[Driver init] Unexpected error while loading routes', routesErr);
+      }
+
       const appendOptions = () => {
         // keep first placeholder option; remove others
         while (routeSelect.options.length > 1) {
@@ -476,8 +498,19 @@ document.addEventListener('DOMContentLoaded', () => {
               lat: terminal.lat,
               lng: terminal.lng
             };
+
+            // Try to resolve the associated route for this terminal so
+            // commuters can see where this jeepney is heading.
+            const routeMeta = routesByDestTerminalId.get(terminal.terminal_id) || null;
+            if (routeMeta) {
+              window.currentRouteId = routeMeta.route_id;
+              console.log('[Driver init] currentRouteId set to', window.currentRouteId, routeMeta.name);
+            } else {
+              window.currentRouteId = null;
+            }
           } else {
             navState.activeTerminal = null;
+            window.currentRouteId = null;
           }
           console.log('[Driver init] currentTerminalId set to', window.currentTerminalId, navState.activeTerminal);
           if (window.currentDriverId) {
@@ -540,7 +573,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // For now we read optional globals you can populate from your auth/route logic.
   const getDriverContext = () => ({
     driverId: window.currentDriverId || null,
-    terminalId: window.currentTerminalId || null
+    terminalId: window.currentTerminalId || null,
+    routeId: window.currentRouteId || null
   });
 
   const LAST_ROUTE_KEY_PREFIX = 'larga:lastRoute:';
@@ -834,7 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!coords) return;
 
     const { latitude, longitude, speed, heading } = coords;
-    const { driverId } = getDriverContext();
+    const { driverId, routeId } = getDriverContext();
 
     if (!driverId) {
       console.warn('[GPS] No driverId set (window.currentDriverId). Skipping upload.');
@@ -859,7 +893,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .from('jeepney_locations')
         .upsert({
           driver_id: driverId,
-          route_id: null,
+          route_id: routeId || null,
           lat: latitude,
           lng: longitude,
           speed: typeof speed === 'number' ? speed : null,

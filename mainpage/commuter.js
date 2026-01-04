@@ -23,9 +23,9 @@ import { supabase } from '../login/supabaseClient.js';
 
 // Map + GPS + live jeepneys
 (function () {
-  const routeSearchInput = document.querySelector('.search-bar');
-  const routesDatalist = document.getElementById('routes');
+  // Route name lookup for popups only (no commuter route selection UI)
   const routeNameToId = new Map();
+  const routeIdToName = new Map();
 
   // Initialize Leaflet map
   const map = L.map('map', { zoomControl: false }).setView([14.831426, 120.976661], 13);
@@ -46,8 +46,56 @@ import { supabase } from '../login/supabaseClient.js';
   let commuterMarker = null;
   let hasCenteredOnCommuter = false;
 
+  // Latest commuter context for distance/ETA and filtering
+  const commuterState = {
+    lat: null,
+    lng: null
+  };
+
+  function getCommuterGeoContext() {
+    return {
+      lat: commuterState.lat,
+      lng: commuterState.lng
+    };
+  }
+
+  function toRad(d) {
+    return (d * Math.PI) / 180;
+  }
+
+  function distanceMeters(a, b) {
+    const R = 6371000;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const sinDLat = Math.sin(dLat / 2);
+    const sinDLng = Math.sin(dLng / 2);
+    const h = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  function formatDistance(meters) {
+    if (!Number.isFinite(meters)) return '—';
+    if (meters < 1000) return `${Math.round(meters)} m`;
+    return `${(meters / 1000).toFixed(2)} km`;
+  }
+
+  function formatEtaMinutes(minutes) {
+    if (!Number.isFinite(minutes)) return '—';
+    if (minutes < 1) return '< 1 min';
+    if (minutes < 60) return `${Math.round(minutes)} min`;
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    return `${h}h ${m}m`;
+  }
+
+  const FALLBACK_JEEP_SPEED_KMH = 18;
+
   function updateCommuterMarker(lat, lng) {
     const pos = [lat, lng];
+    commuterState.lat = lat;
+    commuterState.lng = lng;
     if (!commuterMarker) {
       commuterMarker = L.marker(pos, { title: 'Your Location' }).addTo(map);
     } else {
@@ -62,16 +110,124 @@ import { supabase } from '../login/supabaseClient.js';
 
   // Jeepney markers keyed by driver_id
   const jeepneyMarkers = new Map();
+  const driverInfoCache = new Map(); // optional: plate number and other details per driver
+
+  function getRouteDisplayName(row) {
+    const id = row?.route_id;
+    if (!id) return '—';
+    const byId = routeIdToName.get(id);
+    if (byId) return byId;
+    // Fallback: attempt to invert the name->id map if needed
+    for (const [name, rid] of routeNameToId.entries()) {
+      if (rid === id) return name;
+    }
+    return `Route ${id}`;
+  }
+
+  function computeJeepStats(row) {
+    const ctx = getCommuterGeoContext();
+    if (typeof row?.lat !== 'number' || typeof row?.lng !== 'number' ||
+      typeof ctx.lat !== 'number' || typeof ctx.lng !== 'number') {
+      return {
+        distanceText: '—',
+        etaText: '—',
+        speedText: '—'
+      };
+    }
+
+    const distance = distanceMeters({ lat: ctx.lat, lng: ctx.lng }, { lat: row.lat, lng: row.lng });
+
+    const hasSpeed = typeof row.speed === 'number' && Number.isFinite(row.speed) && row.speed > 0.8;
+    const speedMps = hasSpeed ? row.speed : (FALLBACK_JEEP_SPEED_KMH * 1000) / 3600;
+    const speedKmh = speedMps * 3.6;
+    const etaMinutes = (distance / speedMps) / 60;
+
+    return {
+      distanceText: formatDistance(distance),
+      etaText: formatEtaMinutes(etaMinutes),
+      speedText: `${speedKmh.toFixed(1)} km/h`
+    };
+  }
+
+  async function ensureDriverInfo(driverId) {
+    if (!driverId) return null;
+    if (driverInfoCache.has(driverId)) return driverInfoCache.get(driverId);
+
+    try {
+      const { data, error } = await supabase
+        .from('drivers')
+        .select('driver_id, plate_number')
+        .eq('driver_id', driverId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('[Commuter] Failed to load driver info for popup', error);
+        driverInfoCache.set(driverId, null);
+        return null;
+      }
+
+      driverInfoCache.set(driverId, data || null);
+      return data || null;
+    } catch (err) {
+      console.error('[Commuter] Unexpected error while loading driver info', err);
+      driverInfoCache.set(driverId, null);
+      return null;
+    }
+  }
+
+  function shouldShowJeep(row) {
+    // For now: show every jeep that shares its location.
+    // We keep distance calculations only for ETA/distance in the popup.
+    return !!row && typeof row.lat === 'number' && typeof row.lng === 'number';
+  }
+
+  function updateJeepPopupDom(info, row) {
+    if (!info || !row || !info.dom) return;
+    const { statusEl, speedEl, routeEl, timeEl, distanceEl, plateEl } = info.dom;
+
+    if (statusEl) statusEl.textContent = 'Active';
+    if (routeEl) routeEl.textContent = getRouteDisplayName(row);
+
+    const stats = computeJeepStats(row);
+    if (speedEl) speedEl.textContent = stats.speedText;
+    if (timeEl) timeEl.textContent = stats.etaText;
+    if (distanceEl) distanceEl.textContent = `Distance: ${stats.distanceText}`;
+
+    if (plateEl) {
+      const cached = driverInfoCache.get(row.driver_id) || null;
+      if (cached && cached.plate_number) {
+        plateEl.textContent = cached.plate_number;
+      } else {
+        plateEl.textContent = '—';
+      }
+    }
+
+    // Fire off one-time async load of driver details (plate) if not cached yet
+    if (!driverInfoCache.has(row.driver_id) && plateEl) {
+      void ensureDriverInfo(row.driver_id).then((profile) => {
+        if (!profile || !profile.plate_number) return;
+        const current = jeepneyMarkers.get(row.driver_id);
+        if (!current || current.dom !== info.dom) return;
+        current.dom.plateEl.textContent = profile.plate_number;
+      }).catch(() => { /* already logged */ });
+    }
+  }
 
   function upsertJeepneyMarker(row) {
     if (!row || typeof row.lat !== 'number' || typeof row.lng !== 'number') return;
     const key = row.driver_id;
     if (!key) return;
 
-    const pos = [row.lat, row.lng];
-    let marker = jeepneyMarkers.get(key);
+    // Apply route + 50 m proximity filter
+    if (!shouldShowJeep(row)) {
+      removeJeepneyMarker(key);
+      return;
+    }
 
-    if (!marker) {
+    const pos = [row.lat, row.lng];
+    let info = jeepneyMarkers.get(key);
+
+    if (!info) {
       const tpl = document.getElementById('popup-commuters-info-template');
       let popupContent = null;
       if (tpl) {
@@ -79,7 +235,7 @@ import { supabase } from '../login/supabaseClient.js';
         popupContent.style.display = 'block';
       }
 
-      marker = L.marker(pos, { title: 'Jeepney' });
+      const marker = L.marker(pos, { title: 'Jeepney' });
       if (popupContent) {
         marker.bindPopup(popupContent, {
           maxWidth: 320,
@@ -89,79 +245,35 @@ import { supabase } from '../login/supabaseClient.js';
         });
       }
       marker.addTo(map);
-      jeepneyMarkers.set(key, marker);
+
+      const dom = popupContent
+        ? {
+            statusEl: popupContent.querySelector('.vehicle-status'),
+            speedEl: popupContent.querySelector('.speed'),
+            routeEl: popupContent.querySelector('.route'),
+            timeEl: popupContent.querySelector('.time'),
+            distanceEl: popupContent.querySelector('.distance'),
+            plateEl: popupContent.querySelector('.plate-number')
+          }
+        : {};
+
+      info = { marker, dom, lastRow: row };
+      jeepneyMarkers.set(key, info);
     } else {
-      marker.setLatLng(pos);
+      info.marker.setLatLng(pos);
+      info.lastRow = row;
     }
+
+    updateJeepPopupDom(info, row);
   }
 
   function removeJeepneyMarker(driverId) {
-    const marker = jeepneyMarkers.get(driverId);
-    if (marker) {
-      map.removeLayer(marker);
-      jeepneyMarkers.delete(driverId);
+    const info = jeepneyMarkers.get(driverId);
+    if (info && info.marker) {
+      map.removeLayer(info.marker);
     }
+    jeepneyMarkers.delete(driverId);
   }
-
-  // Optional Jeepney bubble helper remains (no change to markup required)
-  (function () {
-    let _jbTimer = null;
-    let bubble = document.getElementById('jeepney-bubble');
-
-    function hideJeepneyBubble() {
-      bubble = bubble || document.getElementById('jeepney-bubble');
-      if (!bubble) return;
-
-      bubble.classList.remove('show');
-      setTimeout(() => {
-        if (!bubble.classList.contains('show')) {
-          bubble.style.display = 'none';
-        }
-      }, 260);
-
-      if (_jbTimer) {
-        clearTimeout(_jbTimer);
-        _jbTimer = null;
-      }
-    }
-
-    window.showJeepneyBubble = function (html) {
-      bubble = bubble || document.getElementById('jeepney-bubble');
-      if (!bubble) return;
-
-      bubble.innerHTML = `
-        <button class="jb-close" aria-label="Close">&times;</button>
-        <div class="jb-content">${html}</div>
-      `;
-
-      const btn = bubble.querySelector('.jb-close');
-      if (btn) {
-        btn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          hideJeepneyBubble();
-        });
-      }
-
-      bubble.style.display = 'block';
-      void bubble.offsetWidth; // force reflow
-      bubble.classList.add('show');
-
-      if (_jbTimer) clearTimeout(_jbTimer);
-      _jbTimer = setTimeout(hideJeepneyBubble, 6000);
-    };
-
-    if (map && map.on) {
-      map.on('click', hideJeepneyBubble);
-    }
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') hideJeepneyBubble();
-    });
-
-    document.addEventListener('click', function (e) {
-      if (bubble && !bubble.contains(e.target)) hideJeepneyBubble();
-    });
-  })();
 
   // ---------------------------------------------------------------------------
   // Supabase-backed GPS tracking for commuter + live jeepney locations
@@ -169,25 +281,18 @@ import { supabase } from '../login/supabaseClient.js';
   let commuterId = null; // from public.commuters.commuter_id
   let geoWatchId = null;
 
-  const getCommuterContext = () => ({
-    commuterId,
-    // Optional: set this from your UI search bar when route is chosen
-    routeId: window.currentRouteId || null
-  });
-
   async function sendCommuterLocation(position) {
     const { coords } = position || {};
     if (!coords || !commuterId) return;
 
     const { latitude, longitude } = coords;
-    const { routeId } = getCommuterContext();
 
     try {
       const { error } = await supabase
         .from('commuter_locations')
         .upsert({
           commuter_id: commuterId,
-          route_id: routeId,
+          route_id: null,
           lat: latitude,
           lng: longitude,
           updated_at: new Date().toISOString()
@@ -242,7 +347,7 @@ import { supabase } from '../login/supabaseClient.js';
     try {
       const { data, error } = await supabase
         .from('jeepney_locations')
-        .select('driver_id, lat, lng, route_id')
+        .select('driver_id, lat, lng, route_id, speed')
         .order('updated_at', { ascending: false });
 
       if (error) {
@@ -251,7 +356,14 @@ import { supabase } from '../login/supabaseClient.js';
       }
 
       if (Array.isArray(data)) {
-        data.forEach((row) => upsertJeepneyMarker(row));
+        data.forEach((row) => {
+          const key = row.driver_id;
+          if (key) {
+            const existing = jeepneyMarkers.get(key);
+            if (existing) existing.lastRow = row;
+          }
+          upsertJeepneyMarker(row);
+        });
       }
     } catch (err) {
       console.error('[Jeepneys] Unexpected error while loading initial data', err);
@@ -269,6 +381,11 @@ import { supabase } from '../login/supabaseClient.js';
           if (!row) return;
 
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const key = row.driver_id;
+            if (key) {
+              const existing = jeepneyMarkers.get(key);
+              if (existing) existing.lastRow = row;
+            }
             upsertJeepneyMarker(row);
           } else if (payload.eventType === 'DELETE') {
             removeJeepneyMarker(row.driver_id);
@@ -314,45 +431,26 @@ import { supabase } from '../login/supabaseClient.js';
 
       commuterId = commuterRow.commuter_id;
 
-      // Load routes list for search bar and wire to window.currentRouteId
-      if (routesDatalist || routeSearchInput) {
-        try {
-          const { data: routes, error: routesError } = await supabase
-            .from('routes')
-            .select('route_id, name')
-            .order('name', { ascending: true });
+      // Preload routes for popup display (routeId -> name); no commuter selection UI
+      try {
+        const { data: routes, error: routesError } = await supabase
+          .from('routes')
+          .select('route_id, name')
+          .order('name', { ascending: true });
 
-          if (routesError) {
-            console.error('[Commuter init] Failed to load routes', routesError);
-          } else if (Array.isArray(routes)) {
-            routeNameToId.clear();
-            routes.forEach((r) => {
-              const name = r.name || `Route ${r.route_id}`;
-              routeNameToId.set(name, r.route_id);
-              if (routesDatalist) {
-                const opt = document.createElement('option');
-                opt.value = name;
-                routesDatalist.appendChild(opt);
-              }
-            });
-
-            if (routeSearchInput) {
-              const onRouteChange = () => {
-                const val = routeSearchInput.value.trim();
-                if (!val) return;
-                const routeId = routeNameToId.get(val);
-                if (routeId && typeof window !== 'undefined') {
-                  window.currentRouteId = routeId;
-                  console.log('[Commuter] currentRouteId set to', window.currentRouteId);
-                }
-              };
-              routeSearchInput.addEventListener('change', onRouteChange);
-              routeSearchInput.addEventListener('blur', onRouteChange);
-            }
-          }
-        } catch (routesErr) {
-          console.error('[Commuter init] Unexpected error while loading routes', routesErr);
+        if (routesError) {
+          console.error('[Commuter init] Failed to load routes', routesError);
+        } else if (Array.isArray(routes)) {
+          routeNameToId.clear();
+          routeIdToName.clear();
+          routes.forEach((r) => {
+            const name = r.name || `Route ${r.route_id}`;
+            routeNameToId.set(name, r.route_id);
+            routeIdToName.set(r.route_id, name);
+          });
         }
+      } catch (routesErr) {
+        console.error('[Commuter init] Unexpected error while loading routes', routesErr);
       }
 
       // Start GPS tracking automatically after login
