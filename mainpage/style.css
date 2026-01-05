@@ -1231,7 +1231,7 @@ body.navigation-mode .route-card .stop-btn {
     top: 46vh;
     left: 50%;
     transform: translate(-50%, 0);   /* allow vertical slide via transform */
-    transition: transform 0.4s ease;
+    transition: top 0.4s ease, transform 0.4s ease;
     width: 330px;
     height: 500px;
     padding-bottom: 0;
@@ -1240,15 +1240,19 @@ body.navigation-mode .route-card .stop-btn {
 
   /* Ensure the hide handle sits inside the viewport on phones */
   .route-card .hide-btn {
-    top: -26px;           /* place handle just above the card */
-    left: 50%;            /* center horizontally */
+    top: -24px;              /* place handle just above the card */
+    left: 50%;               /* center horizontally */
     transform: translateX(-50%);
+    width: 70px;             /* wider, shorter pill for balance */
+    height: 34px;
+    border-radius: 18px 18px 0 0;
     z-index: 20;
   }
 
   /* Collapsed state: slide the panel down while keeping the handle visible */
   .route-card.collapsed-mobile {
-    transform: translate(-50%, 55%); /* push panel downward but leave top sliver+handle visible */
+    top: 100vh;              /* move card fully below viewport */
+    transform: translate(-50%, 0); /* keep horizontal centering */
   }
 
   /* Rotate arrows so they point up/down on mobile only */
