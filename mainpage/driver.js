@@ -389,13 +389,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (routeCard && hideBtn && showBtn) {
     hideBtn.addEventListener('click', () => {
-      routeCard.classList.add('slide-out');
-      routeCard.classList.remove('slide-in');
-      hideBtn.classList.add('hidden');
-      showBtn.classList.remove('hidden');
+      const isMobile = window.matchMedia && window.matchMedia('(max-width: 450px)').matches;
+      if (isMobile) {
+        // On mobile, keep a single handle attached to the panel and
+        // slide the whole card down/up while toggling the arrow.
+        routeCard.classList.toggle('collapsed-mobile');
+      } else {
+        // Desktop/tablet: original side-to-side slide behaviour
+        routeCard.classList.add('slide-out');
+        routeCard.classList.remove('slide-in');
+        hideBtn.classList.add('hidden');
+        showBtn.classList.remove('hidden');
+      }
     });
 
     showBtn.addEventListener('click', () => {
+      const isMobile = window.matchMedia && window.matchMedia('(max-width: 450px)').matches;
+      if (isMobile) {
+        // On mobile we rely only on the attached hide handle;
+        // show button is hidden via CSS.
+        return;
+      }
+
       routeCard.classList.remove('slide-out');
       routeCard.classList.add('slide-in');
       showBtn.classList.add('hidden');

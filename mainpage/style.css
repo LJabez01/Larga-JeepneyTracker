@@ -1230,8 +1230,8 @@ body.navigation-mode .route-card .stop-btn {
     padding: 15px 51px;
     top: 46vh;
     left: 50%;
-    transform: translateX(-50%);
-    transition: top 0.4s ease;
+    transform: translate(-50%, 0);   /* allow vertical slide via transform */
+    transition: transform 0.4s ease;
     width: 330px;
     height: 500px;
     padding-bottom: 0;
@@ -1246,40 +1246,27 @@ body.navigation-mode .route-card .stop-btn {
     z-index: 20;
   }
 
-  /* On small screens, slide the route card vertically instead of horizontally */
-  .route-card.slide-out {
-    top: 100vh !important; /* hide panel off the bottom of the screen */
-    right: auto;
-  }
-
-  .route-card.slide-in {
-    top: 46vh !important; /* bring panel back to its original position */
-    right: auto;
+  /* Collapsed state: slide the panel down while keeping the handle visible */
+  .route-card.collapsed-mobile {
+    transform: translate(-50%, 55%); /* push panel downward but leave top sliver+handle visible */
   }
 
   /* Rotate arrows so they point up/down on mobile only */
   .route-card .hide-btn i {
     transform: rotate(90deg);
+    transition: transform 0.3s ease;
   }
 
-  #showBtn i {
+  .route-card.collapsed-mobile .hide-btn i {
     transform: rotate(-90deg);
   }
 
-  /* Position the show button on the same vertical line as the panel edge,
-     and let its vertical position follow the panel via sibling selectors. */
+  /* Do not use the separate show button on mobile */
   #showBtn {
-    left: calc(50% - 183px); /* 165px (half card width) + ~18px (handle offset) */
-    right: auto;
-    position: fixed;
-    transition: top 0.4s ease;
+    display: none !important;
   }
 
-  .route-card.slide-in + #showBtn {
-    top: 46vh;              /* aligned with visible panel */
-    transform: translateY(-50%);
-  }
-
+  /* If slide-out is applied, keep show button aligned near bottom */
   .route-card.slide-out + #showBtn {
     top: 100vh;             /* move down with hidden panel */
     transform: translateY(-50%);
