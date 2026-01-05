@@ -1238,9 +1238,10 @@ body.navigation-mode .route-card .stop-btn {
     border-radius: 45px 45px 0px 0px;
   }
 
-  /* Ensure the hide handle sits inside the viewport on phones */
+  /* Ensure the hide handle sits clearly above the system nav bar
+     on phones so it's always tappable when the card is collapsed. */
   .route-card .hide-btn {
-    top: -24px;              /* place handle just above the card */
+    top: -56px;              /* raise handle higher above bottom edge */
     left: 50%;               /* center horizontally */
     transform: translateX(-50%);
     width: 70px;             /* wider, shorter pill for balance */
