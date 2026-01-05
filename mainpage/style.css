@@ -1254,6 +1254,26 @@ body.navigation-mode .route-card .stop-btn {
     top: 46vh !important; /* bring panel back to its original position */
     right: auto;
   }
+
+  /* Rotate arrows so they point up/down on mobile only */
+  .route-card .hide-btn i {
+    transform: rotate(90deg);
+  }
+
+  #showBtn i {
+    transform: rotate(-90deg);
+  }
+
+  /* On small screens, slide the route card vertically instead of horizontally */
+  .route-card.slide-out {
+    top: 100vh !important; /* hide panel off the bottom of the screen */
+    right: auto;
+  }
+
+  .route-card.slide-in {
+    top: 46vh !important; /* bring panel back to its original position */
+    right: auto;
+  }
 }
 
 @media (max-width: 400px)
