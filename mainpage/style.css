@@ -398,6 +398,26 @@ nav, .controls, .main-menu
   text-align: center;
 }
 
+/* When actively navigating, simplify the card so the driver
+   focuses on guidance instead of configuration controls. */
+body.navigation-mode .route-card .dropdown-box,
+body.navigation-mode .route-card .last-route-btn {
+  display: none;
+}
+
+body.navigation-mode .driver-guidance .dg-row {
+  font-size: 13px;
+}
+
+body.navigation-mode .route-card .start-btn {
+  display: none;
+}
+
+body.navigation-mode .route-card .stop-btn {
+  font-size: 12px;
+  padding: 14px;
+}
+
 /* Driver Guidance panel (uses existing palette) */
 .driver-guidance {
   width: 100%;
@@ -1215,6 +1235,12 @@ nav, .controls, .main-menu
     height: 500px;
     padding-bottom: 0;
     border-radius: 45px 45px 0px 0px;
+  }
+
+  /* Ensure the hide handle sits inside the viewport on phones */
+  .route-card .hide-btn {
+    left: 0;
+    z-index: 20;
   }
 }
 

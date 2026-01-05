@@ -322,3 +322,19 @@ VALUES
   ('Sta. Maria – Bypass Road',  'SM-BYP',  '#8bc34a', 1, 3),
   ('Sta. Maria – NLET',         'SM-NLET', '#2196f3', 1, 4),
   ('Sta. Maria – Caypombo',     'SM-CAY',  '#ff9800', 1, 5);
+
+  -- 1) Drop the old commuter-select policy that filters by route
+DROP POLICY IF EXISTS jl_commuter_select ON public.jeepney_locations;
+
+-- 2) Create a simpler commuter-select policy:
+--    Any authenticated user who has a commuters row can see all jeeps.
+CREATE POLICY jl_commuter_select
+  ON public.jeepney_locations
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.commuters c
+      WHERE c.user_id = auth.uid()
+    )
+  );

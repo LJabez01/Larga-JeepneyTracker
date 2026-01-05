@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dgNextTerminal = q('#dg-next-terminal');
   const dgDistance = q('#dg-distance');
   const dgEta = q('#dg-eta');
+  const dgSpeed = q('#dg-speed');
   const dgCommuters = q('#dg-commuters');
 
   function setDriverPhase(phase) {
@@ -42,11 +43,22 @@ document.addEventListener('DOMContentLoaded', () => {
             phase === DriverPhase.NO_DRIVER ? 'Not logged in' : 'Standby';
       dgStatus.textContent = label;
     }
+
+    // Toggle a navigation-focused UI mode so the driver can
+    // focus on guidance while on trip
+    if (typeof document !== 'undefined' && document.body) {
+      if (phase === DriverPhase.NAVIGATING) {
+        document.body.classList.add('navigation-mode');
+      } else {
+        document.body.classList.remove('navigation-mode');
+      }
+    }
   }
 
   function setGuidanceEmpty() {
     if (dgNextTerminal) dgNextTerminal.textContent = '—';
     if (dgDistance) dgDistance.textContent = '—';
+    if (dgSpeed) dgSpeed.textContent = '—';
     if (dgEta) dgEta.textContent = '—';
     if (dgCommuters) dgCommuters.textContent = '—';
   }
@@ -476,6 +488,18 @@ document.addEventListener('DOMContentLoaded', () => {
       appendOptions();
 
       const handleRouteChange = (ev) => {
+        // Prevent changing route while actively navigating; require Wakasan first
+        if (driverState.phase === DriverPhase.NAVIGATING) {
+          if (typeof window !== 'undefined') {
+            const currentId = window.currentTerminalId ? String(window.currentTerminalId) : '';
+            if (routeSelect) {
+              routeSelect.value = currentId || '';
+            }
+          }
+          alert('Press "Wakasan" first to end your current trip before choosing a different route.');
+          return;
+        }
+
         const val = ev.target.value;
         if (!val) {
           if (typeof window !== 'undefined') window.currentTerminalId = null;
@@ -687,7 +711,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!driverState.speedSamples.length) return null;
     const sum = driverState.speedSamples.reduce((acc, v) => acc + v, 0);
     const avg = sum / driverState.speedSamples.length;
-    return Number.isFinite(avg) ? avg : null;
+    const safeAvg = Number.isFinite(avg) ? avg : null;
+
+    // store a km/h approximation for simple safety checks
+    if (safeAvg !== null) {
+      driverState.lastSpeedKmh = safeAvg * 3.6;
+    }
+
+    return safeAvg;
   }
 
   function updateGuidanceFromFix(lat, lng, speedMps) {
@@ -752,6 +783,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (dgDistance) dgDistance.textContent = formatDistance(remainingDistance);
+
+    // Show current speed in km/h, based on smoothed GPS speed
+    let speedKmh = null;
+    if (typeof speedMps === 'number' && Number.isFinite(speedMps) && speedMps >= 0) {
+      speedKmh = speedMps * 3.6;
+    } else if (driverState.lastSpeedKmh && Number.isFinite(driverState.lastSpeedKmh)) {
+      speedKmh = driverState.lastSpeedKmh;
+    }
+    if (dgSpeed) {
+      dgSpeed.textContent = Number.isFinite(speedKmh) ? `${speedKmh.toFixed(1)} km/h` : '—';
+    }
+
     if (dgEta) dgEta.textContent = formatEtaMinutes(etaMinutes);
   }
 
@@ -1018,6 +1061,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // Simple safety confirmation so the driver stays focused on the road
+      const safetyOk = window.confirm(
+        'Safety reminder:\n\nFor your safety, do not operate this app while driving. '
+        + 'Let a passenger handle it or adjust settings only when stopped.\n\nStart navigation now?'
+      );
+      if (!safetyOk) return;
+
       // remember this as the driver's last route choice on this device
       const routeSelect = q('#driver-route');
       let routeName = null;
@@ -1044,10 +1094,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (stopBtn) {
     stopBtn.addEventListener('click', () => {
-      stopGpsTracking();
-      // Back to ready state if a route is still selected
-      const { terminalId } = getDriverContext();
-      setDriverPhase(terminalId ? DriverPhase.ROUTE_SELECTED : DriverPhase.IDLE);
+      const confirmEnd = window.confirm(
+        'Are you sure you want to end this trip and stop sharing your live location?'
+      );
+      if (!confirmEnd) return;
+
+      // Fully stop tracking and reset navigation state
+      void (async () => {
+        await stopGpsTracking();
+
+        const routeSelect = q('#driver-route');
+        if (routeSelect) {
+          routeSelect.value = '';
+        }
+
+        if (typeof window !== 'undefined') {
+          window.currentTerminalId = null;
+          window.currentRouteId = null;
+        }
+
+        clearActiveRoute();
+        navState.activeTerminal = null;
+        navState.routeCoords = [];
+        navState.cumulativeDistances = [];
+        navState.totalDistance = 0;
+        navState.totalTimeSec = 0;
+        navState.routeBounds = null;
+        navState.lastRecalcAt = 0;
+
+        setGuidanceEmpty();
+
+        // Recenter the map back to the default home view
+        if (map && typeof map.setView === 'function') {
+          map.setView([14.831426, 120.976661], 13);
+        }
+
+        // Back to idle/standby phase (driver still logged in)
+        setDriverPhase(window.currentDriverId ? DriverPhase.IDLE : DriverPhase.NO_DRIVER);
+      })();
     });
   }
 
