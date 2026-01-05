@@ -1240,9 +1240,9 @@ body.navigation-mode .route-card .stop-btn {
 
   /* Ensure the hide handle sits inside the viewport on phones */
   .route-card .hide-btn {
-    left: -18px;          /* half-outside the card so the center aligns with the panel edge */
-    top: 50%;
-    transform: translateY(-50%);
+    top: -26px;           /* place handle just above the card */
+    left: 50%;            /* center horizontally */
+    transform: translateX(-50%);
     z-index: 20;
   }
 
