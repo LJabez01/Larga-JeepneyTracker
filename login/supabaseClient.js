@@ -36,7 +36,17 @@ try {
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export async function signUp(email, password) {
-  return await supabase.auth.signUp({ email, password });
+  // Where the user lands after clicking the verification link
+  // Example: send them back to the login page of this app
+  let redirectTo = undefined;
+  if (typeof window !== 'undefined') {
+    redirectTo = `${window.location.origin}/login/Log-in.html`;
+  }
+  return await supabase.auth.signUp({
+    email,
+    password,
+    options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
+  });
 }
 
 export async function signIn(email, password) {
