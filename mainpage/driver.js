@@ -295,16 +295,27 @@ document.addEventListener('DOMContentLoaded', () => {
           activeRouteOverlay = overlayRoute;
 
           overlayRoute.on('click', (ev) => {
-            const meters = r.summary && r.summary.totalDistance;
-            const mins = r.summary && r.summary.totalTime / 60;
-            if (!meters || !mins) return;
+            // Show a popup that mirrors the current guidance panel
+            const guidanceEl = document.getElementById('driver-guidance');
+
+            let html;
+            if (guidanceEl) {
+              // Reuse existing guidance markup so Status / Next terminal /
+              // Distance / Speed / ETA / Commuters look consistent.
+              html = `<div class="driver-guidance driver-guidance-popup">${guidanceEl.innerHTML}</div>`;
+            } else {
+              // Fallback to simple distance/ETA summary if the panel is missing
+              const meters = (r.summary && r.summary.totalDistance) || navState.totalDistance;
+              const mins = ((r.summary && r.summary.totalTime) || navState.totalTimeSec) / 60;
+              if (!meters || !mins) return;
+              html =
+                `<strong>${name}</strong><br>` +
+                `${(meters / 1000).toFixed(1)} km · ~${Math.round(mins)} min`;
+            }
 
             L.popup({ closeButton: false, autoClose: true })
               .setLatLng(ev.latlng)
-              .setContent(
-                `<strong>${name}</strong><br>` +
-                  `${(meters / 1000).toFixed(1)} km · ~${Math.round(mins)} min`
-              )
+              .setContent(html)
               .openOn(map);
           });
         });
@@ -571,8 +582,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const label = last.routeName || opt.textContent || 'last route';
             useLastRouteBtn.textContent = `Use last route (${label})`;
             useLastRouteBtn.style.display = 'inline-block';
+            // When clicked, always load the latest stored route for this driver
             useLastRouteBtn.addEventListener('click', () => {
-              routeSelect.value = String(last.routeId);
+              const latest = loadLastRouteForDriver(window.currentDriverId);
+              if (!latest || !latest.routeId) return;
+              routeSelect.value = String(latest.routeId);
               const ev = new Event('change', { bubbles: true });
               routeSelect.dispatchEvent(ev);
             });
@@ -613,6 +627,13 @@ document.addEventListener('DOMContentLoaded', () => {
         savedAt: new Date().toISOString()
       };
       window.localStorage.setItem(key, JSON.stringify(payload));
+
+      // Immediately refresh the button label so it matches the latest choice
+      const useLastRouteBtn = q('#use-last-route');
+      if (useLastRouteBtn) {
+        const label = routeName || 'last route';
+        useLastRouteBtn.textContent = `Use last route (${label})`;
+      }
     } catch (e) {
       console.warn('[LastRoute] Failed to save last route', e);
     }
@@ -1081,6 +1102,12 @@ document.addEventListener('DOMContentLoaded', () => {
       driverState.leg = 'TO_ORIGIN';
       setDriverPhase(DriverPhase.NAVIGATING);
 
+       // While navigating, hide the "Use last route" button for extra focus
+       const useLastRouteBtn = q('#use-last-route');
+       if (useLastRouteBtn) {
+         useLastRouteBtn.style.display = 'none';
+       }
+
       if (driverState.commutersTimer) {
         clearInterval(driverState.commutersTimer);
       }
@@ -1106,6 +1133,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const routeSelect = q('#driver-route');
         if (routeSelect) {
           routeSelect.value = '';
+        }
+
+        const useLastRouteBtn = q('#use-last-route');
+        if (useLastRouteBtn) {
+          // Restore button visibility so drivers can quickly reuse the last route
+          useLastRouteBtn.style.display = 'inline-block';
         }
 
         if (typeof window !== 'undefined') {

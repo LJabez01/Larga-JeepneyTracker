@@ -420,13 +420,14 @@ body.navigation-mode .route-card .stop-btn {
 
 /* Driver Guidance panel (uses existing palette) */
 .driver-guidance {
-  width: 100%;
-  margin: 10px 0 14px 0;
+  width: calc(100% - 20px); /* match visual width of the white select box */
+  margin: 10px auto 14px auto;
   background: #d8d8d8;
   color: #333;
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 10px 17px; /* align text with the select box padding */
   text-align: left;
+  box-sizing: border-box;
 }
 
 .driver-guidance .dg-row {
@@ -1241,6 +1242,17 @@ body.navigation-mode .route-card .stop-btn {
   .route-card .hide-btn {
     left: 0;
     z-index: 20;
+  }
+
+  /* On small screens, slide the route card vertically instead of horizontally */
+  .route-card.slide-out {
+    top: 100vh !important; /* hide panel off the bottom of the screen */
+    right: auto;
+  }
+
+  .route-card.slide-in {
+    top: 46vh !important; /* bring panel back to its original position */
+    right: auto;
   }
 }
 
