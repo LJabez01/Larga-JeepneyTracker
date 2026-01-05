@@ -12,6 +12,12 @@ const licenseNumberInput = document.getElementById('licenseNumber');
 const commuterIdUpload = document.getElementById('commuterIdUpload');
 const driverLicenseUpload = document.getElementById('driverLicenseUpload');
 
+function isValidEmail(email) {
+    // Basic RFC-5322 compliant pattern for typical emails
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return pattern.test(email);
+}
+
 function updateRoleFields() {
     const role = roleSelect.value;
     commuterFields.style.display = 'none';
@@ -62,6 +68,8 @@ async function handleSubmit(e) {
     const identityDocument = identityDocumentRaw ? identityDocumentRaw.trim() : '';
     const plateNumber = plateNumberRaw ? plateNumberRaw.trim().toUpperCase() : '';
     const licenseNumber = licenseNumberRaw ? licenseNumberRaw.trim().toUpperCase() : '';
+
+    if (!isValidEmail(email)) return showMessage('Please enter a valid email address.', true);
 
     if (!role) return showMessage('Please select a role.', true);
     if (password !== confirmPassword) return showMessage('Passwords do not match.', true);
