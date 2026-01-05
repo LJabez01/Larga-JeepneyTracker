@@ -1240,7 +1240,9 @@ body.navigation-mode .route-card .stop-btn {
 
   /* Ensure the hide handle sits inside the viewport on phones */
   .route-card .hide-btn {
-    left: 0;
+    left: -18px;          /* half-outside the card so the center aligns with the panel edge */
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 20;
   }
 
@@ -1262,6 +1264,25 @@ body.navigation-mode .route-card .stop-btn {
 
   #showBtn i {
     transform: rotate(-90deg);
+  }
+
+  /* Position the show button on the same vertical line as the panel edge,
+     and let its vertical position follow the panel via sibling selectors. */
+  #showBtn {
+    left: calc(50% - 183px); /* 165px (half card width) + ~18px (handle offset) */
+    right: auto;
+    position: fixed;
+    transition: top 0.4s ease;
+  }
+
+  .route-card.slide-in + #showBtn {
+    top: 46vh;              /* aligned with visible panel */
+    transform: translateY(-50%);
+  }
+
+  .route-card.slide-out + #showBtn {
+    top: 100vh;             /* move down with hidden panel */
+    transform: translateY(-50%);
   }
 
   /* On small screens, slide the route card vertically instead of horizontally */
