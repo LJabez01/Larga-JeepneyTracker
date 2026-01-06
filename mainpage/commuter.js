@@ -386,6 +386,22 @@ import { supabase } from '../login/supabaseClient.js';
     }
   }
 
+  async function clearCommuterLocationRow() {
+    if (!commuterId) return;
+    try {
+      const { error } = await supabase
+        .from('commuter_locations')
+        .delete()
+        .eq('commuter_id', commuterId);
+
+      if (error) {
+        console.error('[Commuter GPS] Failed to delete commuter_locations row on logout', error);
+      }
+    } catch (err) {
+      console.error('[Commuter GPS] Unexpected error while deleting commuter_locations row on logout', err);
+    }
+  }
+
   async function loadInitialJeepneys() {
     try {
       const { data, error } = await supabase
@@ -515,6 +531,7 @@ import { supabase } from '../login/supabaseClient.js';
   // Expose stop function if needed from other scripts
   if (typeof window !== 'undefined') {
     window.stopCommuterTracking = stopCommuterTracking;
+    window.clearCommuterLocationRow = clearCommuterLocationRow;
   }
 })();
 
@@ -624,4 +641,38 @@ import { supabase } from '../login/supabaseClient.js';
   // initial render with sample notifications
   renderNotifications(sampleNotifs);
 
+})();
+
+// Global logout handling for commuter page: stop GPS + clear row + sign out
+(function () {
+  const logoutLink = document.querySelector('.dropdown-menu a[href="../login/Log-in.html"]');
+  if (!logoutLink) return;
+
+  logoutLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+
+    try {
+      if (typeof window !== 'undefined' && window.stopCommuterTracking) {
+        window.stopCommuterTracking();
+      }
+    } catch (err) {
+      console.error('[Commuter logout] Error while stopping GPS tracking', err);
+    }
+
+    try {
+      if (typeof window !== 'undefined' && window.clearCommuterLocationRow) {
+        await window.clearCommuterLocationRow();
+      }
+    } catch (err) {
+      console.error('[Commuter logout] Error clearing commuter row', err);
+    }
+
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('[Commuter logout] Error signing out', err);
+    }
+
+    window.location.href = '../login/Log-in.html';
+  });
 })();

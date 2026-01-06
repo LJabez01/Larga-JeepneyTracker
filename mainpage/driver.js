@@ -24,7 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
     lastSentAt: 0,
     commutersTimer: null,
     commutersMarkers: new Map(),
-    lastCommutersRefreshAt: 0
+    lastCommutersRefreshAt: 0,
+    // Viewport helpers for Waze-like navigation
+    lastViewportUpdateAt: 0,
+    lastZoomUpdateAt: 0
   };
 
   const dgStatus = q('#dg-status');
@@ -94,6 +97,33 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${h}h ${m}m`;
   }
 
+  // Choose an appropriate zoom level based on current speed.
+  // Slower speeds -> closer zoom, faster -> farther out overview.
+  function chooseZoomForSpeed(speedKmh, currentZoom) {
+    const baseZoom = Number.isFinite(currentZoom) ? currentZoom : 16;
+    if (!Number.isFinite(speedKmh)) {
+      return baseZoom;
+    }
+
+    let target;
+    if (speedKmh < 10) {
+      target = 18; // almost stopped, very close
+    } else if (speedKmh < 25) {
+      target = 17;
+    } else if (speedKmh < 45) {
+      target = 16;
+    } else if (speedKmh < 70) {
+      target = 15;
+    } else {
+      target = 14; // highway-ish
+    }
+
+    // Clamp to a reasonable range for your map style
+    if (target > 19) target = 19;
+    if (target < 13) target = 13;
+    return target;
+  }
+
   // Dropdown menu behavior
   const menuToggle = q('#menu-toggle');
   const dropdownMenu = q('.dropdown-menu');
@@ -112,6 +142,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     menuToggle.addEventListener('click', toggleMenu);
     document.addEventListener('click', closeMenuOnDocClick);
+  }
+
+  // Ensure proper logout: stop GPS + clear live location + sign out
+  const logoutLink = document.querySelector('.dropdown-menu a[href="../login/Log-in.html"]');
+  if (logoutLink) {
+    logoutLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        // Stop tracking and remove this driver's jeepney_locations row
+        await stopGpsTracking();
+      } catch (err) {
+        console.error('[Driver logout] Error while stopping GPS tracking', err);
+      }
+
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error('[Driver logout] Error signing out', err);
+      }
+
+      window.location.href = '../login/Log-in.html';
+    });
   }
 
   // Initialize Leaflet map (only if Leaflet is loaded and the #map element exists)
@@ -717,6 +769,49 @@ document.addEventListener('DOMContentLoaded', () => {
   const COMMUTER_ROUTE_RADIUS_METERS = 50;
   const COMMUTER_BBOX_PADDING_DEGREES = 0.01;
 
+  // Keep map view following the driver during navigation, with
+  // gentle pan/zoom adjustments so it feels Waze-like.
+  function updateNavigationViewport(lat, lng, smoothSpeedMps) {
+    if (!map) return;
+
+    const now = Date.now();
+    const pos = [lat, lng];
+    const isNavigating = driverState.phase === DriverPhase.NAVIGATING;
+
+    // Center or gently pan the map towards the driver.
+    if (!hasCenteredOnDriver) {
+      hasCenteredOnDriver = true;
+      map.setView(pos, map.getZoom() || 16, { animate: true });
+    } else if (isNavigating) {
+      // Use panTo for a smooth follow effect while navigating.
+      map.panTo(pos, { animate: true, duration: 0.5, easeLinearity: 0.25 });
+    }
+
+    driverState.lastViewportUpdateAt = now;
+
+    // Dynamic zoom: adjust only occasionally to avoid jitter.
+    let speedKmh = null;
+    if (typeof smoothSpeedMps === 'number' && Number.isFinite(smoothSpeedMps) && smoothSpeedMps >= 0) {
+      speedKmh = smoothSpeedMps * 3.6;
+    } else if (Number.isFinite(driverState.lastSpeedKmh)) {
+      speedKmh = driverState.lastSpeedKmh;
+    }
+
+    if (!isNavigating) return; // only auto-zoom while on trip
+
+    const currentZoom = map.getZoom() || 16;
+    const targetZoom = chooseZoomForSpeed(speedKmh, currentZoom);
+    const ZOOM_CHANGE_MIN_INTERVAL_MS = 5000;
+
+    if (
+      now - (driverState.lastZoomUpdateAt || 0) >= ZOOM_CHANGE_MIN_INTERVAL_MS &&
+      Math.abs(targetZoom - currentZoom) >= 1
+    ) {
+      driverState.lastZoomUpdateAt = now;
+      map.setZoom(targetZoom, { animate: true });
+    }
+  }
+
   // Helpers to derive progress along the current OSRM route
   function getNearestRoutePoint(here) {
     if (!Array.isArray(navState.routeCoords) || !navState.routeCoords.length) {
@@ -1044,26 +1139,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof latitude === 'number' && typeof longitude === 'number') {
         smoothSpeedMps = updateSpeedSamples(latitude, longitude);
         updateGuidanceFromFix(latitude, longitude, smoothSpeedMps);
-      }
 
-      if (typeof latitude === 'number' && typeof longitude === 'number' && map) {
-        const pos = [latitude, longitude];
-        if (!driverMarker) {
-          const icon = (typeof window !== 'undefined' && window.largaDriverIcon)
-            ? window.largaDriverIcon
-            : undefined;
+        // Ensure we have a visible marker for the driver.
+        if (map) {
+          const pos = [latitude, longitude];
+          if (!driverMarker) {
+            const icon = (typeof window !== 'undefined' && window.largaDriverIcon)
+              ? window.largaDriverIcon
+              : undefined;
 
-          driverMarker = L.marker(pos, {
-            title: 'Your Location',
-            icon
-          }).addTo(map);
-        } else {
-          driverMarker.setLatLng(pos);
-        }
+            driverMarker = L.marker(pos, {
+              title: 'Your Location',
+              icon
+            }).addTo(map);
+          } else {
+            driverMarker.setLatLng(pos);
+          }
 
-        if (!hasCenteredOnDriver && typeof map.setView === 'function') {
-          hasCenteredOnDriver = true;
-          map.setView(pos, 16); // zoom closer to the driver on first fix
+          // Waze-like follow behavior: keep map centered/zoomed around driver
+          updateNavigationViewport(latitude, longitude, smoothSpeedMps);
         }
       }
 
