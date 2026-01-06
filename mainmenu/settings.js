@@ -139,11 +139,90 @@ function setupEmailChange() {
       }
 
       const currentEmail = (emailEl.textContent || user.email || '').trim();
+
+  function setupPasswordChange() {
+    const btn = document.getElementById('changePasswordBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      // Reuse the existing Forgot Password flow for changing passwords
+      window.location.href = '../login/Forgot%20Password.html';
+    });
+  }
+
+  function setupSupportForm() {
+    const form = document.querySelector('#supportPage .contact-form');
+    if (!form) return;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const nameInput = form.querySelector('input[type="text"]');
+      const emailInput = form.querySelector('input[type="email"]');
+      const messageInput = form.querySelector('.message-input');
+
+      const name = (nameInput?.value || '').trim();
+      const email = (emailInput?.value || '').trim();
+      const message = (messageInput?.value || '').trim();
+
+      const subject = encodeURIComponent('Support request from ' + (name || 'Larga user'));
+      const bodyLines = [
+        'Name: ' + (name || 'N/A'),
+        'Email: ' + (email || 'N/A'),
+        '',
+        'Message:',
+        message || 'N/A'
+      ];
+
+      const body = encodeURIComponent(bodyLines.join('\n'));
+
+      window.location.href = 'mailto:support@larga-tracker.com?subject=' + subject + '&body=' + body;
+    });
+  }
+
+  function setupFeedbackForm() {
+    const submitBtn = document.querySelector('#feedbackPage .submit-btn');
+    if (!submitBtn) return;
+
+    submitBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      const reportItems = document.querySelectorAll('#feedbackPage .report-item');
+      const selectedProblems = [];
+
+      reportItems.forEach((item) => {
+        const checkbox = item.querySelector('.check');
+        const titleEl = item.querySelector('h3');
+        if (checkbox?.checked && titleEl) {
+          selectedProblems.push(titleEl.textContent.trim());
+        }
+      });
+
+      const longInput = document.querySelector('#feedbackPage .long-input');
+      const extraFeedback = (longInput?.value || '').trim();
+
+      const subject = encodeURIComponent('Feedback / Report from Larga user');
+      const bodyLines = [
+        'Selected problems:',
+        selectedProblems.length ? ' - ' + selectedProblems.join('\n - ') : 'None selected',
+        '',
+        'Additional feedback:',
+        extraFeedback || 'N/A'
+      ];
+
+      const body = encodeURIComponent(bodyLines.join('\n'));
+
+      window.location.href = 'mailto:support@larga-tracker.com?subject=' + subject + '&body=' + body;
+    });
+  }
       const input = prompt('Enter new email address:', currentEmail);
       if (input === null) return; // user cancelled
 
       const newEmail = input.trim();
       if (!newEmail) {
+    setupPasswordChange();
+    setupSupportForm();
+    setupFeedbackForm();
         alert('Email cannot be empty.');
         return;
       }
