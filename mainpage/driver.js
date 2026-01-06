@@ -1131,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const success = (position) => {
-      const { latitude, longitude } = position.coords || {};
+      const { latitude, longitude, heading } = position.coords || {};
 
       // Update guidance and maintain a smoothed speed sample that we
       // also send to Supabase so commuters see the same value.
@@ -1150,10 +1150,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             driverMarker = L.marker(pos, {
               title: 'Your Location',
-              icon
+              icon,
+              // RotatedMarker plugin lets us show jeep heading.
+              rotationOrigin: 'center center'
             }).addTo(map);
           } else {
             driverMarker.setLatLng(pos);
+          }
+
+          // Update marker rotation to reflect heading when available
+          if (
+            typeof heading === 'number' &&
+            Number.isFinite(heading) &&
+            typeof driverMarker.setRotationAngle === 'function'
+          ) {
+            driverMarker.setRotationAngle(heading);
           }
 
           // Waze-like follow behavior: keep map centered/zoomed around driver
@@ -1226,6 +1237,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // When navigation starts, immediately focus the map on the
+  // jeep's latest known position with an appropriate zoom so
+  // the driver sees their own vehicle centered right away.
+  function focusMapOnDriverAtNavStart() {
+    if (!map) return;
+
+    let lat = null;
+    let lng = null;
+
+    if (driverMarker && typeof driverMarker.getLatLng === 'function') {
+      const ll = driverMarker.getLatLng();
+      lat = ll.lat;
+      lng = ll.lng;
+    } else if (driverState.lastSent && Number.isFinite(driverState.lastSent.lat) && Number.isFinite(driverState.lastSent.lng)) {
+      lat = driverState.lastSent.lat;
+      lng = driverState.lastSent.lng;
+    }
+
+    if (typeof lat !== 'number' || typeof lng !== 'number') return;
+
+    const currentZoom = map.getZoom() || 16;
+    const speedKmh = Number.isFinite(driverState.lastSpeedKmh) ? driverState.lastSpeedKmh : null;
+    const targetZoom = chooseZoomForSpeed(speedKmh, currentZoom);
+
+    hasCenteredOnDriver = true;
+    map.setView([lat, lng], targetZoom, { animate: true });
+  }
+
   if (startBtn) {
     startBtn.addEventListener('click', () => {
       if (startBtn.disabled) return;
@@ -1268,6 +1307,11 @@ document.addEventListener('DOMContentLoaded', () => {
       driverState.commutersTimer = setInterval(() => {
         void refreshCommutersForRoute();
       }, 15_000);
+
+      // As soon as navigation starts, bring the map view
+      // to the jeep's current location for a consistent
+      // starting viewpoint across all terminals.
+      focusMapOnDriverAtNavStart();
 
       startGpsTracking();
     });
