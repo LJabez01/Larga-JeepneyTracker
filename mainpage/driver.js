@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let map = null;
   let driverMarker = null;
   let hasCenteredOnDriver = false;
+  let commuterIcon = null;
   let terminalsById = new Map();
   let routesByDestTerminalId = new Map();
   let activeRouteControl = null;
@@ -380,6 +381,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (map?.zoomControl?.setPosition) {
       map.zoomControl.setPosition('bottomleft');
     }
+
+    // -----------------------------------------------------------------------
+    // Custom driver + commuter icons (visual only; logic unchanged)
+    // NOTE: iconUrl path is relative to driver.html in /mainpage
+    // Make sure these image files exist in /images:
+    //   jeepney-icon.png  (driver)
+    //   commuter-icon.png (commuter)
+    // -----------------------------------------------------------------------
+    window.largaDriverIcon = L.icon({
+      iconUrl: '../images/jeepney-icon.png',
+      iconSize: [64, 64],
+      iconAnchor: [32, 64],
+      popupAnchor: [0, -64]
+    });
+
+    commuterIcon = L.icon({
+      iconUrl: '../images/commuter-icon.png',
+      iconSize: [48, 48],
+      iconAnchor: [24, 48],
+      popupAnchor: [0, -48]
+    });
   }
 
   // route-card show/hide behaviour (slide-in / slide-out)
@@ -911,14 +933,15 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Use existing palette: border uses #0a714e and white fill
-        const marker = L.circleMarker(pos, {
-          radius: 5,
-          color: '#0a714e',
-          weight: 2,
-          fillColor: '#ffffff',
-          fillOpacity: 1
-        }).bindTooltip('Commuter (same route)', {
+        const markerOptions = {
+          title: 'Commuter (same route)'
+        };
+
+        if (commuterIcon) {
+          markerOptions.icon = commuterIcon;
+        }
+
+        const marker = L.marker(pos, markerOptions).bindTooltip('Commuter (same route)', {
           permanent: false,
           direction: 'top',
           opacity: 0.95,
@@ -945,7 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function sendDriverLocation(position) {
+  async function sendDriverLocation(position, smoothSpeedMpsOverride) {
     const { coords } = position || {};
     if (!coords) return;
 
@@ -970,6 +993,16 @@ document.addEventListener('DOMContentLoaded', () => {
     driverState.lastSent = curr;
     driverState.lastSentAt = now;
 
+    // Use the smoothed speed we compute on the driver side as the
+    // single source of truth for commuters, falling back to the
+    // raw GPS speed only if we don't have a sample yet.
+    let speedToSend = null;
+    if (typeof smoothSpeedMpsOverride === 'number' && Number.isFinite(smoothSpeedMpsOverride) && smoothSpeedMpsOverride >= 0) {
+      speedToSend = smoothSpeedMpsOverride;
+    } else if (typeof speed === 'number' && Number.isFinite(speed) && speed >= 0) {
+      speedToSend = speed;
+    }
+
     try {
       const { error } = await supabase
         .from('jeepney_locations')
@@ -978,7 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
           route_id: routeId || null,
           lat: latitude,
           lng: longitude,
-          speed: typeof speed === 'number' ? speed : null,
+          speed: speedToSend,
           heading: typeof heading === 'number' ? heading : null,
           updated_at: new Date().toISOString()
         });
@@ -1005,16 +1038,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const success = (position) => {
       const { latitude, longitude } = position.coords || {};
 
-      // Update guidance (even if we skip upload due to throttling)
+      // Update guidance and maintain a smoothed speed sample that we
+      // also send to Supabase so commuters see the same value.
+      let smoothSpeedMps = null;
       if (typeof latitude === 'number' && typeof longitude === 'number') {
-        const smoothSpeedMps = updateSpeedSamples(latitude, longitude);
+        smoothSpeedMps = updateSpeedSamples(latitude, longitude);
         updateGuidanceFromFix(latitude, longitude, smoothSpeedMps);
       }
 
       if (typeof latitude === 'number' && typeof longitude === 'number' && map) {
         const pos = [latitude, longitude];
         if (!driverMarker) {
-          driverMarker = L.marker(pos, { title: 'Your Location' }).addTo(map);
+          const icon = (typeof window !== 'undefined' && window.largaDriverIcon)
+            ? window.largaDriverIcon
+            : undefined;
+
+          driverMarker = L.marker(pos, {
+            title: 'Your Location',
+            icon
+          }).addTo(map);
         } else {
           driverMarker.setLatLng(pos);
         }
@@ -1026,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Send to backend regardless of whether map centering ran
-      void sendDriverLocation(position);
+      void sendDriverLocation(position, smoothSpeedMps);
 
       // Refresh commuters along the current route only (lightweight + throttled)
       void refreshCommutersForRoute();
