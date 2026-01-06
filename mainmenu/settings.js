@@ -115,3 +115,77 @@ document.addEventListener('DOMContentLoaded', () => {
   setupUsernameChange();
 });
 
+function setupEmailChange() {
+  const btn = document.getElementById('changeEmailBtn');
+  const emailEl = document.getElementById('accountEmail');
+  if (!btn || !emailEl) return;
+
+  btn.addEventListener('click', async () => {
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      const user = data?.user;
+
+      if (error || !user?.id || !user.email) {
+        alert('You must be logged in to change your email.');
+        return;
+      }
+
+      const currentEmail = (emailEl.textContent || user.email || '').trim();
+      const input = prompt('Enter new email address:', currentEmail);
+      if (input === null) return; // user cancelled
+
+      const newEmail = input.trim();
+      if (!newEmail) {
+        alert('Email cannot be empty.');
+        return;
+      }
+
+      // Basic Gmail-style validation to match registration rules
+      const gmailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+      if (!gmailPattern.test(newEmail)) {
+        alert('Please enter a valid Gmail address (example@gmail.com).');
+        return;
+      }
+
+      if (newEmail.toLowerCase() === currentEmail.toLowerCase()) {
+        return;
+      }
+
+      // 1) Update Supabase Auth email (may send confirmation email)
+      const { error: authError } = await supabase.auth.updateUser({ email: newEmail });
+      if (authError) {
+        const msg = (authError.message || '').toLowerCase();
+        if (msg.includes('already registered') || msg.includes('exists')) {
+          alert('That email is already in use. Please use a different one.');
+        } else {
+          console.error('Failed to update auth email:', authError.message);
+          alert('Unable to update email right now. Please try again later.');
+        }
+        return;
+      }
+
+      // 2) Keep profiles table in sync
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ email: newEmail })
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.warn('Email changed in auth but not in profiles:', profileError.message);
+      }
+
+      emailEl.textContent = newEmail;
+      alert('We sent a confirmation email to your new address. Please verify it to complete the change.');
+    } catch (e) {
+      console.error('Unexpected error changing email:', e);
+      alert('Unexpected error. Please try again later.');
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadAccount();
+  setupUsernameChange();
+  setupEmailChange();
+});
+
