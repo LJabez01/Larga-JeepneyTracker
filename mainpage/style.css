@@ -1241,7 +1241,7 @@ body.navigation-mode .route-card .stop-btn {
   /* Ensure the hide handle sits flush with the panel top (no gap).
      Use a smaller negative top so it overlaps the panel without a visible gap. */
   .route-card .hide-btn {
-    top: -17px;              /* overlap panel top so button edge sits flush */
+    top: -34px;              /* overlap panel top so button edge sits flush */
     left: 50%;               /* center horizontally */
     transform: translateX(-50%);
     width: 70px;             /* wider, shorter pill for balance */
@@ -1277,6 +1277,8 @@ body.navigation-mode .route-card .stop-btn {
      hide handle as the single control (no floating button). */
   @media (max-width: 450px) {
     #showBtn { display: none !important; }
+    /* Move the route card up slightly so Chrome navigation button doesn't cover it */
+    .route-card { top: 38vh !important; }
   }
 
   /* On small screens, slide the route card vertically instead of horizontally */
