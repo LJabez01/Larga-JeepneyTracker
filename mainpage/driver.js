@@ -757,8 +757,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let geoWatchId = null;
 
   // GPS write throttling (efficiency)
-  const GPS_MIN_MOVE_METERS = 20;
-  const GPS_MIN_INTERVAL_MS = 10_000;
+  // While navigating we want smoother updates (8 m / 4 s),
+  // otherwise we back off to save battery and Supabase writes.
+  const GPS_NAV_MOVE_METERS = 8;
+  const GPS_NAV_INTERVAL_MS = 4_000;
+  const GPS_IDLE_MOVE_METERS = 25;
+  const GPS_IDLE_INTERVAL_MS = 15_000;
 
   // Guidance: consider we "arrived" at a terminal if within this radius
   const ARRIVAL_RADIUS_METERS = 60;
@@ -976,7 +980,9 @@ document.addEventListener('DOMContentLoaded', () => {
     driverState.lastCommutersRefreshAt = now;
 
     try {
-      const since = new Date(Date.now() - 5 * 60_000).toISOString();
+      // Treat commuters as stale after ~3 minutes so the driver
+      // sees reasonably fresh dots along the route.
+      const since = new Date(Date.now() - 3 * 60_000).toISOString();
       const pad = COMMUTER_BBOX_PADDING_DEGREES;
       const { minLat, maxLat, minLng, maxLng } = navState.routeBounds;
 
@@ -1075,13 +1081,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Throttle writes (avoid hammering DB): only send if moved enough or enough time passed
+    // Throttle writes (avoid hammering DB): use tighter thresholds
+    // while actively navigating so commuters see smoother motion,
+    // and looser thresholds when idle to save battery and writes.
     const now = Date.now();
     const curr = { lat: latitude, lng: longitude };
+    const isNavigating = driverState.phase === DriverPhase.NAVIGATING;
+    const moveThreshold = isNavigating ? GPS_NAV_MOVE_METERS : GPS_IDLE_MOVE_METERS;
+    const intervalThreshold = isNavigating ? GPS_NAV_INTERVAL_MS : GPS_IDLE_INTERVAL_MS;
+
     if (driverState.lastSent && Number.isFinite(driverState.lastSentAt)) {
       const moved = distanceMeters(driverState.lastSent, curr);
       const dt = now - driverState.lastSentAt;
-      if (moved < GPS_MIN_MOVE_METERS && dt < GPS_MIN_INTERVAL_MS) {
+      if (moved < moveThreshold && dt < intervalThreshold) {
         return;
       }
     }
@@ -1306,7 +1318,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       driverState.commutersTimer = setInterval(() => {
         void refreshCommutersForRoute();
-      }, 15_000);
+      }, 10_000);
 
       // As soon as navigation starts, bring the map view
       // to the jeep's current location for a consistent

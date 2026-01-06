@@ -112,6 +112,7 @@ import { supabase } from '../login/supabaseClient.js';
   }
 
   const FALLBACK_JEEP_SPEED_KMH = 18;
+  const JEEP_STALE_MS = 60_000; // hide jeepneys if no update for 60s
 
   function updateCommuterMarker(lat, lng) {
     const pos = [lat, lng];
@@ -216,9 +217,21 @@ import { supabase } from '../login/supabaseClient.js';
   }
 
   function shouldShowJeep(row) {
-    // For now: show every jeep that shares its location.
-    // We keep distance calculations only for ETA/distance in the popup.
-    return !!row && typeof row.lat === 'number' && typeof row.lng === 'number';
+    if (!row || typeof row.lat !== 'number' || typeof row.lng !== 'number') {
+      return false;
+    }
+
+    // Hide jeepneys that have not reported in for a while,
+    // so icons disappear if a driver logs out or goes offline
+    // and we somehow miss the DELETE event.
+    if (row.updated_at) {
+      const t = new Date(row.updated_at).getTime();
+      if (Number.isFinite(t) && (Date.now() - t) > JEEP_STALE_MS) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   function updateJeepPopupDom(info, row) {
@@ -406,7 +419,7 @@ import { supabase } from '../login/supabaseClient.js';
     try {
       const { data, error } = await supabase
         .from('jeepney_locations')
-        .select('driver_id, lat, lng, route_id, speed')
+        .select('driver_id, lat, lng, route_id, speed, updated_at')
         .order('updated_at', { ascending: false });
 
       if (error) {
