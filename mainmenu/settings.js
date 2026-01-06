@@ -47,7 +47,20 @@ async function loadAccount() {
     usernameEl.textContent = profile?.username || user.user_metadata?.username || '';
   }
   if (emailEl) {
-    emailEl.textContent = profile?.email || user.email || '';
+    const effectiveEmail = user.email || profile?.email || '';
+    emailEl.textContent = effectiveEmail;
+  }
+
+  // If auth email and profile email ever drift, quietly sync profile to auth.
+  if (profile && user.email && profile.email !== user.email) {
+    try {
+      await supabase
+        .from('profiles')
+        .update({ email: user.email })
+        .eq('id', user.id);
+    } catch (syncErr) {
+      console.warn('Failed to sync profile email with auth email:', syncErr.message || syncErr);
+    }
   }
 }
 
@@ -110,11 +123,6 @@ function setupUsernameChange() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadAccount();
-  setupUsernameChange();
-});
-
 function setupEmailChange() {
   const btn = document.getElementById('changeEmailBtn');
   const emailEl = document.getElementById('accountEmail');
@@ -151,7 +159,8 @@ function setupEmailChange() {
         return;
       }
 
-      // 1) Update Supabase Auth email (may send confirmation email)
+      // 1) Request Supabase Auth email change (this may require email verification
+      //    before the new email actually becomes active for login).
       const { error: authError } = await supabase.auth.updateUser({ email: newEmail });
       if (authError) {
         const msg = (authError.message || '').toLowerCase();
@@ -164,18 +173,15 @@ function setupEmailChange() {
         return;
       }
 
-      // 2) Keep profiles table in sync
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ email: newEmail })
-        .eq('id', user.id);
+      // At this point Supabase has accepted the email-change request, but depending on
+      // project security settings the primary login email usually does NOT switch until
+      // the user clicks the verification link. To avoid lying in the UI, we:
+      //  - do NOT change the displayed email yet
+      //  - do NOT touch profiles.email yet
+      // The next time the user visits after confirming, loadAccount() will see auth.email
+      // updated and will sync profiles.email + the UI automatically.
 
-      if (profileError) {
-        console.warn('Email changed in auth but not in profiles:', profileError.message);
-      }
-
-      emailEl.textContent = newEmail;
-      alert('We sent a confirmation email to your new address. Please verify it to complete the change.');
+      alert('We sent a confirmation email to your new address. Please verify it to complete the change. Until then, you can still sign in with your current email.');
     } catch (e) {
       console.error('Unexpected error changing email:', e);
       alert('Unexpected error. Please try again later.');
