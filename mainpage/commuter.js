@@ -525,9 +525,6 @@ import { supabase } from '../login/supabaseClient.js';
         console.error('[Commuter init] Unexpected error while loading routes', routesErr);
       }
 
-      // Start GPS tracking automatically after login
-      startCommuterTracking();
-
       // Load existing jeepney locations that RLS allows this commuter to see
       await loadInitialJeepneys();
 
@@ -539,6 +536,11 @@ import { supabase } from '../login/supabaseClient.js';
   }
 
   // Kick off Supabase-backed commuter behavior
+  // Start local GPS tracking immediately so the commuter icon
+  // appears even if Supabase auth/profile resolution is delayed.
+  // sendCommuterLocation() is a no-op until commuterId is set.
+  startCommuterTracking();
+
   initCommuterSide();
 
   // Expose stop function if needed from other scripts

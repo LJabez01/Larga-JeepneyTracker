@@ -688,6 +688,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // after resolving driver and any initial route, update button state
       updateStartButtonState();
+
+      // If this driver was already navigating before a browser refresh,
+      // automatically restore the last route and resume GPS tracking so
+      // navigation continues without extra clicks.
+      if (window.currentDriverId && routeSelect) {
+        const wasNavigating = loadNavActiveForDriver(window.currentDriverId);
+        if (wasNavigating) {
+          const lastRoute = loadLastRouteForDriver(window.currentDriverId);
+          if (lastRoute && lastRoute.routeId) {
+            const opt = routeSelect.querySelector(`option[value="${lastRoute.routeId}"]`);
+            if (opt) {
+              routeSelect.value = String(lastRoute.routeId);
+              const ev = new Event('change', { bubbles: true });
+              routeSelect.dispatchEvent(ev);
+
+              driverState.leg = 'TO_ORIGIN';
+              setDriverPhase(DriverPhase.NAVIGATING);
+
+              if (driverState.commutersTimer) {
+                clearInterval(driverState.commutersTimer);
+              }
+              driverState.commutersTimer = setInterval(() => {
+                void refreshCommutersForRoute();
+              }, 10_000);
+
+              focusMapOnDriverAtNavStart();
+              startGpsTracking();
+            }
+          }
+        }
+      }
     } catch (err) {
       console.error('[Driver init] Unexpected error', err);
     }
@@ -708,6 +739,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const LAST_ROUTE_KEY_PREFIX = 'larga:lastRoute:';
+
+  const NAV_ACTIVE_KEY_PREFIX = 'larga:driverNavActive:';
 
   function saveLastRouteForDriver(driverId, routeId, routeName) {
     if (!driverId || !routeId || typeof window === 'undefined') return;
@@ -743,6 +776,34 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.warn('[LastRoute] Failed to load last route', e);
       return null;
+    }
+  }
+
+  function setNavActiveForDriver(driverId, isActive) {
+    if (!driverId || typeof window === 'undefined') return;
+    try {
+      const key = `${NAV_ACTIVE_KEY_PREFIX}${driverId}`;
+      const payload = {
+        active: !!isActive,
+        updatedAt: new Date().toISOString()
+      };
+      window.localStorage.setItem(key, JSON.stringify(payload));
+    } catch (e) {
+      console.warn('[NavActive] Failed to persist nav active flag', e);
+    }
+  }
+
+  function loadNavActiveForDriver(driverId) {
+    if (!driverId || typeof window === 'undefined') return false;
+    try {
+      const key = `${NAV_ACTIVE_KEY_PREFIX}${driverId}`;
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      return !!(parsed && parsed.active);
+    } catch (e) {
+      console.warn('[NavActive] Failed to load nav active flag', e);
+      return false;
     }
   }
 
@@ -1246,6 +1307,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.error('[GPS] Unexpected error while deleting jeepney_locations row on stop', err);
       }
+
+      // Ensure navigation-active flag is cleared when GPS stops.
+      setNavActiveForDriver(driverId, false);
     }
   }
 
@@ -1302,6 +1366,9 @@ document.addEventListener('DOMContentLoaded', () => {
         routeName = opt ? opt.textContent : null;
       }
       saveLastRouteForDriver(driverId, terminalId, routeName);
+
+      // Mark navigation as active so we can restore it on refresh.
+      setNavActiveForDriver(driverId, true);
 
       // Initialize trip phase and start periodic route-scoped commuter refresh
       driverState.leg = 'TO_ORIGIN';
