@@ -1278,7 +1278,7 @@ body.navigation-mode .route-card .stop-btn {
   @media (max-width: 450px) {
     #showBtn { display: none !important; }
     /* Move the route card up slightly so Chrome navigation button doesn't cover it */
-    .route-card { top: 38vh !important; }
+    .route-card { top: 33vh !important; }
   }
 
   /* On small screens, slide the route card vertically instead of horizontally */
