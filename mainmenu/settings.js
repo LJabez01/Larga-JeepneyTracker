@@ -189,9 +189,20 @@ function setupEmailChange() {
   });
 }
 
+function setupPasswordChange() {
+  const btn = document.getElementById('changePasswordBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    // Reuse the existing Forgot Password flow for changing passwords
+    window.location.href = '../login/Forgot%20Password.html';
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadAccount();
   setupUsernameChange();
   setupEmailChange();
+  setupPasswordChange();
 });
 
