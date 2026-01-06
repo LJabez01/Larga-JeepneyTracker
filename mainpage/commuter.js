@@ -42,6 +42,27 @@ import { supabase } from '../login/supabaseClient.js';
     L.control.zoom({ position: 'bottomleft' }).addTo(map);
   }
 
+  // -------------------------------------------------------------------------
+  // Custom map icons (visual only; logic unchanged)
+  // NOTE: iconUrl paths are relative to commuter.html in /mainpage
+  // Make sure these image files exist in /images
+  //   ../images/commuter-icon.png
+  //   ../images/jeepney-icon.png
+  // -------------------------------------------------------------------------
+  const commuterIcon = L.icon({
+    iconUrl: '../images/commuter-icon.png',
+    iconSize: [64, 64],
+    iconAnchor: [32, 64],
+    popupAnchor: [0, -64]
+  });
+
+  const jeepneyIcon = L.icon({
+    iconUrl: '../images/jeepney-icon.png',
+    iconSize: [64, 64],
+    iconAnchor: [32, 64],
+    popupAnchor: [0, -64]
+  });
+
   // Commuter marker (updated from GPS)
   let commuterMarker = null;
   let hasCenteredOnCommuter = false;
@@ -97,7 +118,10 @@ import { supabase } from '../login/supabaseClient.js';
     commuterState.lat = lat;
     commuterState.lng = lng;
     if (!commuterMarker) {
-      commuterMarker = L.marker(pos, { title: 'Your Location' }).addTo(map);
+      commuterMarker = L.marker(pos, {
+        title: 'Your Location',
+        icon: commuterIcon
+      }).addTo(map);
     } else {
       commuterMarker.setLatLng(pos);
     }
@@ -136,16 +160,32 @@ import { supabase } from '../login/supabaseClient.js';
     }
 
     const distance = distanceMeters({ lat: ctx.lat, lng: ctx.lng }, { lat: row.lat, lng: row.lng });
+    const hasSpeed = typeof row.speed === 'number' && Number.isFinite(row.speed) && row.speed >= 0;
 
-    const hasSpeed = typeof row.speed === 'number' && Number.isFinite(row.speed) && row.speed > 0.8;
-    const speedMps = hasSpeed ? row.speed : (FALLBACK_JEEP_SPEED_KMH * 1000) / 3600;
-    const speedKmh = speedMps * 3.6;
-    const etaMinutes = (distance / speedMps) / 60;
+    // Displayed speed: only show real values coming from the driver.
+    let displaySpeedText = '—';
+    if (hasSpeed) {
+      const kmh = row.speed * 3.6;
+      // Treat near-zero speeds as stopped to avoid flicker.
+      if (kmh < 1) {
+        displaySpeedText = '0.0 km/h';
+      } else {
+        displaySpeedText = `${kmh.toFixed(1)} km/h`;
+      }
+    }
+
+    // ETA: prefer real speed when we have it, otherwise fall back
+    // to a typical jeepney speed, but do NOT use the fallback for
+    // the displayed "Speed" field.
+    const effectiveSpeedMps = hasSpeed && row.speed > 0.8
+      ? row.speed
+      : (FALLBACK_JEEP_SPEED_KMH * 1000) / 3600;
+    const etaMinutes = (distance / effectiveSpeedMps) / 60;
 
     return {
       distanceText: formatDistance(distance),
       etaText: formatEtaMinutes(etaMinutes),
-      speedText: `${speedKmh.toFixed(1)} km/h`
+      speedText: displaySpeedText
     };
   }
 
@@ -235,7 +275,10 @@ import { supabase } from '../login/supabaseClient.js';
         popupContent.style.display = 'block';
       }
 
-      const marker = L.marker(pos, { title: 'Jeepney' });
+      const marker = L.marker(pos, {
+        title: 'Jeepney',
+        icon: jeepneyIcon
+      });
       if (popupContent) {
         marker.bindPopup(popupContent, {
           maxWidth: 320,
