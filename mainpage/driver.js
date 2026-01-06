@@ -391,23 +391,26 @@ document.addEventListener('DOMContentLoaded', () => {
     hideBtn.addEventListener('click', () => {
       const isMobile = window.matchMedia && window.matchMedia('(max-width: 450px)').matches;
       if (isMobile) {
-        // On mobile, keep a single handle attached to the panel and
-        // slide the whole card down/up while toggling the arrow.
+        // On mobile, just toggle the collapsed state. keep the in-panel handle
+        // visible (it overlaps the visible strip) — no floating show button.
         routeCard.classList.toggle('collapsed-mobile');
-      } else {
-        // Desktop/tablet: original side-to-side slide behaviour
-        routeCard.classList.add('slide-out');
-        routeCard.classList.remove('slide-in');
-        hideBtn.classList.add('hidden');
-        showBtn.classList.remove('hidden');
+        return;
       }
+
+      // Desktop/tablet: original side-to-side slide behaviour
+      routeCard.classList.add('slide-out');
+      routeCard.classList.remove('slide-in');
+      hideBtn.classList.add('hidden');
+      showBtn.classList.remove('hidden');
     });
 
     showBtn.addEventListener('click', () => {
       const isMobile = window.matchMedia && window.matchMedia('(max-width: 450px)').matches;
       if (isMobile) {
-        // On mobile we rely only on the attached hide handle;
-        // show button is hidden via CSS.
+        // On mobile: open the collapsed panel and swap visibility of handles
+        routeCard.classList.remove('collapsed-mobile');
+        showBtn.classList.add('hidden');
+        hideBtn.classList.remove('hidden');
         return;
       }
 
@@ -1189,4 +1192,113 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize default guidance UI state
   setDriverPhase(window.currentDriverId ? DriverPhase.IDLE : DriverPhase.NO_DRIVER);
   setGuidanceEmpty();
+
+  
 });
+
+// Notification panel: toggle, populate sample items, close handlers
+(function () {
+  const notifToggle = document.getElementById('notifToggle');
+  const notifPanel = document.getElementById('notifPanel');
+  const notificationList = document.getElementById('notificationList');
+  const notifMute = document.getElementById('notifMute');
+  const notifInbox = document.getElementById('notifInbox');
+
+  if (!notifPanel || !notificationList) return;
+
+  const sampleNotifs = [
+    { id: 1, title: 'A jeepney has passed your waiting area', date: 'December 2, 2026', type: 'passed' },
+    { id: 2, title: 'A jeepney is approaching your waiting area', date: 'December 2, 2026', type: 'approaching' },
+    { id: 3, title: 'A jeepney has passed your waiting area', date: 'December 2, 2026', type: 'passed' },
+    { id: 4, title: 'A jeepney is approaching your waiting area', date: 'December 2, 2026', type: 'approaching' }
+  ];
+
+  function renderNotifications(items) {
+    notificationList.innerHTML = '';
+    items.forEach((n) => {
+      const item = document.createElement('div');
+      item.className = 'notif-item';
+
+      const dot = document.createElement('div');
+      dot.className = 'notif-dot';
+      dot.style.background = n.type === 'approaching' ? '#3fa65a' : '#d64545';
+
+      const content = document.createElement('div');
+      content.className = 'notif-content';
+
+      const title = document.createElement('div');
+      title.className = 'notif-title';
+      title.textContent = n.title;
+
+      const date = document.createElement('div');
+      date.className = 'notif-date';
+      date.textContent = n.date;
+
+      content.appendChild(title);
+      content.appendChild(date);
+
+      item.appendChild(dot);
+      item.appendChild(content);
+
+      item.addEventListener('click', function (e) {
+        item.classList.toggle('notif-highlight');
+      });
+
+      notificationList.appendChild(item);
+    });
+  }
+
+  // Toggle panel visibility
+  function togglePanel() {
+    notifPanel.classList.toggle('show');
+    const isShown = notifPanel.classList.contains('show');
+    notifPanel.setAttribute('aria-hidden', (!isShown).toString());
+  }
+
+  if (notifToggle) {
+    notifToggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      togglePanel();
+    });
+  }
+
+  // Close when clicking outside
+  document.addEventListener('click', function (e) {
+    if (!notifPanel.classList.contains('show')) return;
+    const target = e.target;
+    if (!notifPanel.contains(target) && !notifToggle.contains(target)) {
+      notifPanel.classList.remove('show');
+      notifPanel.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  // Escape closes
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && notifPanel.classList.contains('show')) {
+      notifPanel.classList.remove('show');
+      notifPanel.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  if (notifInbox) {
+    notifInbox.addEventListener('click', function (e) {
+      e.preventDefault();
+      // navigate to notifications page
+      window.location.href = '../mainmenu/notifications.html';
+    });
+  }
+
+  if (notifMute) {
+    notifMute.addEventListener('click', function (e) {
+      e.preventDefault();
+      // simple feedback toggle (could be wired to user prefs)
+      notifMute.classList.toggle('muted');
+      notifMute.title = notifMute.classList.contains('muted') ? 'Unmute notifications' : 'Mute notifications';
+    });
+  }
+
+  // initial render with sample notifications
+  renderNotifications(sampleNotifs);
+
+})();

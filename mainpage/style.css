@@ -1238,10 +1238,10 @@ body.navigation-mode .route-card .stop-btn {
     border-radius: 45px 45px 0px 0px;
   }
 
-  /* Ensure the hide handle sits clearly above the system nav bar
-     on phones so it's always tappable when the card is collapsed. */
+  /* Ensure the hide handle sits flush with the panel top (no gap).
+     Use a smaller negative top so it overlaps the panel without a visible gap. */
   .route-card .hide-btn {
-    top: -56px;              /* raise handle higher above bottom edge */
+    top: -17px;              /* overlap panel top so button edge sits flush */
     left: 50%;               /* center horizontally */
     transform: translateX(-50%);
     width: 70px;             /* wider, shorter pill for balance */
@@ -1250,9 +1250,10 @@ body.navigation-mode .route-card .stop-btn {
     z-index: 20;
   }
 
-  /* Collapsed state: slide the panel down while keeping the handle visible */
+  /* Collapsed state: leave a small strip of the panel visible at the bottom
+     so the user can see it's present. Keep it below the fold using !important. */
   .route-card.collapsed-mobile {
-    top: 100vh;              /* move card fully below viewport */
+    top: calc(100vh - 80px) !important; /* leave 80px visible */
     transform: translate(-50%, 0); /* keep horizontal centering */
   }
 
@@ -1266,15 +1267,16 @@ body.navigation-mode .route-card .stop-btn {
     transform: rotate(-90deg);
   }
 
-  /* Do not use the separate show button on mobile */
-  #showBtn {
-    display: none !important;
-  }
-
-  /* If slide-out is applied, keep show button aligned near bottom */
+  /* Desktop: keep the separate show button for slide-out behaviour. */
   .route-card.slide-out + #showBtn {
     top: 100vh;             /* move down with hidden panel */
     transform: translateY(-50%);
+  }
+
+  /* On mobile hide the floating showBtn entirely — we use the in-panel
+     hide handle as the single control (no floating button). */
+  @media (max-width: 450px) {
+    #showBtn { display: none !important; }
   }
 
   /* On small screens, slide the route card vertically instead of horizontally */
