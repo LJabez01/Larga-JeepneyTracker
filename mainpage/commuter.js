@@ -480,6 +480,7 @@ import { supabase } from '../login/supabaseClient.js';
             }
             upsertJeepneyMarker(row);
           } else if (payload.eventType === 'DELETE') {
+            console.log('[Jeepneys] DELETE event for driver_id:', row.driver_id);
             removeJeepneyMarker(row.driver_id);
           }
         }
