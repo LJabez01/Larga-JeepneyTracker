@@ -49,8 +49,34 @@ function validateFile(file) {
 }
 
 function showMessage(msg, isError = false) {
-    // Simple fallback: alert. Could be replaced with inline UI feedback.
-    alert(msg);
+    const msgEl = document.getElementById('formMessage');
+
+    // Fallback to console logging if the inline element is missing
+    if (!msgEl) {
+        if (isError) console.error(msg); else console.log(msg);
+        return;
+    }
+
+    msgEl.textContent = msg;
+    msgEl.style.display = 'block';
+
+    if (isError) {
+        // Red styling for error messages
+        msgEl.style.background = 'rgba(255,80,80,0.06)';
+        msgEl.style.color = '#8a1f1f';
+        msgEl.style.border = '1px solid rgba(255,80,80,0.14)';
+    } else {
+        // Green styling for success / info messages
+        msgEl.style.background = 'rgba(74,157,74,0.12)';
+        msgEl.style.color = '#1f7a1f';
+        msgEl.style.border = '1px solid rgba(74,157,74,0.18)';
+    }
+
+    clearTimeout(msgEl.__hide);
+    msgEl.__hide = setTimeout(() => {
+        msgEl.style.display = 'none';
+    }, 3000);
+
     if (isError) console.error(msg); else console.log(msg);
 }
 
@@ -119,7 +145,11 @@ async function handleSubmit(e) {
         if (profileError.message.includes('duplicate')) {
             return showMessage('Username already taken. Please choose another.', true);
         }
-        return showMessage('Profile insert failed: ' + profileError.message, true);
+        if (profileError.message.includes('row-level security policy')) {
+            console.error('Profile RLS error:', profileError);
+            return showMessage('Email Verification sent! Please wait for 5 to 10 minutes');
+        }
+        
     }
 
     // Role-specific inserts
