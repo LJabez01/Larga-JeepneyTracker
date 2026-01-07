@@ -189,16 +189,20 @@ function renderUsersTable(users) {
 }
 
 async function updateVerification(userId, isVerified) {
-  const { error } = await supabase
+  // Attempt update and log full response for debugging RLS/permission issues
+  const res = await supabase
     .from('profiles')
     .update({ is_verified: isVerified })
-    .eq('id', userId);
+    .eq('id', userId)
+    .select('id,is_verified');
 
-  if (error) {
-    console.error('[admin] Failed to update verification status:', error.message);
-    alert('Failed to update verification status: ' + error.message);
+  if (res.error) {
+    console.error('[admin] Failed to update verification status:', res.error);
+    alert('Failed to update verification status: ' + (res.error.message || res.error));
     return false;
   }
+
+  console.log('[admin] updateVerification result:', res);
 
   allUsers = allUsers.map(u => (u.id === userId ? { ...u, is_verified: isVerified } : u));
   updateDashboardStats(allUsers);
