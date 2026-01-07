@@ -302,9 +302,9 @@ import { supabase } from '../login/supabaseClient.js';
           maxWidth: 320,
           className: 'small-popup',
           // Align the popup so its pointer is centered on
-          // the jeepney icon anchor instead of floating
-          // noticeably above it.
-          offset: L.point(0, -32),
+          // the jeepney icon; small positive x nudges it
+          // a few pixels to the right.
+          offset: L.point(6, -32),
           autoPanPadding: [20, 20]
         });
       }
