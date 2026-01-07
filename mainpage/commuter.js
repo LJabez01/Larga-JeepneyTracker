@@ -436,13 +436,23 @@ import { supabase } from '../login/supabaseClient.js';
       }
 
       if (Array.isArray(data)) {
+        const currentDriverIds = new Set();
         data.forEach((row) => {
           const key = row.driver_id;
           if (key) {
+            currentDriverIds.add(String(key));
             const existing = jeepneyMarkers.get(key);
             if (existing) existing.lastRow = row;
           }
           upsertJeepneyMarker(row);
+        });
+
+        // Remove markers for drivers no longer in the database
+        Array.from(jeepneyMarkers.keys()).forEach((driverId) => {
+          if (!currentDriverIds.has(String(driverId))) {
+            console.log('[Jeepneys] Removing marker for driver_id:', driverId, '(no longer in DB)');
+            removeJeepneyMarker(driverId);
+          }
         });
       }
     } catch (err) {
@@ -453,7 +463,7 @@ import { supabase } from '../login/supabaseClient.js';
   // Lightweight polling fallback so jeepney markers keep moving even
   // if Realtime is misconfigured or temporarily unavailable.
   function startJeepPollingFallback() {
-    const INTERVAL_MS = 10_000; // 10 seconds
+    const INTERVAL_MS = 3_000; // 3 seconds for faster cleanup
     if (typeof window === 'undefined') return;
     if (window.__largaJeepPollingTimer) return;
 
