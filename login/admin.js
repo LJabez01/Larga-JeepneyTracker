@@ -37,35 +37,34 @@ async function ensureAdminSession() {
   }
   const session = data && data.session;
   if (!session || !session.user) {
-    window.location.href = 'Log-in.html';
+    // Dev mode: no session, but keep page open (read-only UI)
+    console.warn('[admin] No active session; running dashboard in guest mode.');
     return null;
   }
+  // Build a lightweight profile from the auth session instead
+  const user = session.user;
+  const storedRole = (typeof window !== 'undefined' && window.sessionStorage)
+    ? window.sessionStorage.getItem('userRole')
+    : null;
 
-  const userId = session.user.id;
-  const { data: profile, error: profileErr } = await supabase
-    .from('profiles')
-    .select('id, email, full_name, role, is_active, is_verified')
-    .eq('id', userId)
-    .single();
+  currentAdmin = {
+    id: user.id,
+    email: user.email || '',
+    full_name: (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email || '',
+    role: storedRole || 'commuter',
+    is_active: true,
+    is_verified: true,
+  };
 
-  if (profileErr) {
-    console.error('[admin] Failed to load admin profile:', profileErr.message);
-    alert('Unable to load your profile. Please try logging in again.');
-    window.location.href = 'Log-in.html';
-    return null;
-  }
-
-  // NOTE (dev mode): originally we enforced role === 'admin' here.
-  // For now, allow any logged-in user to access admin.html.
-
-  currentAdmin = profile;
+  // NOTE (dev mode): we do NOT enforce role === 'admin' here.
+  // Any logged-in user can access admin.html while you are developing.
 
   try {
     const headerTitle = document.querySelector('.header-brand h1');
     const headerSub = document.querySelector('.header-brand p');
     if (headerTitle) headerTitle.textContent = 'Admin Panel';
-    if (headerSub && profile.full_name) {
-      headerSub.textContent = 'Welcome, ' + profile.full_name;
+    if (headerSub && currentAdmin.full_name) {
+      headerSub.textContent = 'Welcome, ' + currentAdmin.full_name;
     }
   } catch (e) {
     console.warn('[admin] Failed to update header brand text:', e);
@@ -85,7 +84,7 @@ async function ensureAdminSession() {
     });
   }
 
-  return profile;
+  return currentAdmin;
 }
 
 async function fetchAllUsers() {
