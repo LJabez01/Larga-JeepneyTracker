@@ -107,6 +107,12 @@ async function doLogin() {
         }
 
         // Block login for accounts that are not yet approved by admin
+        console.log('[login] Approval check:', {
+            email: loggedInEmail,
+            isFixedAdmin,
+            isVerified,
+            profileFetched: typeof profile !== 'undefined' ? profile : null
+        });
         if (!isFixedAdmin && isVerified === false) {
             alert('Your account is still pending admin approval. Please wait until an admin verifies your ID.');
             try {
