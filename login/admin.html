@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Larga Jeepney Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="adminstyle.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="admin-header">
+        <div class="header-wrapper">
+            <div class="header-brand">
+                <i class="bi bi-shield-check"></i>
+                <div>
+                    <h1>Admin Panel</h1>
+                    <p>Manage Users & Verify IDs</p>
+                </div>
+            </div>
+            <div class="header-menu">
+                <a href="Log-in.html" class="header-logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="admin-main">
+        <!-- Navigation Tabs -->
+        <nav class="admin-tabs">
+            <button class="tab-item active" onclick="switchTab('dashboard')">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('users')">
+                <i class="bi bi-people-fill"></i>
+                <span>Users</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('verification')">
+                <i class="bi bi-shield-check"></i>
+                <span>ID Verification</span>
+                <span class="tab-badge">5</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('valid-ids')">
+                <i class="bi bi-patch-check-fill"></i>
+                <span>Valid IDs</span>
+            </button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <section id="dashboard-tab" class="tab-section active">
+            <div class="section-header">
+                <h2>Dashboard Overview</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-icon users-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">125</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon online-icon">
+                        <i class="bi bi-circle-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">98</div>
+                        <div class="stat-label">Active Now</div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon pending-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">Pending IDs</div>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon verified-icon">
+                        <i class="bi bi-patch-check-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">120</div>
+                        <div class="stat-label">Verified IDs</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Users Tab -->
+        <section id="users-tab" class="tab-section">
+            <div class="section-header">
+                <h2>Manage Users</h2>
+                <div class="header-controls">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="userSearch" placeholder="Search users..." onkeyup="searchUsers()">
+                    </div>
+                    <select class="filter-dropdown">
+                        <option>All Types</option>
+                        <option>Drivers</option>
+                        <option>Commuters</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User Info</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>ID Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="user-row">
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar">L</div>
+                                    <div class="user-details">
+                                        <div class="user-name">Lander Domingo</div>
+                                        <div class="user-email">lander@email.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-driver">Driver</span></td>
+                            <td><span class="badge badge-online">Online</span></td>
+                            <td><span class="badge badge-verified">Verified</span></td>
+                            <td>
+                                <div class="action-group">
+                                    <button class="btn-icon btn-view" title="View"><i class="bi bi-eye-fill"></i></button>
+                                    <button class="btn-icon btn-edit" title="Edit"><i class="bi bi-pencil-fill"></i></button>
+                                    <button class="btn-icon btn-delete" title="Delete"><i class="bi bi-trash-fill"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="user-row">
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar">L</div>
+                                    <div class="user-details">
+                                        <div class="user-name">Lester Roduta</div>
+                                        <div class="user-email">lester@email.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-commuter">Commuter</span></td>
+                            <td><span class="badge badge-online">Online</span></td>
+                            <td><span class="badge badge-pending">Pending</span></td>
+                            <td>
+                                <div class="action-group">
+                                    <button class="btn-icon btn-view" title="View"><i class="bi bi-eye-fill"></i></button>
+                                    <button class="btn-icon btn-verify" title="Verify"><i class="bi bi-shield-check"></i></button>
+                                    <button class="btn-icon btn-delete" title="Delete"><i class="bi bi-trash-fill"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="user-row">
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar">K</div>
+                                    <div class="user-details">
+                                        <div class="user-name">Kenzhin Martinez</div>
+                                        <div class="user-email">kenzhin@email.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-driver">Driver</span></td>
+                            <td><span class="badge badge-online">Online</span></td>
+                            <td><span class="badge badge-verified">Verified</span></td>
+                            <td>
+                                <div class="action-group">
+                                    <button class="btn-icon btn-view" title="View"><i class="bi bi-eye-fill"></i></button>
+                                    <button class="btn-icon btn-edit" title="Edit"><i class="bi bi-pencil-fill"></i></button>
+                                    <button class="btn-icon btn-delete" title="Delete"><i class="bi bi-trash-fill"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="user-row">
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar">F</div>
+                                    <div class="user-details">
+                                        <div class="user-name">Frank Cascano</div>
+                                        <div class="user-email">frank@email.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-commuter">Commuter</span></td>
+                            <td><span class="badge badge-offline">Offline</span></td>
+                            <td><span class="badge badge-rejected">Rejected</span></td>
+                            <td>
+                                <div class="action-group">
+                                    <button class="btn-icon btn-view" title="View"><i class="bi bi-eye-fill"></i></button>
+                                    <button class="btn-icon btn-verify" title="Verify"><i class="bi bi-shield-check"></i></button>
+                                    <button class="btn-icon btn-delete" title="Delete"><i class="bi bi-trash-fill"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="user-row">
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar">H</div>
+                                    <div class="user-details">
+                                        <div class="user-name">Harvey Delacruz</div>
+                                        <div class="user-email">harvey@email.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-driver">Driver</span></td>
+                            <td><span class="badge badge-online">Online</span></td>
+                            <td><span class="badge badge-pending">Pending</span></td>
+                            <td>
+                                <div class="action-group">
+                                    <button class="btn-icon btn-view" title="View"><i class="bi bi-eye-fill"></i></button>
+                                    <button class="btn-icon btn-verify" title="Verify"><i class="bi bi-shield-check"></i></button>
+                                    <button class="btn-icon btn-delete" title="Delete"><i class="bi bi-trash-fill"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ID Verification Tab -->
+        <section id="verification-tab" class="tab-section">
+            <div class="section-header">
+                <h2>Pending ID Verification (5)</h2>
+                <p class="section-desc">Review and approve user IDs</p>
+            </div>
+            <div class="verification-cards">
+                <div class="verify-card">
+                    <div class="verify-card-header">
+                        <div class="verify-user">
+                            <div class="verify-avatar">L</div>
+                            <div>
+                                <div class="verify-name">Lester Garcia</div>
+                                <div class="verify-email">lester@email.com</div>
+                            </div>
+                        </div>
+                        <span class="time-badge">2h ago</span>
+                    </div>
+                    <div class="verify-card-body">
+                        <div class="id-info">
+                            <div class="info-item">
+                                <span class="label">ID Type:</span>
+                                <span class="value">National ID</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">ID Number:</span>
+                                <span class="value">123-456-789</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Expiry:</span>
+                                <span class="value">2028-12-31</span>
+                            </div>
+                        </div>
+                        <div class="id-preview">
+                            <i class="bi bi-card-image"></i>
+                            <p>ID Document</p>
+                        </div>
+                    </div>
+                    <div class="verify-card-footer">
+                        <button class="btn-approve">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Approve
+                        </button>
+                        <button class="btn-reject">
+                            <i class="bi bi-x-circle-fill"></i>
+                            Reject
+                        </button>
+                    </div>
+                </div>
+
+                <div class="verify-card">
+                    <div class="verify-card-header">
+                        <div class="verify-user">
+                            <div class="verify-avatar">H</div>
+                            <div>
+                                <div class="verify-name">Harvey Lopez</div>
+                                <div class="verify-email">harvey@email.com</div>
+                            </div>
+                        </div>
+                        <span class="time-badge">5h ago</span>
+                    </div>
+                    <div class="verify-card-body">
+                        <div class="id-info">
+                            <div class="info-item">
+                                <span class="label">ID Type:</span>
+                                <span class="value">Driver's License</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">ID Number:</span>
+                                <span class="value">DL-2024-99999</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Expiry:</span>
+                                <span class="value">2028-05-15</span>
+                            </div>
+                        </div>
+                        <div class="id-preview">
+                            <i class="bi bi-card-image"></i>
+                            <p>ID Document</p>
+                        </div>
+                    </div>
+                    <div class="verify-card-footer">
+                        <button class="btn-approve">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Approve
+                        </button>
+                        <button class="btn-reject">
+                            <i class="bi bi-x-circle-fill"></i>
+                            Reject
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Valid IDs Tab -->
+        <section id="valid-ids-tab" class="tab-section">
+            <div class="section-header">
+                <h2>Valid & Approved IDs</h2>
+                <p class="section-desc">All users with verified identification</p>
+            </div>
+            <div class="valid-ids-list">
+                <div class="valid-id-card">
+                    <div class="valid-id-header">
+                        <div class="valid-id-user">
+                            <div class="valid-id-avatar">L</div>
+                            <div>
+                                <div class="valid-id-name">Lander Cruz</div>
+                                <div class="valid-id-email">lander@email.com</div>
+                            </div>
+                        </div>
+                        <span class="valid-badge">✓ Verified</span>
+                    </div>
+                    <div class="valid-id-body">
+                        <div class="id-info">
+                            <div class="info-item">
+                                <span class="label">ID Number:</span>
+                                <span class="value">DL-2024-12345</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">ID Type:</span>
+                                <span class="value">Driver's License</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Verified On:</span>
+                                <span class="value">2024-01-05</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="valid-id-footer">
+                        <button class="btn-view-id">View Details</button>
+                        <button class="btn-revoke">Revoke</button>
+                    </div>
+                </div>
+
+                <div class="valid-id-card">
+                    <div class="valid-id-header">
+                        <div class="valid-id-user">
+                            <div class="valid-id-avatar">K</div>
+                            <div>
+                                <div class="valid-id-name">Kenzhin Santos</div>
+                                <div class="valid-id-email">kenzhin@email.com</div>
+                            </div>
+                        </div>
+                        <span class="valid-badge">✓ Verified</span>
+                    </div>
+                    <div class="valid-id-body">
+                        <div class="id-info">
+                            <div class="info-item">
+                                <span class="label">ID Number:</span>
+                                <span class="value">DL-2024-54321</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">ID Type:</span>
+                                <span class="value">Driver's License</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Verified On:</span>
+                                <span class="value">2024-01-01</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="valid-id-footer">
+                        <button class="btn-view-id">View Details</button>
+                        <button class="btn-revoke">Revoke</button>
+                    </div>
+                </div>
+
+                <div class="valid-id-card">
+                    <div class="valid-id-header">
+                        <div class="valid-id-user">
+                            <div class="valid-id-avatar">L</div>
+                            <div>
+                                <div class="valid-id-name">Lester Garcia</div>
+                                <div class="valid-id-email">lester@email.com</div>
+                            </div>
+                        </div>
+                        <span class="valid-badge">✓ Verified</span>
+                    </div>
+                    <div class="valid-id-body">
+                        <div class="id-info">
+                            <div class="info-item">
+                                <span class="label">ID Number:</span>
+                                <span class="value">ID-2024-67890</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">ID Type:</span>
+                                <span class="value">National ID</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Verified On:</span>
+                                <span class="value">2024-01-06</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="valid-id-footer">
+                        <button class="btn-view-id">View Details</button>
+                        <button class="btn-revoke">Revoke</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all sections
+            document.querySelectorAll('.tab-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.tab-item').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.closest('.tab-item').classList.add('active');
+        }
+
+        function searchUsers() {
+            const input = document.getElementById('userSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('.user-row');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
