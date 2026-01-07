@@ -94,9 +94,10 @@ async function fetchAllUsers() {
     .order('created_at', { ascending: true });
 
   if (error) {
-    console.error('[admin] Failed to load users from profiles:', error.message);
-    alert('Unable to load users from Supabase. Check RLS policies for profiles.');
-    return [];
+    console.warn('[admin] Failed to load users from profiles (likely RLS):', error.message);
+    // Dev fallback: show just the current logged-in user if available
+    allUsers = currentAdmin ? [currentAdmin] : [];
+    return allUsers;
   }
 
   allUsers = Array.isArray(data) ? data : [];
