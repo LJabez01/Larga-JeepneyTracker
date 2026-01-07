@@ -70,10 +70,22 @@ async function doLogin() {
             }
             return;
         }
-        // Signed in: get role from profiles table using the auth user id
+        // Signed in: derive role
         const userId = data?.user?.id;
         let role = 'commuter';
-        if (userId) {
+        // DEV: fixed admin account(s) without touching Supabase dashboard.
+        // Replace this email with the one you want to be admin.
+        const FIXED_ADMIN_EMAILS = ['landerjabez@gmail.com'];
+
+        const loggedInEmail = (data?.user?.email || email || '').toLowerCase();
+        const isFixedAdmin = FIXED_ADMIN_EMAILS
+            .map(e => e.toLowerCase())
+            .includes(loggedInEmail);
+
+        if (isFixedAdmin) {
+            role = 'admin';
+        } else if (userId) {
+            // Fallback: get role from profiles table using the auth user id
             const { data: profile, error: roleErr } = await supabase
                 .from('profiles')
                 .select('role')
