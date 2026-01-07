@@ -70,9 +70,10 @@ async function doLogin() {
             }
             return;
         }
-        // Signed in: derive role
+        // Signed in: derive role and approval status
         const userId = data?.user?.id;
         let role = 'commuter';
+        let isVerified = true;
         // DEV: fixed admin account(s) without touching Supabase dashboard.
         // Replace this email with the one you want to be admin.
         const FIXED_ADMIN_EMAILS = ['landerjabez@gmail.com'];
@@ -84,18 +85,36 @@ async function doLogin() {
 
         if (isFixedAdmin) {
             role = 'admin';
+            isVerified = true;
         } else if (userId) {
-            // Fallback: get role from profiles table using the auth user id
+            // Get role + is_verified from profiles table using the auth user id
             const { data: profile, error: roleErr } = await supabase
                 .from('profiles')
-                .select('role')
+                .select('role,is_verified')
                 .eq('id', userId)
                 .single();
             if (roleErr) {
-                console.warn('Role lookup failed:', roleErr.message);
-            } else if (profile && profile.role) {
-                role = profile.role;
+                console.warn('Profile lookup failed:', roleErr.message);
+            } else if (profile) {
+                if (profile.role) {
+                    role = profile.role;
+                }
+                // Treat null/undefined as not verified only if explicitly false
+                if (profile.is_verified === false) {
+                    isVerified = false;
+                }
             }
+        }
+
+        // Block login for accounts that are not yet approved by admin
+        if (!isFixedAdmin && isVerified === false) {
+            alert('Your account is still pending admin approval. Please wait until an admin verifies your ID.');
+            try {
+                await supabase.auth.signOut();
+            } catch (e) {
+                console.warn('Error signing out pending user:', e?.message || e);
+            }
+            return;
         }
         // Redirect based on role
         try { sessionStorage.setItem('userRole', role); } catch {}
