@@ -89,6 +89,8 @@ async function doLogin() {
         try { sessionStorage.setItem('userRole', role); } catch {}
         if (role === 'driver') {
             window.location.href = '../mainpage/driver.html';
+        } else if (role === 'admin') {
+            window.location.href = 'admin.html';
         } else {
             window.location.href = '../mainpage/commuter.html';
         }
