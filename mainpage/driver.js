@@ -831,8 +831,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const FALLBACK_SPEED_KMH = 18;
   const DRIVER_ROUTE_DRIFT_THRESHOLD_METERS = 60;
   const DRIVER_ROUTE_RECALC_MIN_INTERVAL_MS = 20_000;
-  const COMMUTER_ROUTE_RADIUS_METERS = 50;
-  const COMMUTER_BBOX_PADDING_DEGREES = 0.01;
+  // Allow commuters up to ~150 m from the route polyline so
+  // slight route mismatches and side streets still show up.
+  const COMMUTER_ROUTE_RADIUS_METERS = 150;
+  const COMMUTER_BBOX_PADDING_DEGREES = 0.02;
 
   // Keep map view following the driver during navigation, with
   // gentle pan/zoom adjustments so it feels Waze-like.
@@ -916,11 +918,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const dtSec = (now - driverState.lastFixAt) / 1000;
       if (dtSec > 0.5) {
         const dist = distanceMeters(driverState.lastFix, here);
-        const instSpeed = dist / dtSec;
-        if (Number.isFinite(instSpeed) && instSpeed >= 0) {
-          driverState.speedSamples.push(instSpeed);
-          if (driverState.speedSamples.length > 8) {
-            driverState.speedSamples.shift();
+        // Ignore very small movements to avoid creating fake motion
+        // from GPS jitter when the jeepney is actually stopped.
+        if (dist >= 3) {
+          const instSpeed = dist / dtSec;
+          if (Number.isFinite(instSpeed) && instSpeed >= 0) {
+            driverState.speedSamples.push(instSpeed);
+            if (driverState.speedSamples.length > 8) {
+              driverState.speedSamples.shift();
+            }
           }
         }
       }
@@ -1012,6 +1018,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (driverState.lastSpeedKmh && Number.isFinite(driverState.lastSpeedKmh)) {
       speedKmh = driverState.lastSpeedKmh;
     }
+    // Snap very small speeds to 0 km/h so the UI doesn't
+    // show a constant ~1 km/h when the jeepney is stationary.
+    if (Number.isFinite(speedKmh) && speedKmh < 1) {
+      speedKmh = 0;
+    }
     if (dgSpeed) {
       dgSpeed.textContent = Number.isFinite(speedKmh) ? `${speedKmh.toFixed(1)} km/h` : '—';
     }
@@ -1086,7 +1097,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         visibleCount += 1;
-
         const pos = [c.lat, c.lng];
         const existing = driverState.commutersMarkers.get(id);
 

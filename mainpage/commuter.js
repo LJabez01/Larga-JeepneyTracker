@@ -151,19 +151,11 @@ import { supabase } from '../login/supabaseClient.js';
 
   function computeJeepStats(row) {
     const ctx = getCommuterGeoContext();
-    if (typeof row?.lat !== 'number' || typeof row?.lng !== 'number' ||
-      typeof ctx.lat !== 'number' || typeof ctx.lng !== 'number') {
-      return {
-        distanceText: '—',
-        etaText: '—',
-        speedText: '—'
-      };
-    }
 
-    const distance = distanceMeters({ lat: ctx.lat, lng: ctx.lng }, { lat: row.lat, lng: row.lng });
-    const hasSpeed = typeof row.speed === 'number' && Number.isFinite(row.speed) && row.speed >= 0;
+    const hasSpeed = typeof row?.speed === 'number' && Number.isFinite(row.speed) && row.speed >= 0;
 
-    // Displayed speed: only show real values coming from the driver.
+    // Displayed speed: only show real values coming from the driver,
+    // regardless of whether we know the commuter's own location.
     let displaySpeedText = '—';
     if (hasSpeed) {
       const kmh = row.speed * 3.6;
@@ -174,6 +166,19 @@ import { supabase } from '../login/supabaseClient.js';
         displaySpeedText = `${kmh.toFixed(1)} km/h`;
       }
     }
+
+    // If we don't know commuter position yet, we can still show
+    // speed, but distance/ETA must remain unknown.
+    if (typeof row?.lat !== 'number' || typeof row?.lng !== 'number' ||
+      typeof ctx.lat !== 'number' || typeof ctx.lng !== 'number') {
+      return {
+        distanceText: '—',
+        etaText: '—',
+        speedText: displaySpeedText
+      };
+    }
+
+    const distance = distanceMeters({ lat: ctx.lat, lng: ctx.lng }, { lat: row.lat, lng: row.lng });
 
     // ETA: prefer real speed when we have it, otherwise fall back
     // to a typical jeepney speed, but do NOT use the fallback for
@@ -442,6 +447,18 @@ import { supabase } from '../login/supabaseClient.js';
     }
   }
 
+  // Lightweight polling fallback so jeepney markers keep moving even
+  // if Realtime is misconfigured or temporarily unavailable.
+  function startJeepPollingFallback() {
+    const INTERVAL_MS = 10_000; // 10 seconds
+    if (typeof window === 'undefined') return;
+    if (window.__largaJeepPollingTimer) return;
+
+    window.__largaJeepPollingTimer = window.setInterval(() => {
+      void loadInitialJeepneys();
+    }, INTERVAL_MS);
+  }
+
   function subscribeToJeepneys() {
     const channel = supabase
       .channel('jeepney-locations-commuter')
@@ -528,8 +545,10 @@ import { supabase } from '../login/supabaseClient.js';
       // Load existing jeepney locations that RLS allows this commuter to see
       await loadInitialJeepneys();
 
-      // Subscribe to live updates
+      // Subscribe to live updates and also start a small polling
+      // fallback so the map still refreshes if realtime is down.
       subscribeToJeepneys();
+      startJeepPollingFallback();
     } catch (err) {
       console.error('[Commuter init] Unexpected error', err);
     }
