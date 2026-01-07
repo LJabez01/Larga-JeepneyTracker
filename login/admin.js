@@ -103,6 +103,39 @@ async function fetchAllUsers() {
   }
 
   allUsers = Array.isArray(data) ? data : [];
+  // Fetch documents for these users (if any) and attach to user objects
+  const userIds = allUsers.map(u => u.id).filter(Boolean);
+  if (userIds.length) {
+    try {
+      const docsRes = await supabase
+        .from('documents')
+        .select('document_id,user_id,storage_path,document_type,file_type')
+        .in('user_id', userIds);
+      if (!docsRes.error && Array.isArray(docsRes.data)) {
+        const docsByUser = docsRes.data.reduce((acc, d) => {
+          (acc[d.user_id] = acc[d.user_id] || []).push(d);
+          return acc;
+        }, {});
+
+        for (const user of allUsers) {
+          const docs = docsByUser[user.id] || [];
+          user.documents = await Promise.all(docs.map(async (doc) => {
+            let publicUrl = null;
+            try {
+              const p = await supabase.storage.from('documents').getPublicUrl(doc.storage_path);
+              publicUrl = p && p.data && p.data.publicUrl ? p.data.publicUrl : null;
+            } catch (err) {
+              console.warn('[admin] getPublicUrl failed for', doc.storage_path, err);
+              publicUrl = null;
+            }
+            return { ...doc, publicUrl };
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('[admin] Failed to fetch documents for users:', err);
+    }
+  }
   return allUsers;
 }
 
@@ -258,8 +291,14 @@ function renderPendingIds(users) {
           </div>
         </div>
         <div class="id-preview">
-          <i class="bi bi-card-image"></i>
-          <p>Document metadata stored in Supabase</p>
+              ${user.documents && user.documents.length ? (function(){
+                const d = user.documents[0];
+                if (d.publicUrl) return `<img class="id-thumb" src="${d.publicUrl}" alt="ID preview" onerror="this.style.display='none'">`;
+                return `<p>Document stored (private) - server signed URL required</p>`;
+              })() : `
+                <i class="bi bi-card-image"></i>
+                <p>No document uploaded</p>
+              `}
         </div>
       </div>
       <div class="verify-card-footer">
@@ -322,6 +361,16 @@ function renderValidIds(users) {
             <span class="label">Account Status:</span>
             <span class="value">${user.is_active === false ? 'Inactive' : 'Active'}</span>
           </div>
+        </div>
+        <div class="id-preview">
+          ${user.documents && user.documents.length ? (function(){
+            const d = user.documents[0];
+            if (d.publicUrl) return `<img class="id-thumb" src="${d.publicUrl}" alt="ID preview" onerror="this.style.display='none'">`;
+            return `<p>Document stored (private) - server signed URL required</p>`;
+          })() : `
+            <i class="bi bi-card-image"></i>
+            <p>No document uploaded</p>
+          `}
         </div>
       </div>
       <div class="valid-id-footer">
