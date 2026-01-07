@@ -37,35 +37,34 @@ async function ensureAdminSession() {
   }
   const session = data && data.session;
   if (!session || !session.user) {
-    window.location.href = 'Log-in.html';
+    // Dev mode: no session, but keep page open (read-only UI)
+    console.warn('[admin] No active session; running dashboard in guest mode.');
     return null;
   }
+  // Build a lightweight profile from the auth session instead
+  const user = session.user;
+  const storedRole = (typeof window !== 'undefined' && window.sessionStorage)
+    ? window.sessionStorage.getItem('userRole')
+    : null;
 
-  const userId = session.user.id;
-  const { data: profile, error: profileErr } = await supabase
-    .from('profiles')
-    .select('id, email, full_name, role, is_active, is_verified')
-    .eq('id', userId)
-    .single();
+  currentAdmin = {
+    id: user.id,
+    email: user.email || '',
+    full_name: (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email || '',
+    role: storedRole || 'commuter',
+    is_active: true,
+    is_verified: true,
+  };
 
-  if (profileErr) {
-    console.error('[admin] Failed to load admin profile:', profileErr.message);
-    alert('Unable to load your profile. Please try logging in again.');
-    window.location.href = 'Log-in.html';
-    return null;
-  }
-
-  // NOTE (dev mode): originally we enforced role === 'admin' here.
-  // For now, allow any logged-in user to access admin.html.
-
-  currentAdmin = profile;
+  // NOTE (dev mode): we do NOT enforce role === 'admin' here.
+  // Any logged-in user can access admin.html while you are developing.
 
   try {
     const headerTitle = document.querySelector('.header-brand h1');
     const headerSub = document.querySelector('.header-brand p');
     if (headerTitle) headerTitle.textContent = 'Admin Panel';
-    if (headerSub && profile.full_name) {
-      headerSub.textContent = 'Welcome, ' + profile.full_name;
+    if (headerSub && currentAdmin.full_name) {
+      headerSub.textContent = 'Welcome, ' + currentAdmin.full_name;
     }
   } catch (e) {
     console.warn('[admin] Failed to update header brand text:', e);
@@ -85,22 +84,58 @@ async function ensureAdminSession() {
     });
   }
 
-  return profile;
+  return currentAdmin;
 }
 
 async function fetchAllUsers() {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email, full_name, role, is_active, is_verified')
+    // Use only columns that exist in your live Supabase table
+    // (username instead of full_name, etc.)
+    .select('id, email, username, role, is_active, is_verified')
     .order('created_at', { ascending: true });
 
   if (error) {
-    console.error('[admin] Failed to load users from profiles:', error.message);
-    alert('Unable to load users from Supabase. Check RLS policies for profiles.');
-    return [];
+    console.warn('[admin] Failed to load users from profiles (likely RLS):', error.message);
+    // Dev fallback: show just the current logged-in user if available
+    allUsers = currentAdmin ? [currentAdmin] : [];
+    return allUsers;
   }
 
   allUsers = Array.isArray(data) ? data : [];
+  // Fetch documents for these users (if any) and attach to user objects
+  const userIds = allUsers.map(u => u.id).filter(Boolean);
+  if (userIds.length) {
+    try {
+      const docsRes = await supabase
+        .from('documents')
+        .select('document_id,user_id,storage_path,document_type,file_type')
+        .in('user_id', userIds);
+      if (!docsRes.error && Array.isArray(docsRes.data)) {
+        const docsByUser = docsRes.data.reduce((acc, d) => {
+          (acc[d.user_id] = acc[d.user_id] || []).push(d);
+          return acc;
+        }, {});
+
+        for (const user of allUsers) {
+          const docs = docsByUser[user.id] || [];
+          user.documents = await Promise.all(docs.map(async (doc) => {
+            let publicUrl = null;
+            try {
+              const p = await supabase.storage.from('documents').getPublicUrl(doc.storage_path);
+              publicUrl = p && p.data && p.data.publicUrl ? p.data.publicUrl : null;
+            } catch (err) {
+              console.warn('[admin] getPublicUrl failed for', doc.storage_path, err);
+              publicUrl = null;
+            }
+            return { ...doc, publicUrl };
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('[admin] Failed to fetch documents for users:', err);
+    }
+  }
   return allUsers;
 }
 
@@ -143,10 +178,10 @@ function renderUsersTable(users) {
     tr.className = 'user-row';
     tr.dataset.userId = user.id;
 
-    const name = user.full_name || user.email || '(no name)';
+    const name = user.full_name || user.username || user.email || '(no name)';
     const email = user.email || '';
     const roleText = humanRole(user.role);
-    const avatarInitial = getAvatarInitial(user.full_name, user.email);
+    const avatarInitial = getAvatarInitial(user.full_name || user.username, user.email);
 
     const userInfoTd = document.createElement('td');
     userInfoTd.innerHTML = `
@@ -187,16 +222,20 @@ function renderUsersTable(users) {
 }
 
 async function updateVerification(userId, isVerified) {
-  const { error } = await supabase
+  // Attempt update and log full response for debugging RLS/permission issues
+  const res = await supabase
     .from('profiles')
     .update({ is_verified: isVerified })
-    .eq('id', userId);
+    .eq('id', userId)
+    .select('id,is_verified');
 
-  if (error) {
-    console.error('[admin] Failed to update verification status:', error.message);
-    alert('Failed to update verification status: ' + error.message);
+  if (res.error) {
+    console.error('[admin] Failed to update verification status:', res.error);
+    alert('Failed to update verification status: ' + (res.error.message || res.error));
     return false;
   }
+
+  console.log('[admin] updateVerification result:', res);
 
   allUsers = allUsers.map(u => (u.id === userId ? { ...u, is_verified: isVerified } : u));
   updateDashboardStats(allUsers);
@@ -252,8 +291,14 @@ function renderPendingIds(users) {
           </div>
         </div>
         <div class="id-preview">
-          <i class="bi bi-card-image"></i>
-          <p>Document metadata stored in Supabase</p>
+              ${user.documents && user.documents.length ? (function(){
+                const d = user.documents[0];
+                if (d.publicUrl) return `<img class="id-thumb" src="${d.publicUrl}" alt="ID preview" onerror="this.style.display='none'">`;
+                return `<p>Document stored (private) - server signed URL required</p>`;
+              })() : `
+                <i class="bi bi-card-image"></i>
+                <p>No document uploaded</p>
+              `}
         </div>
       </div>
       <div class="verify-card-footer">
@@ -317,6 +362,16 @@ function renderValidIds(users) {
             <span class="value">${user.is_active === false ? 'Inactive' : 'Active'}</span>
           </div>
         </div>
+        <div class="id-preview">
+          ${user.documents && user.documents.length ? (function(){
+            const d = user.documents[0];
+            if (d.publicUrl) return `<img class="id-thumb" src="${d.publicUrl}" alt="ID preview" onerror="this.style.display='none'">`;
+            return `<p>Document stored (private) - server signed URL required</p>`;
+          })() : `
+            <i class="bi bi-card-image"></i>
+            <p>No document uploaded</p>
+          `}
+        </div>
       </div>
       <div class="valid-id-footer">
         <button class="btn-view-id" data-action="view" data-user-id="${user.id}">View Details</button>
@@ -360,6 +415,9 @@ async function initAdminDashboard() {
   if (!adminProfile) return;
 
   const users = await fetchAllUsers();
+  console.log('[admin] users loaded for dashboard:', users);
+  console.log('[admin] pending count:', users.filter(u => u.is_verified !== true).length);
+  console.log('[admin] verified count:', users.filter(u => u.is_verified === true).length);
   updateDashboardStats(users);
   renderUsersTable(users);
   renderPendingIds(users);

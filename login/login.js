@@ -70,20 +70,70 @@ async function doLogin() {
             }
             return;
         }
-        // Signed in: get role from profiles table using the auth user id
+        // Signed in: derive role and approval status
         const userId = data?.user?.id;
         let role = 'commuter';
-        if (userId) {
-            const { data: profile, error: roleErr } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', userId)
-                .single();
-            if (roleErr) {
-                console.warn('Role lookup failed:', roleErr.message);
-            } else if (profile && profile.role) {
-                role = profile.role;
+        let isVerified = true;
+        // DEV: fixed admin account(s) without touching Supabase dashboard.
+        // Replace this email with the one you want to be admin.
+        const FIXED_ADMIN_EMAILS = ['landerjabez@gmail.com'];
+
+        const loggedInEmail = (data?.user?.email || email || '').toLowerCase();
+        const isFixedAdmin = FIXED_ADMIN_EMAILS
+            .map(e => e.toLowerCase())
+            .includes(loggedInEmail);
+
+        if (isFixedAdmin) {
+            role = 'admin';
+            isVerified = true;
+        } else if (userId) {
+            // Get role + is_verified from profiles table using the auth user id
+            let profile = null;
+            let roleErr = null;
+            try {
+                const res = await supabase
+                    .from('profiles')
+                    .select('role,is_verified')
+                    .eq('id', userId)
+                    .single();
+                profile = res.data || null;
+                roleErr = res.error || null;
+            } catch (err) {
+                roleErr = err;
             }
+
+            if (roleErr) {
+                console.warn('[login] Profile lookup failed (roleErr):', roleErr);
+            }
+
+            if (profile) {
+                if (profile.role) {
+                    role = profile.role;
+                }
+                if (profile.is_verified === false) {
+                    isVerified = false;
+                }
+            }
+
+            // Debug: show raw profile fetch result
+            console.log('[login] profile fetch result:', { profile, roleErr, userId });
+        }
+
+        // Block login for accounts that are not yet approved by admin
+        console.log('[login] Approval check:', {
+            email: loggedInEmail,
+            isFixedAdmin,
+            isVerified,
+            profileFetched: typeof profile !== 'undefined' ? profile : null
+        });
+        if (!isFixedAdmin && isVerified === false) {
+            alert('Your account is still pending admin approval. Please wait until an admin verifies your ID.');
+            try {
+                await supabase.auth.signOut();
+            } catch (e) {
+                console.warn('Error signing out pending user:', e?.message || e);
+            }
+            return;
         }
         // Redirect based on role
         try { sessionStorage.setItem('userRole', role); } catch {}
