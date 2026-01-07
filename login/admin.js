@@ -90,7 +90,9 @@ async function ensureAdminSession() {
 async function fetchAllUsers() {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email, full_name, role, is_active, is_verified')
+    // Use only columns that exist in your live Supabase table
+    // (username instead of full_name, etc.)
+    .select('id, email, username, role, is_active, is_verified')
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -143,10 +145,10 @@ function renderUsersTable(users) {
     tr.className = 'user-row';
     tr.dataset.userId = user.id;
 
-    const name = user.full_name || user.email || '(no name)';
+    const name = user.full_name || user.username || user.email || '(no name)';
     const email = user.email || '';
     const roleText = humanRole(user.role);
-    const avatarInitial = getAvatarInitial(user.full_name, user.email);
+    const avatarInitial = getAvatarInitial(user.full_name || user.username, user.email);
 
     const userInfoTd = document.createElement('td');
     userInfoTd.innerHTML = `
