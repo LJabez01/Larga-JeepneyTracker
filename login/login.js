@@ -88,22 +88,35 @@ async function doLogin() {
             isVerified = true;
         } else if (userId) {
             // Get role + is_verified from profiles table using the auth user id
-            const { data: profile, error: roleErr } = await supabase
-                .from('profiles')
-                .select('role,is_verified')
-                .eq('id', userId)
-                .single();
+            let profile = null;
+            let roleErr = null;
+            try {
+                const res = await supabase
+                    .from('profiles')
+                    .select('role,is_verified')
+                    .eq('id', userId)
+                    .single();
+                profile = res.data || null;
+                roleErr = res.error || null;
+            } catch (err) {
+                roleErr = err;
+            }
+
             if (roleErr) {
-                console.warn('Profile lookup failed:', roleErr.message);
-            } else if (profile) {
+                console.warn('[login] Profile lookup failed (roleErr):', roleErr);
+            }
+
+            if (profile) {
                 if (profile.role) {
                     role = profile.role;
                 }
-                // Treat null/undefined as not verified only if explicitly false
                 if (profile.is_verified === false) {
                     isVerified = false;
                 }
             }
+
+            // Debug: show raw profile fetch result
+            console.log('[login] profile fetch result:', { profile, roleErr, userId });
         }
 
         // Block login for accounts that are not yet approved by admin
