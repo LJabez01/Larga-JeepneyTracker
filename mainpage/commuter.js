@@ -301,7 +301,10 @@ import { supabase } from '../login/supabaseClient.js';
         marker.bindPopup(popupContent, {
           maxWidth: 320,
           className: 'small-popup',
-          offset: L.point(0, -46),
+          // Align the popup so its pointer is centered on
+          // the jeepney icon anchor instead of floating
+          // noticeably above it.
+          offset: L.point(0, -32),
           autoPanPadding: [20, 20]
         });
       }
