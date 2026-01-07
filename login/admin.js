@@ -360,6 +360,9 @@ async function initAdminDashboard() {
   if (!adminProfile) return;
 
   const users = await fetchAllUsers();
+  console.log('[admin] users loaded for dashboard:', users);
+  console.log('[admin] pending count:', users.filter(u => u.is_verified !== true).length);
+  console.log('[admin] verified count:', users.filter(u => u.is_verified === true).length);
   updateDashboardStats(users);
   renderUsersTable(users);
   renderPendingIds(users);
