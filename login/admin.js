@@ -88,55 +88,36 @@ async function ensureAdminSession() {
 }
 
 async function fetchAllUsers() {
-  const { data, error } = await supabase
-    .from('profiles')
-    // Use only columns that exist in your live Supabase table
-    // (username instead of full_name, etc.)
-    .select('id, email, username, role, is_active, is_verified')
-    .order('created_at', { ascending: true });
-
-  if (error) {
-    console.warn('[admin] Failed to load users from profiles (likely RLS):', error.message);
-    // Dev fallback: show just the current logged-in user if available
+  // Use the Supabase session token to call the secure admin API on the backend.
+  const { data: sessionData, error } = await supabase.auth.getSession();
+  if (error || !sessionData || !sessionData.session) {
+    console.warn('[admin] No active session; cannot load admin data.');
     allUsers = currentAdmin ? [currentAdmin] : [];
     return allUsers;
   }
 
-  allUsers = Array.isArray(data) ? data : [];
-  // Fetch documents for these users (if any) and attach to user objects
-  const userIds = allUsers.map(u => u.id).filter(Boolean);
-  if (userIds.length) {
-    try {
-      const docsRes = await supabase
-        .from('documents')
-        .select('document_id,user_id,storage_path,document_type,file_type')
-        .in('user_id', userIds);
-      if (!docsRes.error && Array.isArray(docsRes.data)) {
-        const docsByUser = docsRes.data.reduce((acc, d) => {
-          (acc[d.user_id] = acc[d.user_id] || []).push(d);
-          return acc;
-        }, {});
+  const token = sessionData.session.access_token;
+  try {
+    const res = await fetch('http://localhost:3000/api/admin/id-documents', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        for (const user of allUsers) {
-          const docs = docsByUser[user.id] || [];
-          user.documents = await Promise.all(docs.map(async (doc) => {
-            let publicUrl = null;
-            try {
-              const p = await supabase.storage.from('documents').getPublicUrl(doc.storage_path);
-              publicUrl = p && p.data && p.data.publicUrl ? p.data.publicUrl : null;
-            } catch (err) {
-              console.warn('[admin] getPublicUrl failed for', doc.storage_path, err);
-              publicUrl = null;
-            }
-            return { ...doc, publicUrl };
-          }));
-        }
-      }
-    } catch (err) {
-      console.warn('[admin] Failed to fetch documents for users:', err);
+    if (!res.ok) {
+      console.error('[admin] Backend admin API failed:', res.status, await res.text());
+      allUsers = currentAdmin ? [currentAdmin] : [];
+      return allUsers;
     }
+
+    const payload = await res.json();
+    allUsers = Array.isArray(payload.users) ? payload.users : [];
+    return allUsers;
+  } catch (err) {
+    console.error('[admin] Error calling backend admin API:', err);
+    allUsers = currentAdmin ? [currentAdmin] : [];
+    return allUsers;
   }
-  return allUsers;
 }
 
 function updateDashboardStats(users) {
@@ -291,14 +272,22 @@ function renderPendingIds(users) {
           </div>
         </div>
         <div class="id-preview">
-              ${user.documents && user.documents.length ? (function(){
-                const d = user.documents[0];
-                if (d.publicUrl) return `<img class="id-thumb" src="${d.publicUrl}" alt="ID preview" onerror="this.style.display='none'">`;
-                return `<p>Document stored (private) - server signed URL required</p>`;
-              })() : `
-                <i class="bi bi-card-image"></i>
-                <p>No document uploaded</p>
-              `}
+          ${user.documents && user.documents.length ? (function () {
+            // Prefer ID-like documents if multiple exist
+            const docs = user.documents.filter(d =>
+              d.document_type === 'commuter_id' ||
+              d.document_type === 'driver_license' ||
+              d.document_type === 'id'
+            );
+            const d = docs[0] || user.documents[0];
+            if (d && d.url) {
+              return `<img class="id-thumb" src="${d.url}" alt="ID preview" onerror="this.style.display='none'">`;
+            }
+            return `<p>Document stored (private) - no preview available</p>`;
+          })() : `
+            <i class="bi bi-card-image"></i>
+            <p>No document uploaded</p>
+          `}
         </div>
       </div>
       <div class="verify-card-footer">
@@ -363,10 +352,17 @@ function renderValidIds(users) {
           </div>
         </div>
         <div class="id-preview">
-          ${user.documents && user.documents.length ? (function(){
-            const d = user.documents[0];
-            if (d.publicUrl) return `<img class="id-thumb" src="${d.publicUrl}" alt="ID preview" onerror="this.style.display='none'">`;
-            return `<p>Document stored (private) - server signed URL required</p>`;
+          ${user.documents && user.documents.length ? (function () {
+            const docs = user.documents.filter(d =>
+              d.document_type === 'commuter_id' ||
+              d.document_type === 'driver_license' ||
+              d.document_type === 'id'
+            );
+            const d = docs[0] || user.documents[0];
+            if (d && d.url) {
+              return `<img class="id-thumb" src="${d.url}" alt="ID preview" onerror="this.style.display='none'">`;
+            }
+            return `<p>Document stored (private) - no preview available</p>`;
           })() : `
             <i class="bi bi-card-image"></i>
             <p>No document uploaded</p>

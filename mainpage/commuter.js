@@ -1,7 +1,7 @@
-// commuter.js - ES module: dropdown, map, GPS for commuter, and live jeepney markers
+// Commuter-side map, GPS tracking, and live jeepney location display
 import { supabase } from '../login/supabaseClient.js';
 
-// Dropdown menu toggle
+// Dropdown menu control
 (function () {
   const menuToggle = document.getElementById('menu-toggle');
   const dropdownMenu = document.querySelector('.dropdown-menu');
@@ -21,9 +21,9 @@ import { supabase } from '../login/supabaseClient.js';
   }
 })();
 
-// Map + GPS + live jeepneys
+// Map, GPS, and live jeepney tracking module
 (function () {
-  // Route name lookup for popups only (no commuter route selection UI)
+  // Route lookup maps for displaying route names in jeepney popups
   const routeNameToId = new Map();
   const routeIdToName = new Map();
 
@@ -35,20 +35,14 @@ import { supabase } from '../login/supabaseClient.js';
     attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
   }).addTo(map);
 
-  // Ensure zoom control is visible and placed bottom-left
+  // Position zoom control at bottom-left to avoid overlapping UI elements
   if (map && map.zoomControl && map.zoomControl.setPosition) {
     map.zoomControl.setPosition('bottomleft');
   } else {
     L.control.zoom({ position: 'bottomleft' }).addTo(map);
   }
 
-  // -------------------------------------------------------------------------
-  // Custom map icons (visual only; logic unchanged)
-  // NOTE: iconUrl paths are relative to commuter.html in /mainpage
-  // Make sure these image files exist in /images
-  //   ../images/commuter-icon.png
-  //   ../images/jeepney-icon.png
-  // -------------------------------------------------------------------------
+  // Custom Leaflet icons (paths relative to /mainpage/commuter.html)
   const commuterIcon = L.icon({
     iconUrl: '../images/commuter-icon.png',
     iconSize: [64, 64],
@@ -63,11 +57,11 @@ import { supabase } from '../login/supabaseClient.js';
     popupAnchor: [0, -64]
   });
 
-  // Commuter marker (updated from GPS)
+  // Commuter marker state
   let commuterMarker = null;
   let hasCenteredOnCommuter = false;
 
-  // Latest commuter context for distance/ETA and filtering
+  // Commuter position for calculating jeepney distance and ETA
   const commuterState = {
     lat: null,
     lng: null
@@ -84,6 +78,7 @@ import { supabase } from '../login/supabaseClient.js';
     return (d * Math.PI) / 180;
   }
 
+  // Haversine formula for accurate great-circle distance between GPS coordinates
   function distanceMeters(a, b) {
     const R = 6371000;
     const dLat = toRad(b.lat - a.lat);
@@ -111,8 +106,10 @@ import { supabase } from '../login/supabaseClient.js';
     return `${h}h ${m}m`;
   }
 
+  // Fallback speed for ETA when real GPS speed unavailable
   const FALLBACK_JEEP_SPEED_KMH = 18;
-  const JEEP_STALE_MS = 60_000; // hide jeepneys if no update for 60s
+  // Hide jeepneys that haven't reported location updates recently
+  const JEEP_STALE_MS = 60_000;
 
   function updateCommuterMarker(lat, lng) {
     const pos = [lat, lng];
@@ -129,37 +126,37 @@ import { supabase } from '../login/supabaseClient.js';
 
     if (!hasCenteredOnCommuter && map && typeof map.setView === 'function') {
       hasCenteredOnCommuter = true;
-      map.setView(pos, 16); // zoom in closer to the commuter
+      map.setView(pos, 16);
     }
   }
 
-  // Jeepney markers keyed by driver_id
+  // Active jeepney markers (keyed by driver_id) and cached driver details
   const jeepneyMarkers = new Map();
-  const driverInfoCache = new Map(); // optional: plate number and other details per driver
+  const driverInfoCache = new Map();
 
   function getRouteDisplayName(row) {
     const id = row?.route_id;
     if (!id) return '—';
     const byId = routeIdToName.get(id);
     if (byId) return byId;
-    // Fallback: attempt to invert the name->id map if needed
+    // Fallback lookup if bidirectional map isn't synchronized
     for (const [name, rid] of routeNameToId.entries()) {
       if (rid === id) return name;
     }
     return `Route ${id}`;
   }
 
+  // Calculate distance, ETA, and speed text for a jeepney relative to commuter
   function computeJeepStats(row) {
     const ctx = getCommuterGeoContext();
 
     const hasSpeed = typeof row?.speed === 'number' && Number.isFinite(row.speed) && row.speed >= 0;
 
-    // Displayed speed: only show real values coming from the driver,
-    // regardless of whether we know the commuter's own location.
+    // Only display actual GPS speed from driver (never show fallback speed)
     let displaySpeedText = '—';
     if (hasSpeed) {
       const kmh = row.speed * 3.6;
-      // Treat near-zero speeds as stopped to avoid flicker.
+      // Treat near-zero as stopped to prevent UI flicker
       if (kmh < 1) {
         displaySpeedText = '0.0 km/h';
       } else {
@@ -167,8 +164,7 @@ import { supabase } from '../login/supabaseClient.js';
       }
     }
 
-    // If we don't know commuter position yet, we can still show
-    // speed, but distance/ETA must remain unknown.
+    // Can't calculate distance/ETA without both positions
     if (typeof row?.lat !== 'number' || typeof row?.lng !== 'number' ||
       typeof ctx.lat !== 'number' || typeof ctx.lng !== 'number') {
       return {
@@ -180,9 +176,7 @@ import { supabase } from '../login/supabaseClient.js';
 
     const distance = distanceMeters({ lat: ctx.lat, lng: ctx.lng }, { lat: row.lat, lng: row.lng });
 
-    // ETA: prefer real speed when we have it, otherwise fall back
-    // to a typical jeepney speed, but do NOT use the fallback for
-    // the displayed "Speed" field.
+    // Use real speed for ETA when available; fallback speed otherwise (never shown to user)
     const effectiveSpeedMps = hasSpeed && row.speed > 0.8
       ? row.speed
       : (FALLBACK_JEEP_SPEED_KMH * 1000) / 3600;
@@ -195,6 +189,7 @@ import { supabase } from '../login/supabaseClient.js';
     };
   }
 
+  // Load and cache driver profile data (plate number) from database
   async function ensureDriverInfo(driverId) {
     if (!driverId) return null;
     if (driverInfoCache.has(driverId)) return driverInfoCache.get(driverId);
@@ -226,9 +221,7 @@ import { supabase } from '../login/supabaseClient.js';
       return false;
     }
 
-    // Hide jeepneys that have not reported in for a while,
-    // so icons disappear if a driver logs out or goes offline
-    // and we somehow miss the DELETE event.
+    // Hide stale jeepneys in case DELETE events are missed during logout/offline
     if (row.updated_at) {
       const t = new Date(row.updated_at).getTime();
       if (Number.isFinite(t) && (Date.now() - t) > JEEP_STALE_MS) {
@@ -239,6 +232,7 @@ import { supabase } from '../login/supabaseClient.js';
     return true;
   }
 
+  // Update DOM elements inside a jeepney marker's popup with current data
   function updateJeepPopupDom(info, row) {
     if (!info || !row || !info.dom) return;
     const { statusEl, speedEl, routeEl, timeEl, distanceEl, plateEl } = info.dom;
@@ -260,7 +254,7 @@ import { supabase } from '../login/supabaseClient.js';
       }
     }
 
-    // Fire off one-time async load of driver details (plate) if not cached yet
+    // Lazy-load driver details if not already cached
     if (!driverInfoCache.has(row.driver_id) && plateEl) {
       void ensureDriverInfo(row.driver_id).then((profile) => {
         if (!profile || !profile.plate_number) return;
@@ -276,7 +270,7 @@ import { supabase } from '../login/supabaseClient.js';
     const key = row.driver_id;
     if (!key) return;
 
-    // Apply route + 50 m proximity filter
+    // Remove marker if jeepney no longer meets display criteria
     if (!shouldShowJeep(row)) {
       removeJeepneyMarker(key);
       return;
@@ -301,9 +295,7 @@ import { supabase } from '../login/supabaseClient.js';
         marker.bindPopup(popupContent, {
           maxWidth: 320,
           className: 'small-popup',
-          // Align the popup so its pointer is centered on
-          // the jeepney icon; small positive x nudges it
-          // a few pixels to the right.
+          // Offset centers popup pointer on jeepney icon
           offset: L.point(6, -32),
           autoPanPadding: [20, 20]
         });
@@ -339,10 +331,8 @@ import { supabase } from '../login/supabaseClient.js';
     jeepneyMarkers.delete(driverId);
   }
 
-  // ---------------------------------------------------------------------------
-  // Supabase-backed GPS tracking for commuter + live jeepney locations
-  // ---------------------------------------------------------------------------
-  let commuterId = null; // from public.commuters.commuter_id
+  // Commuter GPS tracking and database synchronization
+  let commuterId = null;
   let geoWatchId = null;
 
   async function sendCommuterLocation(position) {
@@ -378,9 +368,22 @@ import { supabase } from '../login/supabaseClient.js';
 
     if (geoWatchId !== null) return;
 
+    // Show GPS waiting indicator
+    const gpsStatus = document.getElementById('gps-status');
+    if (gpsStatus) {
+      gpsStatus.classList.remove('hidden');
+    }
+
+    let firstFixReceived = false;
+
     const success = (pos) => {
       const { latitude, longitude } = pos.coords || {};
       if (typeof latitude === 'number' && typeof longitude === 'number') {
+        // Hide GPS status on first successful fix
+        if (!firstFixReceived && gpsStatus) {
+          gpsStatus.classList.add('hidden');
+          firstFixReceived = true;
+        }
         updateCommuterMarker(latitude, longitude);
         void sendCommuterLocation(pos);
       }
@@ -388,6 +391,11 @@ import { supabase } from '../login/supabaseClient.js';
 
     const error = (err) => {
       console.error('[Commuter GPS] watchPosition error', err);
+      // Keep showing the indicator if GPS fails
+      if (gpsStatus && err.code === 3) {
+        // Timeout: GPS is trying but signal is weak
+        gpsStatus.innerHTML = '<i class="bi bi-geo-alt"></i> GPS signal weak, retrying...';
+      }
     };
 
     geoWatchId = navigator.geolocation.watchPosition(success, error, {
@@ -460,10 +468,9 @@ import { supabase } from '../login/supabaseClient.js';
     }
   }
 
-  // Lightweight polling fallback so jeepney markers keep moving even
-  // if Realtime is misconfigured or temporarily unavailable.
+  // Polling fallback keeps jeepneys updated if Realtime subscription fails
   function startJeepPollingFallback() {
-    const INTERVAL_MS = 3_000; // 3 seconds for faster cleanup
+    const INTERVAL_MS = 3_000;
     if (typeof window === 'undefined') return;
     if (window.__largaJeepPollingTimer) return;
 
@@ -534,7 +541,7 @@ import { supabase } from '../login/supabaseClient.js';
 
       commuterId = commuterRow.commuter_id;
 
-      // Preload routes for popup display (routeId -> name); no commuter selection UI
+      // Preload route names for displaying in jeepney popups
       try {
         const { data: routes, error: routesError } = await supabase
           .from('routes')
@@ -556,11 +563,8 @@ import { supabase } from '../login/supabaseClient.js';
         console.error('[Commuter init] Unexpected error while loading routes', routesErr);
       }
 
-      // Load existing jeepney locations that RLS allows this commuter to see
+      // Load initial jeepney markers and subscribe to real-time updates
       await loadInitialJeepneys();
-
-      // Subscribe to live updates and also start a small polling
-      // fallback so the map still refreshes if realtime is down.
       subscribeToJeepneys();
       startJeepPollingFallback();
     } catch (err) {
@@ -568,23 +572,18 @@ import { supabase } from '../login/supabaseClient.js';
     }
   }
 
-  // Kick off Supabase-backed commuter behavior
-  // Start local GPS tracking immediately so the commuter icon
-  // appears even if Supabase auth/profile resolution is delayed.
-  // sendCommuterLocation() is a no-op until commuterId is set.
+  // Start GPS tracking immediately (commuter marker appears before auth completes)
   startCommuterTracking();
-
   initCommuterSide();
 
-  // Expose stop function if needed from other scripts
+  // Expose functions for logout handler
   if (typeof window !== 'undefined') {
     window.stopCommuterTracking = stopCommuterTracking;
     window.clearCommuterLocationRow = clearCommuterLocationRow;
   }
 })();
 
-
-// Notification panel: toggle, populate sample items, close handlers
+// Notification panel UI control
 (function () {
   const notifToggle = document.getElementById('notifToggle');
   const notifPanel = document.getElementById('notifPanel');
@@ -636,7 +635,6 @@ import { supabase } from '../login/supabaseClient.js';
     });
   }
 
-  // Toggle panel visibility
   function togglePanel() {
     notifPanel.classList.toggle('show');
     const isShown = notifPanel.classList.contains('show');
@@ -651,7 +649,7 @@ import { supabase } from '../login/supabaseClient.js';
     });
   }
 
-  // Close when clicking outside
+  // Close panel when clicking outside
   document.addEventListener('click', function (e) {
     if (!notifPanel.classList.contains('show')) return;
     const target = e.target;
@@ -661,7 +659,7 @@ import { supabase } from '../login/supabaseClient.js';
     }
   });
 
-  // Escape closes
+  // Escape key closes panel
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && notifPanel.classList.contains('show')) {
       notifPanel.classList.remove('show');
@@ -672,7 +670,6 @@ import { supabase } from '../login/supabaseClient.js';
   if (notifInbox) {
     notifInbox.addEventListener('click', function (e) {
       e.preventDefault();
-      // navigate to notifications page
       window.location.href = '../mainmenu/notifications.html';
     });
   }
@@ -680,18 +677,16 @@ import { supabase } from '../login/supabaseClient.js';
   if (notifMute) {
     notifMute.addEventListener('click', function (e) {
       e.preventDefault();
-      // simple feedback toggle (could be wired to user prefs)
       notifMute.classList.toggle('muted');
       notifMute.title = notifMute.classList.contains('muted') ? 'Unmute notifications' : 'Mute notifications';
     });
   }
 
-  // initial render with sample notifications
   renderNotifications(sampleNotifs);
 
 })();
 
-// Global logout handling for commuter page: stop GPS + clear row + sign out
+// Logout handler: cleanup GPS tracking and database row before sign out
 (function () {
   const logoutLink = document.querySelector('.dropdown-menu a[href="../login/Log-in.html"]');
   if (!logoutLink) return;

@@ -1,5 +1,5 @@
-﻿// driver.js - cleaned and formatted
-// ES module so we can import the shared Supabase client used by login/registration
+﻿// driver.js - Jeepney Driver Real-Time Tracking & Navigation
+// Manages GPS tracking, OSRM routing, commuter display, and turn-by-turn guidance
 import { supabase } from '../login/supabaseClient.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,9 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const q = (sel) => document.querySelector(sel);
 
-  // ---------------------------------------------------------------------------
-  // Minimal driver state + guidance UI (keeps existing behavior)
-  // ---------------------------------------------------------------------------
+  // Driver phase state machine: controls UI visibility and GPS behavior
   const DriverPhase = Object.freeze({
     NO_DRIVER: 'NO_DRIVER',
     IDLE: 'IDLE',
@@ -17,19 +15,20 @@ document.addEventListener('DOMContentLoaded', () => {
     NAVIGATING: 'NAVIGATING'
   });
 
+  // Runtime state for current driver session
   const driverState = {
     phase: DriverPhase.IDLE,
     leg: 'TO_ORIGIN', // TO_ORIGIN -> TO_DEST
-    lastSent: null,
+    lastSent: null, // Last GPS position sent (for throttling)
     lastSentAt: 0,
     commutersTimer: null,
     commutersMarkers: new Map(),
     lastCommutersRefreshAt: 0,
-    // Viewport helpers for Waze-like navigation
-    lastViewportUpdateAt: 0,
+    lastViewportUpdateAt: 0, // Waze-like viewport following
     lastZoomUpdateAt: 0
   };
 
+  // Driver guidance panel elements
   const dgStatus = q('#dg-status');
   const dgNextTerminal = q('#dg-next-terminal');
   const dgDistance = q('#dg-distance');
@@ -37,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dgSpeed = q('#dg-speed');
   const dgCommuters = q('#dg-commuters');
 
+  // Updates driver phase and toggles navigation-focused UI
   function setDriverPhase(phase) {
     driverState.phase = phase;
     if (dgStatus) {
@@ -47,8 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
       dgStatus.textContent = label;
     }
 
-    // Toggle a navigation-focused UI mode so the driver can
-    // focus on guidance while on trip
+    // Toggle navigation-mode class (hides route selection during trip)
     if (typeof document !== 'undefined' && document.body) {
       if (phase === DriverPhase.NAVIGATING) {
         document.body.classList.add('navigation-mode');
@@ -70,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return (d * Math.PI) / 180;
   }
 
+  // Haversine formula: calculates great-circle distance between two points
   function distanceMeters(a, b) {
     const R = 6371000;
     const dLat = toRad(b.lat - a.lat);
@@ -97,8 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${h}h ${m}m`;
   }
 
-  // Choose an appropriate zoom level based on current speed.
-  // Slower speeds -> closer zoom, faster -> farther out overview.
+  // Waze-like zoom: slower speeds = closer zoom, faster = wider overview
   function chooseZoomForSpeed(speedKmh, currentZoom) {
     const baseZoom = Number.isFinite(currentZoom) ? currentZoom : 16;
     if (!Number.isFinite(speedKmh)) {
@@ -107,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let target;
     if (speedKmh < 10) {
-      target = 18; // almost stopped, very close
+      target = 18;
     } else if (speedKmh < 25) {
       target = 17;
     } else if (speedKmh < 45) {
@@ -115,16 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (speedKmh < 70) {
       target = 15;
     } else {
-      target = 14; // highway-ish
+      target = 14;
     }
 
-    // Clamp to a reasonable range for your map style
     if (target > 19) target = 19;
     if (target < 13) target = 13;
     return target;
   }
 
-  // Dropdown menu behavior
+  // Dropdown menu toggle behavior
   const menuToggle = q('#menu-toggle');
   const dropdownMenu = q('.dropdown-menu');
 
@@ -144,13 +142,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', closeMenuOnDocClick);
   }
 
-  // Ensure proper logout: stop GPS + clear live location + sign out
+  // Logout: stop GPS, clear live location, sign out
   const logoutLink = document.querySelector('.dropdown-menu a[href="../login/Log-in.html"]');
   if (logoutLink) {
     logoutLink.addEventListener('click', async (e) => {
       e.preventDefault();
       try {
-        // Stop tracking and remove this driver's jeepney_locations row
         await stopGpsTracking();
       } catch (err) {
         console.error('[Driver logout] Error while stopping GPS tracking', err);
@@ -166,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initialize Leaflet map (only if Leaflet is loaded and the #map element exists)
+  // Map and navigation state
   const mapRoot = q('#map');
   let map = null;
   let driverMarker = null;
@@ -178,16 +175,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeRouteOverlay = null;
   let activeRouteMarkers = [];
 
-  // Navigation state for dynamic driver -> terminal routing
+  // Navigation state: stores active route geometry and metadata from OSRM
   const navState = {
     activeTerminal: null, // { id, name, lat, lng }
-    routeCoords: [], // [{ lat, lng }, ...] from OSRM
-    cumulativeDistances: [], // meters along route for each coord index
-    totalDistance: 0, // meters
-    totalTimeSec: 0, // seconds
+    routeCoords: [], // [{ lat, lng }, ...]
+    cumulativeDistances: [], // meters at each coord
+    totalDistance: 0,
+    totalTimeSec: 0,
     routeBounds: null, // { minLat, maxLat, minLng, maxLng }
-    lastRecalcAt: 0 // timestamp ms
+    lastRecalcAt: 0
   };
+  // Removes all route layers from map
   function clearActiveRoute() {
     if (map) {
       if (activeRouteControl) {
@@ -222,7 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
     activeRouteMarkers = [];
   }
 
-  // Build / rebuild OSRM route from current driver location to the active terminal
+  // Calculates OSRM route from driver's position to active terminal
+  // Falls back to straight line if routing library unavailable
   function recomputeRouteFromHere(currentLat, currentLng) {
     if (!map || typeof L === 'undefined') return;
     if (!navState.activeTerminal) return;
@@ -251,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addWaypoints: false,
         draggableWaypoints: false,
         fitSelectedRoutes: true,
-        show: false,
+        show: false, // Hide default turn-by-turn instructions panel
         routeWhileDragging: false,
         lineOptions: {
           styles: [
@@ -274,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sticky: true
           });
 
+          // Toggle tooltip on click
           marker._tooltipOpen = false;
           marker.on('click', () => {
             if (marker._tooltipOpen) {
@@ -293,13 +293,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const r = e.routes && e.routes[0];
           if (!r || !Array.isArray(r.coordinates) || !r.coordinates.length) return;
 
-          // Capture OSRM geometry + summary for guidance
+          // Capture OSRM geometry + summary
           navState.totalDistance = r.summary?.totalDistance || 0;
           navState.totalTimeSec = r.summary?.totalTime || 0;
 
           navState.routeCoords = r.coordinates.map((c) => ({ lat: c.lat, lng: c.lng }));
           navState.cumulativeDistances = [];
 
+          // Calculate cumulative distance at each point (for progress tracking)
           let acc = 0;
           navState.routeCoords.forEach((pt, idx) => {
             if (idx === 0) {
@@ -311,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
 
-          // Compute simple bounding box for commuter queries
+          // Compute bounding box for commuter queries
           let minLat = Infinity;
           let maxLat = -Infinity;
           let minLng = Infinity;
@@ -328,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           navState.lastRecalcAt = Date.now();
 
-          // Remove any previous clickable overlay for this route
+          // Create clickable transparent overlay on route
           if (overlayRoute) {
             try {
               map.removeLayer(overlayRoute);
@@ -337,27 +338,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
 
-          // Create a nearly invisible but clickable polyline over the route
           overlayRoute = L.polyline(r.coordinates, {
             color,
-            weight: 20,
-            opacity: 0.01,
+            weight: 20, // Wide hit area
+            opacity: 0.01, // Nearly invisible
             interactive: true
           }).addTo(map);
 
           activeRouteOverlay = overlayRoute;
 
+          // Show guidance popup when route is clicked
           overlayRoute.on('click', (ev) => {
-            // Show a popup that mirrors the current guidance panel
             const guidanceEl = document.getElementById('driver-guidance');
 
             let html;
             if (guidanceEl) {
-              // Reuse existing guidance markup so Status / Next terminal /
-              // Distance / Speed / ETA / Commuters look consistent.
+              // Clone current guidance panel into popup
               html = `<div class="driver-guidance driver-guidance-popup">${guidanceEl.innerHTML}</div>`;
             } else {
-              // Fallback to simple distance/ETA summary if the panel is missing
+              // Fallback: simple distance/ETA
               const meters = (r.summary && r.summary.totalDistance) || navState.totalDistance;
               const mins = ((r.summary && r.summary.totalTime) || navState.totalTimeSec) / 60;
               if (!meters || !mins) return;
@@ -373,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
     } else {
-      // Fallback: straight line if routing machine is not available
+      // Fallback: straight line if routing library unavailable
       activeRouteOverlay = L.polyline([fromLatLng, toLatLng], {
         color,
         weight: 8,
@@ -403,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      // Straight line meta for guidance
+      // Straight-line metadata for guidance
       navState.routeCoords = [
         { lat: currentLat, lng: currentLng },
         { lat: tLat, lng: tLng }
@@ -434,13 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
       map.zoomControl.setPosition('bottomleft');
     }
 
-    // -----------------------------------------------------------------------
-    // Custom driver + commuter icons (visual only; logic unchanged)
-    // NOTE: iconUrl path is relative to driver.html in /mainpage
-    // Make sure these image files exist in /images:
-    //   jeepney-icon.png  (driver)
-    //   commuter-icon.png (commuter)
-    // -----------------------------------------------------------------------
+    // Custom icons (paths relative to driver.html in /mainpage)
     window.largaDriverIcon = L.icon({
       iconUrl: '../images/jeepney-icon.png',
       iconSize: [64, 64],
@@ -456,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // route-card show/hide behaviour (slide-in / slide-out)
+  // Route card slide-in/slide-out behavior (responsive for mobile/desktop)
   const routeCard = q('.route-card');
   const hideBtn = q('#hideBtn');
   const showBtn = q('#showBtn');
@@ -465,13 +458,10 @@ document.addEventListener('DOMContentLoaded', () => {
     hideBtn.addEventListener('click', () => {
       const isMobile = window.matchMedia && window.matchMedia('(max-width: 450px)').matches;
       if (isMobile) {
-        // On mobile, just toggle the collapsed state. keep the in-panel handle
-        // visible (it overlaps the visible strip) — no floating show button.
         routeCard.classList.toggle('collapsed-mobile');
         return;
       }
 
-      // Desktop/tablet: original side-to-side slide behaviour
       routeCard.classList.add('slide-out');
       routeCard.classList.remove('slide-in');
       hideBtn.classList.add('hidden');
@@ -481,7 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
     showBtn.addEventListener('click', () => {
       const isMobile = window.matchMedia && window.matchMedia('(max-width: 450px)').matches;
       if (isMobile) {
-        // On mobile: open the collapsed panel and swap visibility of handles
         routeCard.classList.remove('collapsed-mobile');
         showBtn.classList.add('hidden');
         hideBtn.classList.remove('hidden');
@@ -817,27 +806,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let geoWatchId = null;
 
-  // GPS write throttling (efficiency)
-  // While navigating we want smoother updates (8 m / 4 s),
-  // otherwise we back off to save battery and Supabase writes.
+  // GPS throttling: tighter updates while navigating, looser when idle
   const GPS_NAV_MOVE_METERS = 8;
   const GPS_NAV_INTERVAL_MS = 4_000;
   const GPS_IDLE_MOVE_METERS = 25;
   const GPS_IDLE_INTERVAL_MS = 15_000;
 
-  // Guidance: consider we "arrived" at a terminal if within this radius
+  // Navigation and guidance thresholds
   const ARRIVAL_RADIUS_METERS = 60;
-  // Basic ETA assumptions (kept simple): use GPS speed when available, else fallback
   const FALLBACK_SPEED_KMH = 18;
   const DRIVER_ROUTE_DRIFT_THRESHOLD_METERS = 60;
   const DRIVER_ROUTE_RECALC_MIN_INTERVAL_MS = 20_000;
-  // Allow commuters up to ~150 m from the route polyline so
-  // slight route mismatches and side streets still show up.
   const COMMUTER_ROUTE_RADIUS_METERS = 150;
   const COMMUTER_BBOX_PADDING_DEGREES = 0.02;
 
-  // Keep map view following the driver during navigation, with
-  // gentle pan/zoom adjustments so it feels Waze-like.
+  // Waze-like viewport following: keeps driver centered, adjusts zoom by speed
   function updateNavigationViewport(lat, lng, smoothSpeedMps) {
     if (!map) return;
 
@@ -845,18 +828,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const pos = [lat, lng];
     const isNavigating = driverState.phase === DriverPhase.NAVIGATING;
 
-    // Center or gently pan the map towards the driver.
+    // Center on first call, smooth pan thereafter
     if (!hasCenteredOnDriver) {
       hasCenteredOnDriver = true;
       map.setView(pos, map.getZoom() || 16, { animate: true });
     } else if (isNavigating) {
-      // Use panTo for a smooth follow effect while navigating.
       map.panTo(pos, { animate: true, duration: 0.5, easeLinearity: 0.25 });
     }
 
     driverState.lastViewportUpdateAt = now;
 
-    // Dynamic zoom: adjust only occasionally to avoid jitter.
+    // Dynamic zoom based on speed (only during navigation)
     let speedKmh = null;
     if (typeof smoothSpeedMps === 'number' && Number.isFinite(smoothSpeedMps) && smoothSpeedMps >= 0) {
       speedKmh = smoothSpeedMps * 3.6;
@@ -864,7 +846,7 @@ document.addEventListener('DOMContentLoaded', () => {
       speedKmh = driverState.lastSpeedKmh;
     }
 
-    if (!isNavigating) return; // only auto-zoom while on trip
+    if (!isNavigating) return;
 
     const currentZoom = map.getZoom() || 16;
     const targetZoom = chooseZoomForSpeed(speedKmh, currentZoom);
@@ -879,7 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Helpers to derive progress along the current OSRM route
+  // Finds closest point on route to driver's position
   function getNearestRoutePoint(here) {
     if (!Array.isArray(navState.routeCoords) || !navState.routeCoords.length) {
       return { index: -1, distance: Infinity };
@@ -896,6 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return { index: bestIndex, distance: bestDist };
   }
 
+  // Calculates how far along the route the driver has traveled
   function getRouteProgress(here) {
     const { index, distance } = getNearestRoutePoint(here);
     if (index < 0 || !Array.isArray(navState.cumulativeDistances) || !navState.cumulativeDistances.length) {
@@ -905,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return { distanceAlong, offRouteDistance: distance };
   }
 
-  // Smooth speed based on recent fixes (meters/second)
+  // Smooths GPS speed using rolling average (filters out GPS jitter)
   function updateSpeedSamples(lat, lng) {
     const now = Date.now();
     const here = { lat, lng };
@@ -918,8 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const dtSec = (now - driverState.lastFixAt) / 1000;
       if (dtSec > 0.5) {
         const dist = distanceMeters(driverState.lastFix, here);
-        // Ignore very small movements to avoid creating fake motion
-        // from GPS jitter when the jeepney is actually stopped.
+        // Ignore movements <3m to filter GPS jitter when stationary
         if (dist >= 3) {
           const instSpeed = dist / dtSec;
           if (Number.isFinite(instSpeed) && instSpeed >= 0) {
@@ -940,7 +922,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const avg = sum / driverState.speedSamples.length;
     const safeAvg = Number.isFinite(avg) ? avg : null;
 
-    // store a km/h approximation for simple safety checks
     if (safeAvg !== null) {
       driverState.lastSpeedKmh = safeAvg * 3.6;
     }
