@@ -1029,9 +1029,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // This keeps commuters visible along the whole route (and not just
     // near the current remaining route segment from driver -> terminal).
 
-    const { routeId } = getDriverContext();
-    if (!routeId) return;
-
     // Basic throttling for commuter refresh
     const now = Date.now();
     if (now - driverState.lastCommutersRefreshAt < 8_000) return;
@@ -1044,7 +1041,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data, error } = await supabase
         .from('commuter_locations')
         .select('commuter_id, route_id, lat, lng, updated_at')
-        .eq('route_id', routeId)
         .gte('updated_at', since);
 
       if (error) {
