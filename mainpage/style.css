@@ -1275,7 +1275,7 @@ body.navigation-mode .route-card .stop-btn {
   /* Ensure the hide handle sits clearly above the system nav bar
      on phones so it's always tappable when the card is collapsed. */
   .route-card .hide-btn {
-    top: -56px;              /* raise handle higher above bottom edge */
+    top: -34px;              /* overlap panel top so button edge sits flush */
     left: 50%;               /* center horizontally */
     transform: translateX(-50%);
     width: 70px;             /* wider, shorter pill for balance */
@@ -1286,7 +1286,7 @@ body.navigation-mode .route-card .stop-btn {
 
   /* Collapsed state: slide the panel down while keeping the handle visible */
   .route-card.collapsed-mobile {
-    top: 100vh;              /* move card fully below viewport */
+    top: calc(100vh - 80px) !important; /* leave 80px visible */
     transform: translate(-50%, 0); /* keep horizontal centering */
   }
 
