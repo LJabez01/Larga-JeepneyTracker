@@ -7,6 +7,13 @@ const loginBtn = document.getElementById('loginBtn');
 const emailEl = document.getElementById('email');
 const passwordEl = document.getElementById('password');
 
+// Prefer runtime-injected API base (login/runtime-config.js or hosting platform). Fall back to localhost/origin.
+const API_BASE = (typeof window !== 'undefined' && window.__API_BASE__)
+    ? window.__API_BASE__
+    : (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3000'
+        : window.location.origin);
+
 async function doLogin() {
     const email = emailEl.value.trim();
     const password = passwordEl.value.trim();
@@ -31,9 +38,7 @@ async function doLogin() {
         // Verify reCAPTCHA token with backend (Express server)
         if (recaptchaToken) {
             try {
-                const verifyUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                    ? 'http://localhost:3000/api/verify-recaptcha'
-                    : '/api/verify-recaptcha';  
+                const verifyUrl = `${API_BASE}/api/verify-recaptcha`;
 
                 const resp = await fetch(verifyUrl, {
                     method: 'POST',
