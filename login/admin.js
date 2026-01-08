@@ -125,6 +125,8 @@ function updateDashboardStats(users) {
   const activeNowEl = document.getElementById('statActiveNow');
   const pendingIdsEl = document.getElementById('statPendingIds');
   const verifiedIdsEl = document.getElementById('statVerifiedIds');
+  const pendingBadgeEl = document.getElementById('pendingIdsBadge');
+  const pendingHeadingEl = document.getElementById('pendingIdsHeading');
 
   const total = users.length;
   const activeCount = users.filter(u => u.is_active !== false).length;
@@ -135,6 +137,8 @@ function updateDashboardStats(users) {
   if (activeNowEl) activeNowEl.textContent = activeCount;
   if (pendingIdsEl) pendingIdsEl.textContent = pendingCount;
   if (verifiedIdsEl) verifiedIdsEl.textContent = verifiedCount;
+  if (pendingBadgeEl) pendingBadgeEl.textContent = pendingCount;
+  if (pendingHeadingEl) pendingHeadingEl.textContent = `Pending ID Verification (${pendingCount})`;
 }
 
 function renderUsersTable(users) {

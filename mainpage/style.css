@@ -35,7 +35,7 @@ nav
 
 .logo a
 {
-  font-family: 'Poppins';
+  font-family: 'Montserrat';
   text-decoration: none;
   font-size: 30px;
   font-weight: 700;
@@ -381,6 +381,40 @@ nav, .controls, .main-menu
   top: 0;
   left: 0;
   z-index: 0;
+}
+
+/* GPS Status Indicator */
+.gps-status {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  background: rgba(10, 113, 78, 0.95);
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.gps-status.hidden {
+  display: none;
+}
+
+.gps-status i {
+  font-size: 16px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* Route Selection - Drivers Side */
@@ -1238,10 +1272,10 @@ body.navigation-mode .route-card .stop-btn {
     border-radius: 45px 45px 0px 0px;
   }
 
-  /* Ensure the hide handle sits flush with the panel top (no gap).
-     Use a smaller negative top so it overlaps the panel without a visible gap. */
+  /* Ensure the hide handle sits clearly above the system nav bar
+     on phones so it's always tappable when the card is collapsed. */
   .route-card .hide-btn {
-    top: -34px;              /* overlap panel top so button edge sits flush */
+    top: -56px;              /* raise handle higher above bottom edge */
     left: 50%;               /* center horizontally */
     transform: translateX(-50%);
     width: 70px;             /* wider, shorter pill for balance */
@@ -1250,10 +1284,9 @@ body.navigation-mode .route-card .stop-btn {
     z-index: 20;
   }
 
-  /* Collapsed state: leave a small strip of the panel visible at the bottom
-     so the user can see it's present. Keep it below the fold using !important. */
+  /* Collapsed state: slide the panel down while keeping the handle visible */
   .route-card.collapsed-mobile {
-    top: calc(100vh - 80px) !important; /* leave 80px visible */
+    top: 100vh;              /* move card fully below viewport */
     transform: translate(-50%, 0); /* keep horizontal centering */
   }
 
@@ -1267,7 +1300,12 @@ body.navigation-mode .route-card .stop-btn {
     transform: rotate(-90deg);
   }
 
-  /* Desktop: keep the separate show button for slide-out behaviour. */
+  /* Do not use the separate show button on mobile */
+  #showBtn {
+    display: none !important;
+  }
+
+  /* If slide-out is applied, keep show button aligned near bottom */
   .route-card.slide-out + #showBtn {
     top: 100vh;             /* move down with hidden panel */
     transform: translateY(-50%);
@@ -1277,8 +1315,6 @@ body.navigation-mode .route-card .stop-btn {
      hide handle as the single control (no floating button). */
   @media (max-width: 450px) {
     #showBtn { display: none !important; }
-    /* Move the route card up slightly so Chrome navigation button doesn't cover it */
-    .route-card { top: 33vh !important; }
   }
 
   /* On small screens, slide the route card vertically instead of horizontally */
