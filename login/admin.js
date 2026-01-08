@@ -6,13 +6,6 @@ import { supabase } from './supabaseClient.js';
 let currentAdmin = null;
 let allUsers = [];
 
-// Prefer runtime-injected API base (set via login/runtime-config.js or hosting platform).
-const API_BASE = (typeof window !== 'undefined' && window.__API_BASE__)
-  ? window.__API_BASE__
-  : (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-      ? 'http://localhost:3000'
-      : window.location.origin);
-
 function getAvatarInitial(name, email) {
   const base = (name && name.trim()) || (email && email.trim()) || '?';
   return base.charAt(0).toUpperCase();
@@ -105,7 +98,7 @@ async function fetchAllUsers() {
 
   const token = sessionData.session.access_token;
   try {
-    const res = await fetch(`${API_BASE}/api/admin/id-documents`, {
+    const res = await fetch('http://localhost:3000/api/admin/id-documents', {
       headers: {
         Authorization: `Bearer ${token}`,
       },

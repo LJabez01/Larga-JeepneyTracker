@@ -5,8 +5,7 @@
   "main": "commuter.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server/index.js",
-    "vercel-build": "node scripts/generate-runtime-config.js"
+    "start": "node server/index.js"
   },
   "repository": {
     "type": "git",
