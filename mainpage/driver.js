@@ -817,7 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const FALLBACK_SPEED_KMH = 18;
   const DRIVER_ROUTE_DRIFT_THRESHOLD_METERS = 60;
   const DRIVER_ROUTE_RECALC_MIN_INTERVAL_MS = 20_000;
-  const COMMUTER_ROUTE_RADIUS_METERS = 150;
+  const COMMUTER_ROUTE_RADIUS_METERS = 400;
   const COMMUTER_BBOX_PADDING_DEGREES = 0.02;
 
   // Waze-like viewport following: keeps driver centered, adjusts zoom by speed
@@ -1025,7 +1025,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function refreshCommutersForRoute() {
     if (!map) return;
     if (!navState.activeTerminal) return;
-    if (!navState.routeBounds || !Array.isArray(navState.routeCoords) || !navState.routeCoords.length) return;
+    // Show commuters even if the route geometry is not available yet.
+    // This keeps commuters visible along the whole route (and not just
+    // near the current remaining route segment from driver -> terminal).
+
+    const { routeId } = getDriverContext();
+    if (!routeId) return;
 
     // Basic throttling for commuter refresh
     const now = Date.now();
@@ -1036,17 +1041,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Treat commuters as stale after ~3 minutes so the driver
       // sees reasonably fresh dots along the route.
       const since = new Date(Date.now() - 3 * 60_000).toISOString();
-      const pad = COMMUTER_BBOX_PADDING_DEGREES;
-      const { minLat, maxLat, minLng, maxLng } = navState.routeBounds;
-
       const { data, error } = await supabase
         .from('commuter_locations')
-        .select('commuter_id, lat, lng, updated_at')
-        .gte('updated_at', since)
-        .gte('lat', (minLat ?? -90) - pad)
-        .lte('lat', (maxLat ?? 90) + pad)
-        .gte('lng', (minLng ?? -180) - pad)
-        .lte('lng', (maxLng ?? 180) + pad);
+        .select('commuter_id, route_id, lat, lng, updated_at')
+        .eq('route_id', routeId)
+        .gte('updated_at', since);
 
       if (error) {
         console.error('[Driver commuters] Failed to fetch commuter_locations', error);
@@ -1064,18 +1063,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const id = String(c.commuter_id);
         seen.add(id);
-
-        const point = { lat: c.lat, lng: c.lng };
-        const { distance: dToRoute } = getNearestRoutePoint(point);
-        if (!Number.isFinite(dToRoute) || dToRoute > COMMUTER_ROUTE_RADIUS_METERS) {
-          // Too far from the jeepney route; hide if marker exists
-          const existingFar = driverState.commutersMarkers.get(id);
-          if (existingFar) {
-            try { map.removeLayer(existingFar); } catch (e) { /* ignore */ }
-            driverState.commutersMarkers.delete(id);
-          }
-          return;
-        }
 
         visibleCount += 1;
         const pos = [c.lat, c.lng];
